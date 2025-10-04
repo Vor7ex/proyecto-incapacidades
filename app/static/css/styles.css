@@ -1,0 +1,87 @@
+body {
+  background-color: #f8f9fa;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.card {
+  border: none;
+  border-radius: 10px;
+}
+
+.card-header {
+  border-radius: 10px 10px 0 0 !important;
+}
+
+.navbar-brand {
+  font-weight: bold;
+}
+
+.badge-estado {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.estado-pendiente {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.estado-revision {
+  background-color: #17a2b8;
+  color: #fff;
+}
+
+.estado-aprobada {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.estado-rechazada {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f1f3f5;
+  cursor: pointer;
+}
+
+.documento-item {
+  padding: 10px;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  transition: all 0.3s;
+}
+
+.documento-item:hover {
+  background-color: #f8f9fa;
+  border-color: #0d6efd;
+}
+
+.alert {
+  border-radius: 8px;
+}
+
+.btn {
+  border-radius: 5px;
+}
+
+.form-control, .form-select {
+  border-radius: 5px;
+}
+
+.shadow {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card-body {
+    padding: 1rem;
+  }
+
+  .table {
+    font-size: 0.9rem;
+  }
+}
