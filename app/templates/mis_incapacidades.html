@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Incapacidades{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2>Mis Incapacidades</h2>
+      <a href="{{ url_for('incapacidades.registrar') }}" class="btn btn-primary">
+        + Nueva Incapacidad
+      </a>
+    </div>
+
+    {% if incapacidades %}
+    <div class="card shadow">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Código</th>
+                <th>Tipo</th>
+                <th>Fecha Inicio</th>
+                <th>Fecha Fin</th>
+                <th>Días</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for inc in incapacidades %}
+              <tr>
+                <td><strong>#{{ inc.id }}</strong></td>
+                <td>{{ inc.tipo }}</td>
+                <td>{{ inc.fecha_inicio.strftime('%d/%m/%Y') }}</td>
+                <td>{{ inc.fecha_fin.strftime('%d/%m/%Y') }}</td>
+                <td><span class="badge bg-secondary">{{ inc.dias }} días</span></td>
+                <td>
+                  <span class="badge badge-estado estado-{{ inc.estado.lower().replace(' ', '-') }}">
+                    {{ inc.estado }}
+                  </span>
+                </td>
+                <td>
+                  <a href="{{ url_for('incapacidades.detalle', id=inc.id) }}" class="btn btn-sm btn-info text-white">
+                    Ver Detalle
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+      <h5>No tiene incapacidades registradas</h5>
+      <p>Haga clic en el botón "Nueva Incapacidad" para registrar su primera incapacidad.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle de Incapacidad #{{ incapacidad.id }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="mb-3">
+      {% if current_user.rol == 'colaborador' %}
+        <a href="{{ url_for('incapacidades.mis_incapacidades') }}" class="btn btn-secondary">
+          &larr; Volver
+        </a>
+      {% else %}
+        <a href="{{ url_for('incapacidades.dashboard_auxiliar') }}" class="btn btn-secondary">
+          &larr; Volver
+        </a>
+      {% endif %}
+    </div>
+
+    <div class="card shadow">
+      <div class="card-header bg-primary text-white">
+        <h3 class="mb-0">Incapacidad #{{ incapacidad.id }}</h3>
+      </div>
+      <div class="card-body">
+        <!-- Información del Colaborador -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <h5>Información del Colaborador</h5>
+            <p><strong>Nombre:</strong> {{ incapacidad.usuario.nombre }}</p>
+            <p><strong>Email:</strong> {{ incapacidad.usuario.email }}</p>
+          </div>
+          <div class="col-md-6">
+            <h5>Estado Actual</h5>
+            <p>
+              <span class="badge badge-estado estado-{{ incapacidad.estado.lower().replace(' ', '-') }}" style="font-size: 1.1rem;">
+                {{ incapacidad.estado }}
+              </span>
+            </p>
+            {% if incapacidad.motivo_rechazo %}
+              <div class="alert alert-danger">
+                <strong>Motivo de Rechazo:</strong><br>
+                {{ incapacidad.motivo_rechazo }}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- Detalles de la Incapacidad -->
+        <h5>Detalles de la Incapacidad</h5>
+        <div class="row">
+          <div class="col-md-4">
+            <p><strong>Tipo:</strong> {{ incapacidad.tipo }}</p>
+          </div>
+          <div class="col-md-4">
+            <p><strong>Fecha de Inicio:</strong> {{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }}</p>
+          </div>
+          <div class="col-md-4">
+            <p><strong>Fecha de Fin:</strong> {{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4">
+            <p><strong>Días Totales:</strong> <span class="badge bg-secondary">{{ incapacidad.dias }} días</span></p>
+          </div>
+          <div class="col-md-4">
+            <p><strong>Fecha de Registro:</strong> {{ incapacidad.fecha_registro.strftime('%d/%m/%Y %H:%M') }}</p>
+          </div>
+          <div class="col-md-4">
+            <p><strong>Última Actualización:</strong> {{ incapacidad.fecha_actualizacion.strftime('%d/%m/%Y %H:%M') }}</p>
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- Documentos Adjuntos -->
+        <h5>Documentos Adjuntos</h5>
+        {% if incapacidad.documentos %}
+          <div class="row">
+            {% for doc in incapacidad.documentos %}
+              <div class="col-md-6 mb-3">
+                <div class="documento-item">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <p class="mb-1">
+                        <strong>
+                          {% if doc.tipo_documento == 'certificado' %}
+                            Certificado de Incapacidad
+                          {% else %}
+                            Epicrisis
+                          {% endif %}
+                        </strong>
+                      </p>
+                      <p class="mb-0 text-muted small">{{ doc.nombre_archivo }}</p>
+                      <p class="mb-0 text-muted small">Cargado: {{ doc.fecha_carga.strftime('%d/%m/%Y %H:%M') }}</p>
+                    </div>
+                    <div>
+                      <a href="{{ url_for('documentos.descargar', documento_id=doc.id) }}" class="btn btn-sm btn-primary">
+                        Descargar
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="alert alert-warning">
+            No hay documentos adjuntos
+          </div>
+        {% endif %}
+
+        <!-- Botones de Acción para Auxiliar -->
+        {% if current_user.rol == 'auxiliar' and incapacidad.estado in ['Pendiente', 'En revision'] %}
+          <hr>
+          <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <a href="{{ url_for('incapacidades.validar', id=incapacidad.id) }}" class="btn btn-info text-white">
+              Validar Documentación
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

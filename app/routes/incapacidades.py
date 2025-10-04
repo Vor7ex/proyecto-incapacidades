@@ -144,3 +144,16 @@ def dashboard_auxiliar():
     en_revision = Incapacidad.query.filter_by(estado='En revision').all()
 
     return render_template('dashboard_auxiliar.html', pendientes=pendientes, en_revision=en_revision)
+
+@incapacidades_bp.route('/detalle/<int:id>')
+@login_required
+def detalle(id):
+    """UC4: Ver detalle de incapacidad"""
+    incapacidad = Incapacidad.query.get_or_404(id)
+
+    # Verificar permisos
+    if current_user.rol == 'colaborador' and incapacidad.usuario_id != current_user.id:
+        flash('No tiene permisos para ver esta incapacidad', 'danger')
+        return redirect(url_for('incapacidades.mis_incapacidades'))
+
+    return render_template('detalle_incapacidad.html', incapacidad=incapacidad)
