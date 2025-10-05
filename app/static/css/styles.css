@@ -124,3 +124,104 @@ body {
 .estado-rechazada {
   background-color: #dc3545 !important;
 }
+
+/* Tarjetas de estadisticas */
+.card.bg-warning h5,
+.card.bg-info h5,
+.card.bg-success h5,
+.card.bg-danger h5 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    opacity: 0.9;
+}
+
+.card.bg-warning h2,
+.card.bg-info h2,
+.card.bg-success h2,
+.card.bg-danger h2 {
+    font-weight: bold;
+    margin: 0.5rem 0;
+}
+
+.card.bg-warning p,
+.card.bg-info p,
+.card.bg-success p,
+.card.bg-danger p {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.card.text-white {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card.text-white:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Headers de tablas en dashboard */
+.card-header h4 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.card-header i {
+    margin-right: 8px;
+}
+
+/* Badges mejorados */
+.badge {
+    font-weight: 500;
+    padding: 0.4rem 0.8rem;
+}
+
+/* Botones en tablas */
+.btn-sm i {
+    margin-right: 3px;
+}
+
+/* Alertas mejoradas */
+.alert i {
+    margin-right: 8px;
+}
+
+/* Estilos para validacion */
+.bi {
+    font-size: 1rem;
+}
+
+.alert ul {
+    margin-bottom: 0;
+    padding-left: 1.5rem;
+}
+
+.alert li {
+    margin-bottom: 0.5rem;
+}
+
+.form-check-label {
+    cursor: pointer;
+    user-select: none;
+}
+
+.form-check-input:checked + .form-check-label {
+    color: #28a745;
+    font-weight: 500;
+}
+
+.card.bg-light {
+    border: 2px dashed #dee2e6;
+}
+
+/* Animacion para checks */
+.form-check {
+    transition: all 0.3s;
+}
+
+.form-check:hover {
+    background-color: #f8f9fa;
+    padding: 5px;
+    border-radius: 5px;
+}

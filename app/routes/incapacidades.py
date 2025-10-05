@@ -157,3 +157,225 @@ def detalle(id):
         return redirect(url_for('incapacidades.mis_incapacidades'))
 
     return render_template('detalle_incapacidad.html', incapacidad=incapacidad)
+
+@incapacidades_bp.route('/validar/<int:id>', methods=['GET', 'POST'])
+@login_required
+def validar(id):
+    """UC6: Validar documentacion"""
+    if current_user.rol != 'auxiliar':
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('auth.index'))
+    
+    incapacidad = Incapacidad.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        accion = request.form.get('accion')
+        
+        if accion == 'completar_revision':
+            # Marcar como en revision (documentacion completa)
+            incapacidad.estado = 'En revision'
+            db.session.commit()
+            flash('Documentacion marcada como completa. Ahora puede aprobar o rechazar.', 'success')
+            return redirect(url_for('incapacidades.aprobar_rechazar', id=id))
+        
+        elif accion == 'solicitar_documentos':
+            # Mantener en pendiente (documentacion incompleta)
+            observaciones = request.form.get('observaciones', '')
+            flash(f'Solicitud registrada: {observaciones}. Notifique al colaborador.', 'warning')
+            return redirect(url_for('incapacidades.dashboard_auxiliar'))
+    
+    # UC10: Validacion automatica de requisitos
+    validacion = validar_requisitos_automatico(incapacidad)
+    
+    return render_template('validar_incapacidades.html', 
+                         incapacidad=incapacidad,
+                         validacion=validacion)
+
+def validar_requisitos_automatico(incapacidad):
+    """UC10: Validacion automatica basica"""
+    resultado = {
+        'certificado_presente': False,
+        'epicrisis_presente': False,
+        'epicrisis_requerida': False,
+        'todos_documentos': False,
+        'advertencias': [],
+        'recomendaciones': []
+    }
+    
+    # Verificar certificado
+    certificado = Documento.query.filter_by(
+        incapacidad_id=incapacidad.id,
+        tipo_documento='certificado'
+    ).first()
+    resultado['certificado_presente'] = certificado is not None
+    
+    # Verificar epicrisis
+    epicrisis = Documento.query.filter_by(
+        incapacidad_id=incapacidad.id,
+        tipo_documento='epicrisis'
+    ).first()
+    resultado['epicrisis_presente'] = epicrisis is not None
+    
+    # Determinar si epicrisis es requerida
+    if incapacidad.dias > 2 or incapacidad.tipo == 'Accidente Laboral':
+        resultado['epicrisis_requerida'] = True
+        if not epicrisis:
+            resultado['advertencias'].append('Falta Epicrisis (requerida para este tipo)')
+    
+    # Verificar si falta certificado
+    if not certificado:
+        resultado['advertencias'].append('Falta Certificado de Incapacidad (obligatorio)')
+    else:
+        resultado['recomendaciones'].append('Certificado presente')
+    
+    # Verificar epicrisis si esta presente
+    if epicrisis:
+        resultado['recomendaciones'].append('Epicrisis presente')
+    
+    # Todos los documentos OK
+    if resultado['certificado_presente']:
+        if resultado['epicrisis_requerida']:
+            resultado['todos_documentos'] = resultado['epicrisis_presente']
+        else:
+            resultado['todos_documentos'] = True
+    
+    return resultado
+
+@incapacidades_bp.route('/aprobar-rechazar/<int:id>', methods=['GET', 'POST'])
+@login_required
+def aprobar_rechazar(id):
+    """UC7: Aprobar o rechazar incapacidad"""
+    if current_user.rol != 'auxiliar':
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('auth.index'))
+    
+    incapacidad = Incapacidad.query.get_or_404(id)
+    
+    # Solo se puede aprobar/rechazar si esta en revision
+    if incapacidad.estado not in ['En revision', 'Pendiente']:
+        flash('Esta incapacidad ya fue procesada', 'warning')
+        return redirect(url_for('incapacidades.dashboard_auxiliar'))
+    
+    if request.method == 'POST':
+        decision = request.form.get('decision')
+        
+        if decision == 'aprobar':
+            incapacidad.estado = 'Aprobada'
+            incapacidad.motivo_rechazo = None
+            db.session.commit()
+            flash(f'Incapacidad #{id} aprobada exitosamente', 'success')
+            return redirect(url_for('incapacidades.dashboard_auxiliar'))
+        
+        elif decision == 'rechazar':
+            motivo = request.form.get('motivo_rechazo')
+            if not motivo or len(motivo.strip()) < 10:
+                flash('Debe especificar un motivo de rechazo (minimo 10 caracteres)', 'danger')
+                return render_template('aprobar_rechazar.html', incapacidad=incapacidad)
+            
+            incapacidad.estado = 'Rechazada'
+            incapacidad.motivo_rechazo = motivo
+            db.session.commit()
+            flash(f'Incapacidad #{id} rechazada', 'info')
+            return redirect(url_for('incapacidades.dashboard_auxiliar'))
+    
+    return render_template('aprobar_rechazar.html', incapacidad=incapacidad)
+
+@incapacidades_bp.route('/estadisticas')
+@login_required
+def estadisticas():
+    """Vista de estadisticas basicas"""
+    if current_user.rol != 'auxiliar':
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('auth.index'))
+    
+    total = Incapacidad.query.count()
+    pendientes = Incapacidad.query.filter_by(estado='Pendiente').count()
+    en_revision = Incapacidad.query.filter_by(estado='En revision').count()
+    aprobadas = Incapacidad.query.filter_by(estado='Aprobada').count()
+    rechazadas = Incapacidad.query.filter_by(estado='Rechazada').count()
+    
+    total_documentos = Documento.query.count()
+    
+    stats = {
+        'total': total,
+        'pendientes': pendientes,
+        'en_revision': en_revision,
+        'aprobadas': aprobadas,
+        'rechazadas': rechazadas,
+        'total_documentos': total_documentos
+    }
+    
+    return render_template('estadisticas.html', stats=stats)
+
+def validar_requisitos_automatico(incapacidad):
+    """UC10: Validacion automatica mejorada"""
+    resultado = {
+        'certificado_presente': False,
+        'epicrisis_presente': False,
+        'epicrisis_requerida': False,
+        'todos_documentos': False,
+        'advertencias': [],
+        'recomendaciones': [],
+        'nivel_cumplimiento': 0  # 0-100
+    }
+    
+    # Verificar certificado
+    certificado = Documento.query.filter_by(
+        incapacidad_id=incapacidad.id,
+        tipo_documento='certificado'
+    ).first()
+    resultado['certificado_presente'] = certificado is not None
+    
+    if not certificado:
+        resultado['advertencias'].append('❌ Falta Certificado de Incapacidad (OBLIGATORIO)')
+        resultado['nivel_cumplimiento'] = 0
+    else:
+        resultado['nivel_cumplimiento'] = 50
+        resultado['recomendaciones'].append('✅ Certificado presente')
+    
+    # Verificar epicrisis
+    epicrisis = Documento.query.filter_by(
+        incapacidad_id=incapacidad.id,
+        tipo_documento='epicrisis'
+    ).first()
+    resultado['epicrisis_presente'] = epicrisis is not None
+    
+    # Determinar si epicrisis es requerida
+    if incapacidad.dias > 2:
+        resultado['epicrisis_requerida'] = True
+        if not epicrisis:
+            resultado['advertencias'].append('❌ Falta Epicrisis (requerida para incapacidades >2 dias)')
+        else:
+            resultado['nivel_cumplimiento'] = 100
+            resultado['recomendaciones'].append('✅ Epicrisis presente (requerida)')
+    
+    if incapacidad.tipo == 'Accidente Laboral':
+        resultado['epicrisis_requerida'] = True
+        if not epicrisis:
+            resultado['advertencias'].append('❌ Falta Epicrisis (obligatoria para accidentes laborales)')
+        else:
+            resultado['nivel_cumplimiento'] = 100
+            resultado['recomendaciones'].append('✅ Epicrisis presente (obligatoria)')
+    
+    # Si epicrisis no es requerida pero esta presente
+    if not resultado['epicrisis_requerida'] and epicrisis:
+        resultado['nivel_cumplimiento'] = 100
+        resultado['recomendaciones'].append('✅ Documentacion completa')
+    
+    # Si no requiere epicrisis y tiene certificado
+    if not resultado['epicrisis_requerida'] and certificado:
+        resultado['nivel_cumplimiento'] = 100
+        resultado['todos_documentos'] = True
+    
+    # Verificar si todos los documentos OK
+    if resultado['certificado_presente']:
+        if resultado['epicrisis_requerida']:
+            resultado['todos_documentos'] = resultado['epicrisis_presente']
+        else:
+            resultado['todos_documentos'] = True
+    
+    # Recomendaciones adicionales
+    if resultado['todos_documentos']:
+        resultado['recomendaciones'].append('�� Todos los documentos obligatorios estan presentes')
+    
+    return resultado
