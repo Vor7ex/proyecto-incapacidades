@@ -201,7 +201,7 @@ Ver detalles en `docs/ESTADO_PROYECTO.md`
 
 ## 🐛 Problemas Conocidos
 
-1. **Rate Limit Mailtrap** - Solo 1 email/segundo (SOLUCIONADO con delay de 2s)
+1. **Rate Limit Mailtrap** - Solo 1 email/segundo (SOLUCIONADO con delay de 10s)
 2. **Notificación al líder falta** - Solo notifica a RRHH (pendiente)
 3. **Validación automática manual** - UC5 requiere completar validación automática
 
