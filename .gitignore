@@ -73,3 +73,10 @@ build/
 *.bak
 *.backup
 *~
+
+# Scripts temporales (no versionar)
+verificar_*.py
+probar_*.py
+corregir_*.py
+debug_*.py
+test_temp*.py
