@@ -7,6 +7,13 @@ from app.models import db
 from app.models.incapacidad import Incapacidad
 from app.models.documento import Documento
 from config import Config
+from app.utils.email_service import (
+    notificar_nueva_incapacidad,
+    notificar_validacion_completada,
+    notificar_documentos_faltantes,
+    notificar_aprobacion,
+    notificar_rechazo
+)
 
 incapacidades_bp = Blueprint('incapacidades', __name__, url_prefix='/incapacidades')
 
@@ -63,6 +70,15 @@ def registrar():
 
         # Procesar archivos (UC2)
         archivos_guardados = procesar_archivos(request.files, incapacidad.id)
+
+        # UC2: Enviar notificaciones por email
+        try:
+            notificar_nueva_incapacidad(incapacidad)
+        except Exception as e:
+            print(f"❌ Error al enviar notificacion: {e}")
+            import traceback
+            traceback.print_exc()
+            # No interrumpir el flujo si falla el email
 
         if archivos_guardados == 0:
             flash('Incapacidad registrada, pero no se cargaron documentos', 'warning')
@@ -181,13 +197,31 @@ def validar(id):
             # Marcar como en revision (documentacion completa)
             incapacidad.estado = 'En revision'
             db.session.commit()
+            
+            # UC2: Notificar validacion completada
+            try:
+                notificar_validacion_completada(incapacidad)
+            except Exception as e:
+                print(f"❌ Error al enviar notificacion: {e}")
+                import traceback
+                traceback.print_exc()
+            
             flash('Documentacion marcada como completa. Ahora puede aprobar o rechazar.', 'success')
             return redirect(url_for('incapacidades.aprobar_rechazar', id=id))
         
         elif accion == 'solicitar_documentos':
             # Mantener en pendiente (documentacion incompleta)
             observaciones = request.form.get('observaciones', '')
-            flash(f'Solicitud registrada: {observaciones}. Notifique al colaborador.', 'warning')
+            
+            # UC2: Notificar documentos faltantes
+            try:
+                notificar_documentos_faltantes(incapacidad, observaciones)
+            except Exception as e:
+                print(f"❌ Error al enviar notificacion: {e}")
+                import traceback
+                traceback.print_exc()
+            
+            flash(f'Solicitud registrada: {observaciones}. Notificacion enviada al colaborador.', 'warning')
             return redirect(url_for('incapacidades.dashboard_auxiliar'))
     
     # UC10: Validacion automatica de requisitos
@@ -269,6 +303,15 @@ def aprobar_rechazar(id):
             incapacidad.estado = 'Aprobada'
             incapacidad.motivo_rechazo = None
             db.session.commit()
+            
+            # UC2: Notificar aprobacion
+            try:
+                notificar_aprobacion(incapacidad)
+            except Exception as e:
+                print(f"❌ Error al enviar notificacion: {e}")
+                import traceback
+                traceback.print_exc()
+            
             flash(f'Incapacidad #{id} aprobada exitosamente', 'success')
             return redirect(url_for('incapacidades.dashboard_auxiliar'))
         
@@ -281,6 +324,15 @@ def aprobar_rechazar(id):
             incapacidad.estado = 'Rechazada'
             incapacidad.motivo_rechazo = motivo
             db.session.commit()
+            
+            # UC2: Notificar rechazo
+            try:
+                notificar_rechazo(incapacidad)
+            except Exception as e:
+                print(f"❌ Error al enviar notificacion: {e}")
+                import traceback
+                traceback.print_exc()
+            
             flash(f'Incapacidad #{id} rechazada', 'info')
             return redirect(url_for('incapacidades.dashboard_auxiliar'))
     

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #dc3545; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { background: #f8f9fa; padding: 30px; border: 1px solid #dee2e6; border-radius: 0 0 5px 5px; }
+        .danger { background: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0; }
+        .info-box { background: white; padding: 15px; margin: 15px 0; border: 1px solid #dee2e6; }
+        .footer { text-align: center; margin-top: 20px; color: #6c757d; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>❌ Incapacidad Rechazada</h1>
+    </div>
+    <div class="content">
+        <p>Hola <strong>{{ colaborador.nombre }}</strong>,</p>
+        <p>Lamentamos informarte que tu incapacidad <strong>#{{ incapacidad.id }}</strong> ha sido <strong>RECHAZADA</strong>.</p>
+        <div class="danger">
+            <h3>Motivo del Rechazo:</h3>
+            <p>{{ incapacidad.motivo_rechazo }}</p>
+        </div>
+        <div class="info-box">
+            <h3>Detalles de la Solicitud</h3>
+            <p><strong>Tipo:</strong> {{ incapacidad.tipo }}</p>
+            <p><strong>Período solicitado:</strong> {{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }} - {{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}</p>
+            <p><strong>Días:</strong> {{ incapacidad.dias }} días</p>
+        </div>
+        <h3>📋 Qué puedes hacer:</h3>
+        <ul>
+            <li>Revisa el motivo del rechazo indicado arriba</li>
+            <li>Si es un problema de documentación, puedes registrar una nueva solicitud con los documentos correctos</li>
+            <li>Para aclaraciones, contacta al departamento de Gestión Humana</li>
+        </ul>
+        <p><strong>Importante:</strong> Si consideras que el rechazo es incorrecto, por favor comunícate con Gestión Humana a la brevedad.</p>
+    </div>
+    <div class="footer">
+        <p>Sistema de Gestión de Incapacidades</p>
+    </div>
+</body>
+</html>

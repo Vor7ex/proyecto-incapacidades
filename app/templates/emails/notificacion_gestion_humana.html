@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Incapacidad - Gestión Humana</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: #198754;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background: #f8f9fa;
+            padding: 30px;
+            border: 1px solid #dee2e6;
+            border-radius: 0 0 5px 5px;
+        }
+        .info-box {
+            background: white;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .alert {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .btn {
+            display: inline-block;
+            background: #0d6efd;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #6c757d;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔔 Nueva Incapacidad para Validar</h1>
+    </div>
+    
+    <div class="content">
+        <p>Equipo de Gestión Humana,</p>
+        
+        <p>Se ha registrado una nueva incapacidad que requiere validación de documentos.</p>
+        
+        <div class="info-box">
+            <h3>Datos del Colaborador</h3>
+            <p><strong>Nombre:</strong> {{ colaborador.nombre }}</p>
+            <p><strong>Email:</strong> {{ colaborador.email }}</p>
+        </div>
+        
+        <div class="info-box">
+            <h3>Detalles de la Incapacidad</h3>
+            <p><strong>Número:</strong> #{{ incapacidad.id }}</p>
+            <p><strong>Tipo:</strong> {{ incapacidad.tipo }}</p>
+            <p><strong>Período:</strong> {{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }} - {{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}</p>
+            <p><strong>Días:</strong> {{ incapacidad.dias }} días</p>
+            <p><strong>Documentos adjuntos:</strong> {{ incapacidad.documentos|length }} archivo(s)</p>
+            <p><strong>Fecha de registro:</strong> {{ incapacidad.fecha_registro.strftime('%d/%m/%Y %H:%M') }}</p>
+        </div>
+        
+        <div class="alert">
+            <strong>⏰ Acción Requerida:</strong> Por favor, valida los documentos adjuntos a la brevedad posible.
+        </div>
+        
+        <p style="text-align: center;">
+            <a href="http://localhost:5000/incapacidades/validar/{{ incapacidad.id }}" class="btn">
+                Ver y Validar Incapacidad
+            </a>
+        </p>
+        
+        <h3>📋 Documentos a Verificar:</h3>
+        <ul>
+            {% if incapacidad.tipo == 'Enfermedad General' and incapacidad.dias <= 2 %}
+            <li>Certificado de Incapacidad (obligatorio)</li>
+            {% elif incapacidad.tipo == 'Enfermedad General' and incapacidad.dias > 2 %}
+            <li>Certificado de Incapacidad (obligatorio)</li>
+            <li>Epicrisis (obligatoria para más de 2 días)</li>
+            {% elif incapacidad.tipo == 'Accidente Laboral' %}
+            <li>Certificado de Incapacidad (obligatorio)</li>
+            <li>Epicrisis (obligatoria para accidentes laborales)</li>
+            {% else %}
+            <li>Certificado de Incapacidad (obligatorio)</li>
+            <li>Epicrisis (según corresponda)</li>
+            {% endif %}
+        </ul>
+    </div>
+    
+    <div class="footer">
+        <p>Este es un correo automático, por favor no responder.</p>
+        <p>Sistema de Gestión de Incapacidades</p>
+    </div>
+</body>
+</html>

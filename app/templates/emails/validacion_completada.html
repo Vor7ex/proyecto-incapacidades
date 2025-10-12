@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #198754; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { background: #f8f9fa; padding: 30px; border: 1px solid #dee2e6; border-radius: 0 0 5px 5px; }
+        .success { background: #d1e7dd; border-left: 4px solid #198754; padding: 15px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 20px; color: #6c757d; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>✅ Documentación Validada</h1>
+    </div>
+    <div class="content">
+        <p>Hola <strong>{{ colaborador.nombre }}</strong>,</p>
+        <p>Te informamos que la documentación de tu incapacidad <strong>#{{ incapacidad.id }}</strong> ha sido validada exitosamente.</p>
+        <div class="success">
+            <h3>Estado: Documentación Completa ✅</h3>
+            <p>Tu solicitud está siendo procesada para aprobación final.</p>
+        </div>
+        <p><strong>Próximo paso:</strong> Recibirás una notificación cuando tu incapacidad sea aprobada o rechazada.</p>
+    </div>
+    <div class="footer">
+        <p>Sistema de Gestión de Incapacidades</p>
+    </div>
+</body>
+</html>

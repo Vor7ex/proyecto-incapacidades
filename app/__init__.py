@@ -3,6 +3,7 @@ from flask_login import LoginManager
 from config import Config
 from app.models import db
 from app.models.usuario import Usuario
+from app.utils.email_service import mail
 import os
 
 login_manager = LoginManager()
@@ -19,6 +20,7 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
+    mail.init_app(app)  # Inicializar Flask-Mail
 
     @login_manager.user_loader
     def load_user(user_id):
