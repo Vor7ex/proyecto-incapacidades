@@ -21,10 +21,15 @@ def login():
         if usuario and usuario.check_password(password):
             login_user(usuario)
 
+            # Redirigir según rol
             if usuario.rol == 'colaborador':
                 return redirect(url_for('incapacidades.mis_incapacidades'))
-            else:
+            elif usuario.rol == 'auxiliar':
                 return redirect(url_for('incapacidades.dashboard_auxiliar'))
+            else:
+                flash('Rol de usuario no reconocido', 'danger')
+                logout_user()
+                return redirect(url_for('auth.login'))
         else:
             flash('Email o contraseña incorrectos', 'danger')
 

@@ -3,6 +3,7 @@ from flask_login import LoginManager
 from config import Config
 from app.models import db
 from app.models.usuario import Usuario
+import os
 
 login_manager = LoginManager()
 
@@ -10,6 +11,9 @@ login_manager = LoginManager()
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    # Crear carpeta de uploads si no existe
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
     # Inicializar extensiones
     db.init_app(app)
@@ -29,10 +33,10 @@ def create_app():
     app.register_blueprint(incapacidades_bp)
     app.register_blueprint(documentos_bp)
 
-    # Crear tablas y usuarios de prueba
+    # Crear tablas (sin usuarios automáticos)
     with app.app_context():
         db.create_all()
-        crear_usuarios_prueba()
+        # crear_usuarios_prueba()  # Desactivado - usar crear_usuarios.py
 
     return app
 

@@ -1,7 +1,75 @@
+# Python
 venv/
+env/
+ENV/
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.py[cod]
+*$py.class
+*.so
+
+# Flask
+instance/
 *.db
+*.sqlite
+*.sqlite3
+
+# Archivos subidos por usuarios
+app/static/uploads/*
+!app/static/uploads/.gitkeep
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
+
+# Logs
+*.log
+logs/
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Sesiones de Flask
+flask_session/
+
+# Coverage y testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+*.cover
+
+# Compilados
+*.exe
+*.dll
+*.dylib
+
+# Distribución
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Backup files
+*.bak
+*.backup
+*~

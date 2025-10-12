@@ -5,7 +5,7 @@
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <h2 class="mb-4">Dashboard de Gestion</h2>
+        <h2 class="mb-4">Dashboard de Auxiliar RRHH</h2>
         
         <!-- Estadisticas -->
         <div class="row mb-4">
@@ -31,8 +31,8 @@
                 <div class="card text-white bg-success shadow">
                     <div class="card-body text-center">
                         <h5 class="card-title">Aprobadas</h5>
-                        <h2 class="display-4">0</h2>
-                        <p class="mb-0">Hoy</p>
+                        <h2 class="display-4">{{ aprobadas|length if aprobadas else 0 }}</h2>
+                        <p class="mb-0">Total</p>
                     </div>
                 </div>
             </div>
@@ -40,8 +40,8 @@
                 <div class="card text-white bg-danger shadow">
                     <div class="card-body text-center">
                         <h5 class="card-title">Rechazadas</h5>
-                        <h2 class="display-4">0</h2>
-                        <p class="mb-0">Hoy</p>
+                        <h2 class="display-4">{{ rechazadas|length if rechazadas else 0 }}</h2>
+                        <p class="mb-0">Total</p>
                     </div>
                 </div>
             </div>
@@ -52,7 +52,7 @@
             <div class="card-header bg-warning text-dark">
                 <h4 class="mb-0">
                     <i class="bi bi-clock-history"></i>
-                    Incapacidades Pendientes de Validacion
+                    Incapacidades Pendientes de Validación
                 </h4>
             </div>
             <div class="card-body">
@@ -114,7 +114,7 @@
             <div class="card-header bg-info text-white">
                 <h4 class="mb-0">
                     <i class="bi bi-search"></i>
-                    Incapacidades En Revision
+                    Incapacidades Listas para Aprobar/Rechazar
                 </h4>
             </div>
             <div class="card-body">

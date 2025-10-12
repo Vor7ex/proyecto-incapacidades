@@ -37,13 +37,18 @@ function validarArchivo(input) {
   return true;
 }
 
-// Auto-cerrar alertas después de 5 segundos
+// Auto-cerrar alertas de mensajes flash después de 5 segundos
+// NO cerrar alertas de validación ni información permanente
 document.addEventListener('DOMContentLoaded', function() {
-  const alertas = document.querySelectorAll('.alert:not(.alert-warning):not(.alert-info)');
-  alertas.forEach(alerta => {
-    setTimeout(() => {
-      const bsAlert = new bootstrap.Alert(alerta);
-      bsAlert.close();
-    }, 5000);
+  // Solo cerrar alertas que estén en el contenedor de mensajes flash
+  const alertasFlash = document.querySelectorAll('.container > .alert');
+  alertasFlash.forEach(alerta => {
+    // No cerrar alertas dentro de cards o formularios (son parte del contenido)
+    if (!alerta.closest('.card-body') && !alerta.closest('form')) {
+      setTimeout(() => {
+        const bsAlert = new bootstrap.Alert(alerta);
+        bsAlert.close();
+      }, 5000);
+    }
   });
 });

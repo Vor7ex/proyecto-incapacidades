@@ -30,7 +30,7 @@
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('incapacidades.mis_incapacidades') }}">Mis Incapacidades</a>
           </li>
-          {% else %}
+          {% elif current_user.rol == 'auxiliar' %}
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('incapacidades.dashboard_auxiliar') }}">Dashboard</a>
           </li>

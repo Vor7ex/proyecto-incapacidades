@@ -1,0 +1,2 @@
+# Este archivo mantiene la carpeta uploads en Git
+# Los archivos PDF subidos por usuarios se ignoran en .gitignore

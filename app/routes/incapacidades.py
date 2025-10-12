@@ -135,15 +135,21 @@ def mis_incapacidades():
 @incapacidades_bp.route('/dashboard-auxiliar')
 @login_required
 def dashboard_auxiliar():
-    """UC5: Ver incapacidades pendientes"""
+    """Dashboard de Auxiliar RRHH (CU-006 y CU-007)"""
     if current_user.rol != 'auxiliar':
-        flash('Acceso denegado', 'danger')
+        flash('Acceso denegado. Solo Auxiliar RRHH puede acceder.', 'danger')
         return redirect(url_for('auth.index'))
 
     pendientes = Incapacidad.query.filter_by(estado='Pendiente').all()
     en_revision = Incapacidad.query.filter_by(estado='En revision').all()
+    aprobadas = Incapacidad.query.filter_by(estado='Aprobada').all()
+    rechazadas = Incapacidad.query.filter_by(estado='Rechazada').all()
 
-    return render_template('dashboard_auxiliar.html', pendientes=pendientes, en_revision=en_revision)
+    return render_template('dashboard_auxiliar.html', 
+                         pendientes=pendientes, 
+                         en_revision=en_revision,
+                         aprobadas=aprobadas,
+                         rechazadas=rechazadas)
 
 @incapacidades_bp.route('/detalle/<int:id>')
 @login_required
@@ -161,9 +167,9 @@ def detalle(id):
 @incapacidades_bp.route('/validar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def validar(id):
-    """UC6: Validar documentacion"""
+    """CU-006: Validar documentación (Auxiliar RRHH)"""
     if current_user.rol != 'auxiliar':
-        flash('Acceso denegado', 'danger')
+        flash('Acceso denegado. Solo Auxiliar RRHH puede validar documentación.', 'danger')
         return redirect(url_for('auth.index'))
     
     incapacidad = Incapacidad.query.get_or_404(id)
@@ -244,9 +250,9 @@ def validar_requisitos_automatico(incapacidad):
 @incapacidades_bp.route('/aprobar-rechazar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def aprobar_rechazar(id):
-    """UC7: Aprobar o rechazar incapacidad"""
+    """CU-007: Aprobar o rechazar incapacidad (Auxiliar RRHH)"""
     if current_user.rol != 'auxiliar':
-        flash('Acceso denegado', 'danger')
+        flash('Acceso denegado. Solo Auxiliar RRHH puede aprobar/rechazar incapacidades.', 'danger')
         return redirect(url_for('auth.index'))
     
     incapacidad = Incapacidad.query.get_or_404(id)
@@ -283,7 +289,7 @@ def aprobar_rechazar(id):
 @incapacidades_bp.route('/estadisticas')
 @login_required
 def estadisticas():
-    """Vista de estadisticas basicas"""
+    """Vista de estadísticas básicas (Auxiliar RRHH)"""
     if current_user.rol != 'auxiliar':
         flash('Acceso denegado', 'danger')
         return redirect(url_for('auth.index'))
