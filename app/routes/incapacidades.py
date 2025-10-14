@@ -7,7 +7,13 @@ from app.models import db
 from app.models.incapacidad import Incapacidad
 from app.models.documento import Documento
 from config import Config
-from app.utils.validaciones import validar_tipo_incapacidad, validar_rango_fechas, validar_archivo
+from app.utils.validaciones import (
+    validar_tipo_incapacidad, 
+    validar_rango_fechas, 
+    validar_archivo,
+    validar_documentos_incapacidad,
+    obtener_documentos_requeridos
+)
 from app.utils.email_service import (
     notificar_nueva_incapacidad,
     notificar_validacion_completada,
@@ -62,6 +68,17 @@ def registrar():
 
         dias = calcular_dias(fecha_inicio, fecha_fin)
 
+        # UC1: Validar documentos obligatorios según tipo de incapacidad
+        documentos_validos, docs_faltantes, error_docs = validar_documentos_incapacidad(
+            tipo, 
+            request.files,
+            dias
+        )
+        
+        if not documentos_validos:
+            flash(error_docs, 'danger')
+            return redirect(url_for('incapacidades.registrar'))
+
         # Crear incapacidad
         incapacidad = Incapacidad(
             usuario_id=current_user.id,
@@ -97,46 +114,37 @@ def registrar():
     return render_template('registro_incapacidad.html')
 
 def procesar_archivos(files, incapacidad_id):
-    """UC2: Cargar documentos"""
+    """UC2: Cargar documentos - Versión mejorada con todos los tipos"""
     archivos_guardados = 0
+    
+    # Lista de todos los tipos de documentos posibles
+    tipos_documentos = [
+        'certificado',
+        'epicrisis',
+        'furips',
+        'certificado_nacido_vivo',
+        'registro_civil',
+        'documento_identidad_madre'
+    ]
 
-    # Procesar certificado
-    if 'certificado' in files:
-        file = files['certificado']
-        if file and file.filename != '' and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-            nuevo_nombre = f"{incapacidad_id}_certificado_{timestamp}_{filename}"
-            ruta = os.path.join(Config.UPLOAD_FOLDER, nuevo_nombre)
-            file.save(ruta)
+    for tipo_doc in tipos_documentos:
+        if tipo_doc in files:
+            file = files[tipo_doc]
+            if file and file.filename != '' and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+                nuevo_nombre = f"{incapacidad_id}_{tipo_doc}_{timestamp}_{filename}"
+                ruta = os.path.join(Config.UPLOAD_FOLDER, nuevo_nombre)
+                file.save(ruta)
 
-            documento = Documento(
-                incapacidad_id=incapacidad_id,
-                nombre_archivo=filename,
-                ruta=ruta,
-                tipo_documento='certificado'
-            )
-            db.session.add(documento)
-            archivos_guardados += 1
-
-    # Procesar epicrisis
-    if 'epicrisis' in files:
-        file = files['epicrisis']
-        if file and file.filename != '' and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-            nuevo_nombre = f"{incapacidad_id}_epicrisis_{timestamp}_{filename}"
-            ruta = os.path.join(Config.UPLOAD_FOLDER, nuevo_nombre)
-            file.save(ruta)
-
-            documento = Documento(
-                incapacidad_id=incapacidad_id,
-                nombre_archivo=filename,
-                ruta=ruta,
-                tipo_documento='epicrisis'
-            )
-            db.session.add(documento)
-            archivos_guardados += 1
+                documento = Documento(
+                    incapacidad_id=incapacidad_id,
+                    nombre_archivo=filename,
+                    ruta=ruta,
+                    tipo_documento=tipo_doc
+                )
+                db.session.add(documento)
+                archivos_guardados += 1
 
     db.session.commit()
     return archivos_guardados

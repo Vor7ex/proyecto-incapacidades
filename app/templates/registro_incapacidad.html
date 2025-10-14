@@ -43,24 +43,66 @@
             </div>
           </div>
 
-          <!-- Documentos -->
+          <!-- Documentos dinámicos según tipo -->
           <div class="mb-3">
-            <label class="form-label">Documentos *</label>
-            <div class="alert alert-warning" id="advertenciaEpicrisis" style="display: none;">
-              <strong>Nota:</strong> Para incapacidades mayores a 2 días, se requiere Epicrisis.
+            <label class="form-label">Documentos Requeridos *</label>
+            <div class="alert alert-info" id="infoDocumentos">
+              <strong>ℹ️ Información:</strong> Los documentos requeridos varían según el tipo de incapacidad seleccionado.
             </div>
           </div>
 
-          <div class="mb-3">
-            <label for="certificado" class="form-label">Certificado de Incapacidad *</label>
-            <input type="file" class="form-control" id="certificado" name="certificado" accept=".pdf,.jpg,.jpeg,.png" required>
-            <div class="form-text">Formato: PDF, JPG, PNG. Tamaño máximo: 10MB</div>
+          <!-- Certificado de Incapacidad -->
+          <div class="mb-3 documento-field" id="field-certificado">
+            <label for="certificado" class="form-label">
+              Certificado de Incapacidad <span class="text-danger">*</span>
+            </label>
+            <input type="file" class="form-control" id="certificado" name="certificado" accept=".pdf,.jpg,.jpeg,.png">
+            <div class="form-text">Obligatorio para todos los tipos. Formato: PDF, JPG, PNG. Máx: 10MB</div>
           </div>
 
-          <div class="mb-3">
-            <label for="epicrisis" class="form-label">Epicrisis o Documento Soporte</label>
+          <!-- Epicrisis -->
+          <div class="mb-3 documento-field" id="field-epicrisis" style="display: none;">
+            <label for="epicrisis" class="form-label">
+              Epicrisis o Documento Soporte <span class="obligatorio-marker"></span>
+            </label>
             <input type="file" class="form-control" id="epicrisis" name="epicrisis" accept=".pdf,.jpg,.jpeg,.png">
-            <div class="form-text">Obligatorio para incapacidades &gt; 2 días o accidentes laborales</div>
+            <div class="form-text">Documento que soporte la atención médica</div>
+          </div>
+
+          <!-- FURIPS -->
+          <div class="mb-3 documento-field" id="field-furips" style="display: none;">
+            <label for="furips" class="form-label">
+              FURIPS (Formulario Único de Reclamación) <span class="obligatorio-marker"></span>
+            </label>
+            <input type="file" class="form-control" id="furips" name="furips" accept=".pdf,.jpg,.jpeg,.png">
+            <div class="form-text">Formulario de instituciones prestadoras de salud por accidentes de tránsito</div>
+          </div>
+
+          <!-- Certificado de Nacido Vivo -->
+          <div class="mb-3 documento-field" id="field-certificado_nacido_vivo" style="display: none;">
+            <label for="certificado_nacido_vivo" class="form-label">
+              Certificado de Nacido Vivo <span class="obligatorio-marker"></span>
+            </label>
+            <input type="file" class="form-control" id="certificado_nacido_vivo" name="certificado_nacido_vivo" accept=".pdf,.jpg,.jpeg,.png">
+            <div class="form-text">Certificado emitido por la institución de salud</div>
+          </div>
+
+          <!-- Registro Civil -->
+          <div class="mb-3 documento-field" id="field-registro_civil" style="display: none;">
+            <label for="registro_civil" class="form-label">
+              Registro Civil <span class="obligatorio-marker"></span>
+            </label>
+            <input type="file" class="form-control" id="registro_civil" name="registro_civil" accept=".pdf,.jpg,.jpeg,.png">
+            <div class="form-text">Registro Civil de Nacimiento</div>
+          </div>
+
+          <!-- Documento de Identidad de la Madre -->
+          <div class="mb-3 documento-field" id="field-documento_identidad_madre" style="display: none;">
+            <label for="documento_identidad_madre" class="form-label">
+              Documento de Identidad de la Madre <span class="obligatorio-marker"></span>
+            </label>
+            <input type="file" class="form-control" id="documento_identidad_madre" name="documento_identidad_madre" accept=".pdf,.jpg,.jpeg,.png">
+            <div class="form-text">Fotocopia del documento de identidad de la madre</div>
           </div>
 
           <!-- Botones -->
@@ -77,41 +119,104 @@
 
 {% block scripts %}
 <script>
-// UC10: Validación automática básica
+// UC1: Validación dinámica de documentos según tipo de incapacidad
 document.addEventListener('DOMContentLoaded', function() {
   const fechaInicio = document.getElementById('fecha_inicio');
   const fechaFin = document.getElementById('fecha_fin');
   const tipo = document.getElementById('tipo');
   const diasCalculados = document.getElementById('diasCalculados');
   const numeroDias = document.getElementById('numeroDias');
-  const advertenciaEpicrisis = document.getElementById('advertenciaEpicrisis');
-  const epicrisis = document.getElementById('epicrisis');
 
-  function calcularDias() {
+  // Mapeo de documentos requeridos por tipo (debe coincidir con el backend)
+  const documentosRequeridos = {
+    'Enfermedad General': {
+      obligatorios: ['certificado'],
+      condicionales: {
+        'epicrisis': (dias) => dias > 2
+      }
+    },
+    'Accidente Laboral': {
+      obligatorios: ['certificado', 'epicrisis'],
+      condicionales: {}
+    },
+    'Accidente de Tránsito': {
+      obligatorios: ['certificado', 'epicrisis', 'furips'],
+      condicionales: {}
+    },
+    'Licencia de Maternidad': {
+      obligatorios: ['certificado', 'epicrisis', 'certificado_nacido_vivo', 'registro_civil'],
+      condicionales: {}
+    },
+    'Licencia de Paternidad': {
+      obligatorios: ['epicrisis', 'certificado_nacido_vivo', 'registro_civil', 'documento_identidad_madre'],
+      condicionales: {}
+    }
+  };
+
+  function actualizarDocumentosRequeridos() {
+    const tipoSeleccionado = tipo.value;
+    let dias = 0;
+
+    // Calcular días si hay fechas
     if (fechaInicio.value && fechaFin.value) {
       const inicio = new Date(fechaInicio.value);
       const fin = new Date(fechaFin.value);
-      const dias = Math.floor((fin - inicio) / (1000 * 60 * 60 * 24)) + 1;
-
+      dias = Math.floor((fin - inicio) / (1000 * 60 * 60 * 24)) + 1;
+      
       if (dias > 0) {
         numeroDias.textContent = dias;
         diasCalculados.style.display = 'block';
+      }
+    }
 
-        // Mostrar advertencia si se requiere epicrisis
-        if (dias > 2 || tipo.value === 'Accidente Laboral') {
-          advertenciaEpicrisis.style.display = 'block';
-          epicrisis.required = true;
-        } else {
-          advertenciaEpicrisis.style.display = 'none';
-          epicrisis.required = false;
+    // Ocultar todos los campos de documentos primero
+    document.querySelectorAll('.documento-field').forEach(field => {
+      field.style.display = 'none';
+      const input = field.querySelector('input[type="file"]');
+      if (input) {
+        input.required = false;
+      }
+    });
+
+    // Si no hay tipo seleccionado, salir
+    if (!tipoSeleccionado || !documentosRequeridos[tipoSeleccionado]) {
+      return;
+    }
+
+    const config = documentosRequeridos[tipoSeleccionado];
+    let documentosAMostrar = [...config.obligatorios];
+
+    // Agregar condicionales si aplican
+    for (const [doc, condicion] of Object.entries(config.condicionales)) {
+      if (condicion(dias)) {
+        if (!documentosAMostrar.includes(doc)) {
+          documentosAMostrar.push(doc);
         }
       }
     }
+
+    // Mostrar y marcar como obligatorios los documentos necesarios
+    documentosAMostrar.forEach(doc => {
+      const field = document.getElementById(`field-${doc}`);
+      if (field) {
+        field.style.display = 'block';
+        const input = field.querySelector('input[type="file"]');
+        if (input) {
+          input.required = true;
+        }
+        // Marcar con asterisco rojo
+        const marker = field.querySelector('.obligatorio-marker');
+        if (marker) {
+          marker.innerHTML = '<span class="text-danger">*</span>';
+        }
+      }
+    });
   }
 
-  fechaInicio.addEventListener('change', calcularDias);
-  fechaFin.addEventListener('change', calcularDias);
-  tipo.addEventListener('change', calcularDias);
+  // Eventos
+  tipo.addEventListener('change', actualizarDocumentosRequeridos);
+  fechaInicio.addEventListener('change', actualizarDocumentosRequeridos);
+  fechaFin.addEventListener('change', actualizarDocumentosRequeridos);
 
   // Validar tamaño de archivo
   document.querySelectorAll('input[type="file"]').forEach(input => {
@@ -119,11 +224,39 @@ document.addEventListener('DOMContentLoaded', function() {
       if (this.files[0]) {
         const size = this.files[0].size / 1024 / 1024; // en MB
         if (size > 10) {
-          alert('El archivo no debe superar 10MB');
+          alert('El archivo no debe superar 10MB. Por favor, comprima el archivo.');
           this.value = '';
         }
       }
     });
+  });
+
+  // Validación antes de enviar
+  document.getElementById('formIncapacidad').addEventListener('submit', function(e) {
+    const tipoSeleccionado = tipo.value;
+    
+    if (!tipoSeleccionado) {
+      e.preventDefault();
+      alert('Debe seleccionar un tipo de incapacidad');
+      return false;
+    }
+
+    // Verificar que todos los documentos obligatorios estén cargados
+    const camposObligatorios = document.querySelectorAll('.documento-field:not([style*="display: none"]) input[required]');
+    let faltantes = [];
+
+    camposObligatorios.forEach(input => {
+      if (!input.files || input.files.length === 0) {
+        const label = input.parentElement.querySelector('label').textContent.replace('*', '').trim();
+        faltantes.push(label);
+      }
+    });
+
+    if (faltantes.length > 0) {
+      e.preventDefault();
+      alert('Faltan los siguientes documentos obligatorios:\n\n• ' + faltantes.join('\n• '));
+      return false;
+    }
   });
 });
 </script>

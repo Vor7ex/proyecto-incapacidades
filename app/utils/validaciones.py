@@ -1,6 +1,121 @@
 from datetime import date
 import os
 
+# Mapeo de documentos obligatorios según tipo de incapacidad (UC1 - Sección 5.1.2)
+DOCUMENTOS_REQUERIDOS_POR_TIPO = {
+    'Enfermedad General': {
+        'obligatorios': ['certificado'],
+        'opcionales': ['epicrisis'],  # Obligatorio si > 2 días
+        'reglas_especiales': {
+            'epicrisis': lambda dias: dias > 2
+        }
+    },
+    'Accidente Laboral': {
+        'obligatorios': ['certificado', 'epicrisis'],
+        'opcionales': [],
+        'reglas_especiales': {}
+    },
+    'Accidente de Tránsito': {
+        'obligatorios': ['certificado', 'epicrisis', 'furips'],
+        'opcionales': [],
+        'reglas_especiales': {}
+    },
+    'Licencia de Maternidad': {
+        'obligatorios': ['certificado', 'epicrisis', 'certificado_nacido_vivo', 'registro_civil'],
+        'opcionales': ['documento_identidad_madre'],
+        'reglas_especiales': {}
+    },
+    'Licencia de Paternidad': {
+        'obligatorios': ['epicrisis', 'certificado_nacido_vivo', 'registro_civil', 'documento_identidad_madre'],
+        'opcionales': ['certificado'],
+        'reglas_especiales': {}
+    }
+}
+
+def obtener_documentos_requeridos(tipo_incapacidad, dias=0):
+    """
+    Obtener la lista de documentos requeridos para un tipo de incapacidad.
+    
+    Args:
+        tipo_incapacidad (str): Tipo de incapacidad
+        dias (int): Número de días de la incapacidad
+        
+    Returns:
+        dict: {
+            'obligatorios': list,
+            'opcionales': list,
+            'todos': list (obligatorios + condicionales aplicables)
+        }
+    """
+    if tipo_incapacidad not in DOCUMENTOS_REQUERIDOS_POR_TIPO:
+        return {'obligatorios': ['certificado'], 'opcionales': [], 'todos': ['certificado']}
+    
+    config = DOCUMENTOS_REQUERIDOS_POR_TIPO[tipo_incapacidad]
+    obligatorios = config['obligatorios'].copy()
+    opcionales = config['opcionales'].copy()
+    
+    # Aplicar reglas especiales
+    for doc, regla in config.get('reglas_especiales', {}).items():
+        if callable(regla) and regla(dias):
+            # Si la regla se cumple, el documento opcional se vuelve obligatorio
+            if doc in opcionales:
+                opcionales.remove(doc)
+                obligatorios.append(doc)
+    
+    return {
+        'obligatorios': obligatorios,
+        'opcionales': opcionales,
+        'todos': obligatorios  # Para validación, solo verificamos obligatorios
+    }
+
+def validar_documentos_incapacidad(tipo_incapacidad, documentos_subidos, dias=0):
+    """
+    Validar que se hayan subido todos los documentos obligatorios según el tipo.
+    
+    Args:
+        tipo_incapacidad (str): Tipo de incapacidad
+        documentos_subidos (dict): Dict con archivos subidos {nombre_campo: FileStorage o bool}
+        dias (int): Número de días de incapacidad
+        
+    Returns:
+        tuple: (es_valido: bool, documentos_faltantes: list, mensaje_error: str o None)
+    """
+    requeridos = obtener_documentos_requeridos(tipo_incapacidad, dias)
+    documentos_obligatorios = requeridos['todos']
+    
+    documentos_faltantes = []
+    
+    # Verificar cada documento obligatorio
+    for doc in documentos_obligatorios:
+        # Verificar si el documento fue subido
+        archivo = documentos_subidos.get(doc)
+        
+        # El archivo está presente si:
+        # - Es un objeto FileStorage con filename no vacío
+        # - O es True (para casos donde ya verificamos antes)
+        if not archivo:
+            documentos_faltantes.append(doc)
+        elif hasattr(archivo, 'filename') and (not archivo.filename or archivo.filename == ''):
+            documentos_faltantes.append(doc)
+    
+    if documentos_faltantes:
+        # Traducir nombres técnicos a nombres legibles
+        nombres_legibles = {
+            'certificado': 'Certificado de Incapacidad',
+            'epicrisis': 'Epicrisis o Documento Soporte',
+            'furips': 'FURIPS (Formulario Único de Reclamación)',
+            'certificado_nacido_vivo': 'Certificado de Nacido Vivo',
+            'registro_civil': 'Registro Civil',
+            'documento_identidad_madre': 'Documento de Identidad de la Madre'
+        }
+        
+        faltantes_legibles = [nombres_legibles.get(d, d) for d in documentos_faltantes]
+        mensaje = f"Faltan documentos obligatorios: {', '.join(faltantes_legibles)}"
+        
+        return False, documentos_faltantes, mensaje
+    
+    return True, [], None
+
 def validar_tipo_incapacidad(tipo):
     """
     Validar que el tipo de incapacidad sea uno de los permitidos según UC1.
