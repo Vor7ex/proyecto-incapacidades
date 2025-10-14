@@ -20,7 +20,8 @@ from app.utils.email_service import (
     notificar_validacion_completada,
     notificar_documentos_faltantes,
     notificar_aprobacion,
-    notificar_rechazo
+    notificar_rechazo,
+    confirmar_almacenamiento_definitivo
 )
 
 incapacidades_bp = Blueprint('incapacidades', __name__, url_prefix='/incapacidades')
@@ -129,20 +130,36 @@ def registrar():
                 for error in errores_archivos:
                     flash(error, 'warning')
             
-            # TODO: UC2 - Enviar notificaciones (después del commit exitoso)
-            # Las notificaciones NO deben estar dentro de la transacción
-            
             # ✅ COMMIT: Todo exitoso
             db.session.commit()
             
-            # UC2: Enviar notificaciones DESPUÉS del commit
+            # ========================================
+            # POST-COMMIT: Hooks e Integraciones
+            # (NO revertir transacción si fallan)
+            # ========================================
+            
+            # UC15: Confirmar almacenamiento definitivo
             try:
-                notificar_nueva_incapacidad(incapacidad)
+                almacenamiento_ok = confirmar_almacenamiento_definitivo(incapacidad)
+                if not almacenamiento_ok:
+                    print(f"⚠️ UC15: Advertencia en confirmación de almacenamiento para #{incapacidad.id}")
             except Exception as e:
-                print(f"❌ Error al enviar notificacion: {e}")
+                print(f"❌ UC15: Error al confirmar almacenamiento: {e}")
                 import traceback
                 traceback.print_exc()
-                # No revertir transacción si falla email
+                # No interrumpir flujo si falla UC15
+            
+            # UC2: Enviar notificaciones
+            try:
+                notificaciones_ok = notificar_nueva_incapacidad(incapacidad)
+                if not notificaciones_ok:
+                    print(f"⚠️ UC2: Advertencia al enviar notificaciones para #{incapacidad.id}")
+                    flash('Incapacidad registrada, pero no se pudieron enviar todas las notificaciones', 'warning')
+            except Exception as e:
+                print(f"❌ UC2: Error al enviar notificaciones: {e}")
+                import traceback
+                traceback.print_exc()
+                flash('Incapacidad registrada, pero falló el envío de notificaciones', 'warning')
             
             # Mensaje de éxito con código de radicación
             flash(

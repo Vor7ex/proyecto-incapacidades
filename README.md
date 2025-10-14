@@ -2,7 +2,7 @@
 
 Sistema web para la gestión de incapacidades médicas de empleados, desarrollado con Flask.
 
-**Estado actual:** 61.1% completo | **Release:** 1.0 (en desarrollo)
+**Estado actual:** 65.5% completo | **Release:** 1.0 (en desarrollo)
 
 > 🚀 **Inicio rápido:** Ver [`GUIA_RAPIDA.md`](GUIA_RAPIDA.md) para setup en 5 minutos  
 > 📁 **Estructura:** Ver [`ESTRUCTURA.md`](ESTRUCTURA.md) para arquitectura completa  
@@ -15,17 +15,19 @@ Sistema web para la gestión de incapacidades médicas de empleados, desarrollad
 | UC | Caso de Uso | Estado |
 |----|------------|--------|
 | UC1 | Registrar incapacidad | ✅ 100% |
-| UC2 | Notificar RRHH | ⚠️ 70% |
+| UC2 | Notificar RRHH | ✅ 85% |
 | UC3 | Consultar incapacidades | ⚠️ 60% |
 | UC4 | Validar documentación | ⚠️ 75% |
 | UC5 | Verificar requisitos por tipo | 🔴 40% |
 | UC6 | Solicitar documentos faltantes | 🔴 0% |
 | UC7 | Aprobar/Rechazar | ⚠️ 65% |
-| UC15 | Almacenar documentos | ⚠️ 50% |
+| UC15 | Almacenar documentos | ⚠️ 70% |
 
-**✅ UC1 COMPLETADO:** Código de radicación + Transacciones atómicas implementados  
+**✅ UC1 COMPLETADO:** Código de radicación + Transacciones atómicas + Notificaciones + Hooks  
+**✅ UC2 MEJORADO:** Sistema de reintentos + Logging robusto + Validaciones  
+**✅ UC15 MEJORADO:** Hook de verificación post-commit implementado  
 **Bloqueadores críticos:** UC6 (0%), UC5 (40%)  
-**Ver detalles:** `docs/ESTADO_PROYECTO.md` | **UC1 completo:** `docs/TAREA4_CODIGO_RADICACION.md`
+**Ver detalles:** `docs/ESTADO_PROYECTO.md` | **UC1 completo:** `docs/RESUMEN_UC1_COMPLETO.md`
 
 ---
 
@@ -36,7 +38,9 @@ Sistema web para la gestión de incapacidades médicas de empleados, desarrollad
 - ✅ Validación de tipos de incapacidad (5 tipos permitidos)
 - ✅ Reglas documentales por tipo de incapacidad
 - ✅ Sistema de carga de archivos con metadatos (UUID, MD5, MIME)
-- ✅ Sistema de notificaciones por email (6 templates)
+- ✅ Sistema de notificaciones por email con reintentos configurables
+- ✅ Logging detallado de eventos del sistema
+- ✅ Hooks post-commit para almacenamiento y verificación
 - ✅ Validación de documentación por auxiliar
 - ✅ Aprobación/rechazo de incapacidades
 - ⚠️ Validación automática por tipo (parcial)
@@ -206,11 +210,40 @@ Ver detalles en `docs/ESTADO_PROYECTO.md`
 
 ## 🐛 Problemas Conocidos
 
-1. **Rate Limit Mailtrap** - Solo 1 email/segundo (SOLUCIONADO con delay de 10s)
-2. **Notificación al líder falta** - Solo notifica a RRHH (pendiente)
-3. **Validación automática manual** - UC5 requiere completar validación automática
+1. **Rate Limit Mailtrap** - Solo 1 email/segundo (✅ SOLUCIONADO con delay de 10s)
+2. **Notificación al líder** - Solo notifica a RRHH y colaborador (⏳ Pendiente: agregar notificación a líder directo)
+3. **Validación automática parcial** - UC5 requiere completar validación automática
 
 Ver más en `docs/SOLUCION_PROBLEMAS.md`
+
+---
+
+## 📋 Pendientes y Mejoras Futuras
+
+### UC2 - Notificaciones (85% completo)
+- [ ] Agregar notificación a líder directo del colaborador
+- [ ] Implementar plantilla de email para líder
+- [ ] Dashboard de histórico de notificaciones enviadas
+- [x] Sistema de reintentos configurables
+- [x] Logging detallado de eventos
+- [x] Validación de destinatarios
+
+### UC15 - Almacenamiento de Documentos (70% completo)
+- [ ] Implementar movimiento a carpeta de archivo definitivo
+- [ ] Crear backup en storage externo (S3, Azure Blob)
+- [ ] Indexar documentos en sistema de búsqueda
+- [ ] Generar thumbnails para PDFs
+- [ ] Escaneo con antivirus de archivos subidos
+- [x] Hook de verificación post-commit
+- [x] Logging de archivos almacenados
+
+### Otras Mejoras
+- [ ] UC6: Implementar solicitud de documentos faltantes (0%)
+- [ ] UC5: Completar validación automática por tipo (40%)
+- [ ] UC3: Agregar búsqueda por código de radicación
+- [ ] Implementar exportación de reportes (PDF, Excel)
+- [ ] API REST para consultas externas
+- [ ] Generación de QR codes para códigos de radicación
 
 ---
 
@@ -228,10 +261,12 @@ python toggle_email.py status  # Ver estado
 - Formatos permitidos: PDF, PNG, JPG, JPEG
 
 **Consultar logs:**
-- Ver consola del servidor para mensajes con ✅ ❌ 📧
+- Ver consola del servidor para mensajes con emojis: ✅ (éxito), ❌ (error), ⚠️ (advertencia), 📧 (email), 💾 (almacenamiento), 🔔 (notificación)
+- Logs detallados con timestamps en formato: `YYYY-MM-DD HH:MM:SS [NIVEL] mensaje`
+- Configurar nivel de logging en `.env`: `LOG_LEVEL=INFO` (opciones: DEBUG, INFO, WARNING, ERROR)
 
 ---
 
-**Última actualización:** 2025-10-12  
-**Estado:** Pre-Release 1.0 (55.6% completo)  
+**Última actualización:** 2025-10-13  
+**Estado:** Pre-Release 1.0 (65.5% completo)  
 **Próximo hito:** UC6 - Solicitar documentos faltantes
