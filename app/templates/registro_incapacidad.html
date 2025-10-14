@@ -4,260 +4,622 @@
 
 {% block content %}
 <div class="row">
-  <div class="col-md-8 offset-md-2">
+  <div class="col-md-10 offset-md-1">
     <div class="card shadow">
       <div class="card-header bg-primary text-white">
-        <h3 class="mb-0">Registrar Nueva Incapacidad</h3>
+        <h3 class="mb-0">📋 Registrar Nueva Incapacidad</h3>
       </div>
       <div class="card-body">
+        <!-- Alertas de validación del servidor -->
+        <div id="serverErrors" style="display: none;" class="alert alert-danger alert-dismissible fade show">
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          <strong>❌ Errores de validación:</strong>
+          <ul id="serverErrorsList" class="mb-0 mt-2"></ul>
+        </div>
+
         <form method="POST" enctype="multipart/form-data" id="formIncapacidad">
           <!-- Tipo de Incapacidad -->
-          <div class="mb-3">
-            <label for="tipo" class="form-label">Tipo de Incapacidad *</label>
+          <div class="mb-4">
+            <label for="tipo" class="form-label fw-bold">Tipo de Incapacidad *</label>
             <select class="form-select" id="tipo" name="tipo" required>
-              <option value="">Seleccione...</option>
+              <option value="">-- Seleccione un tipo --</option>
               <option value="Enfermedad General">Enfermedad General</option>
               <option value="Accidente Laboral">Accidente Laboral</option>
               <option value="Accidente de Tránsito">Accidente de Tránsito</option>
               <option value="Licencia de Maternidad">Licencia de Maternidad</option>
               <option value="Licencia de Paternidad">Licencia de Paternidad</option>
             </select>
+            <div class="form-text">Seleccione el tipo para ver los documentos requeridos</div>
           </div>
 
           <!-- Fechas -->
-          <div class="row">
+          <div class="row mb-4">
             <div class="col-md-6 mb-3">
-              <label for="fecha_inicio" class="form-label">Fecha de Inicio *</label>
+              <label for="fecha_inicio" class="form-label fw-bold">Fecha de Inicio *</label>
               <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" required>
             </div>
             <div class="col-md-6 mb-3">
-              <label for="fecha_fin" class="form-label">Fecha de Fin *</label>
+              <label for="fecha_fin" class="form-label fw-bold">Fecha de Fin *</label>
               <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" required>
             </div>
           </div>
 
           <!-- Días calculados -->
-          <div class="mb-3">
+          <div class="mb-4">
             <div class="alert alert-info" id="diasCalculados" style="display: none;">
-              <strong>Días de incapacidad:</strong> <span id="numeroDias">0</span>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-calendar-check fs-3 me-3"></i>
+                <div>
+                  <strong>Días de incapacidad:</strong> <span id="numeroDias" class="fs-4 text-primary fw-bold">0</span> día(s)
+                  <div class="small text-muted">Del <span id="fechaInicioText"></span> al <span id="fechaFinText"></span></div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Documentos dinámicos según tipo -->
-          <div class="mb-3">
-            <label class="form-label">Documentos Requeridos *</label>
-            <div class="alert alert-info" id="infoDocumentos">
-              <strong>ℹ️ Información:</strong> Los documentos requeridos varían según el tipo de incapacidad seleccionado.
+          <!-- Información de documentos requeridos -->
+          <div class="mb-4">
+            <div class="card border-info">
+              <div class="card-header bg-info bg-opacity-10">
+                <h5 class="mb-0">📄 Documentos Requeridos</h5>
+              </div>
+              <div class="card-body">
+                <div id="infoDocumentos" class="alert alert-info mb-0">
+                  <strong>ℹ️ Información:</strong> Seleccione un tipo de incapacidad para ver los documentos requeridos.
+                </div>
+                <div id="listaDocumentosRequeridos" style="display: none;">
+                  <p class="mb-2"><strong>Para este tipo de incapacidad necesita:</strong></p>
+                  <ul id="documentosObligatorios" class="list-unstyled mb-0"></ul>
+                </div>
+              </div>
             </div>
           </div>
+
+          <hr class="my-4">
+
+          <!-- Sección de Documentos -->
+          <h5 class="mb-3">📎 Adjuntar Documentos</h5>
 
           <!-- Certificado de Incapacidad -->
-          <div class="mb-3 documento-field" id="field-certificado">
-            <label for="certificado" class="form-label">
+          <div class="mb-4 documento-field" id="field-certificado">
+            <label for="certificado" class="form-label fw-bold">
               Certificado de Incapacidad <span class="text-danger">*</span>
             </label>
-            <input type="file" class="form-control" id="certificado" name="certificado" accept=".pdf,.jpg,.jpeg,.png">
+            <input type="file" class="form-control documento-input" id="certificado" name="certificado" 
+                   accept=".pdf,.jpg,.jpeg,.png" data-nombre="Certificado de Incapacidad">
             <div class="form-text">Obligatorio para todos los tipos. Formato: PDF, JPG, PNG. Máx: 10MB</div>
+            <div class="preview-container mt-2" id="preview-certificado" style="display: none;"></div>
+            <div class="invalid-feedback"></div>
           </div>
 
           <!-- Epicrisis -->
-          <div class="mb-3 documento-field" id="field-epicrisis" style="display: none;">
-            <label for="epicrisis" class="form-label">
+          <div class="mb-4 documento-field" id="field-epicrisis" style="display: none;">
+            <label for="epicrisis" class="form-label fw-bold">
               Epicrisis o Documento Soporte <span class="obligatorio-marker"></span>
             </label>
-            <input type="file" class="form-control" id="epicrisis" name="epicrisis" accept=".pdf,.jpg,.jpeg,.png">
+            <input type="file" class="form-control documento-input" id="epicrisis" name="epicrisis" 
+                   accept=".pdf,.jpg,.jpeg,.png" data-nombre="Epicrisis">
             <div class="form-text">Documento que soporte la atención médica</div>
+            <div class="preview-container mt-2" id="preview-epicrisis" style="display: none;"></div>
+            <div class="invalid-feedback"></div>
           </div>
 
           <!-- FURIPS -->
-          <div class="mb-3 documento-field" id="field-furips" style="display: none;">
-            <label for="furips" class="form-label">
+          <div class="mb-4 documento-field" id="field-furips" style="display: none;">
+            <label for="furips" class="form-label fw-bold">
               FURIPS (Formulario Único de Reclamación) <span class="obligatorio-marker"></span>
             </label>
-            <input type="file" class="form-control" id="furips" name="furips" accept=".pdf,.jpg,.jpeg,.png">
+            <input type="file" class="form-control documento-input" id="furips" name="furips" 
+                   accept=".pdf,.jpg,.jpeg,.png" data-nombre="FURIPS">
             <div class="form-text">Formulario de instituciones prestadoras de salud por accidentes de tránsito</div>
+            <div class="preview-container mt-2" id="preview-furips" style="display: none;"></div>
+            <div class="invalid-feedback"></div>
           </div>
 
           <!-- Certificado de Nacido Vivo -->
-          <div class="mb-3 documento-field" id="field-certificado_nacido_vivo" style="display: none;">
-            <label for="certificado_nacido_vivo" class="form-label">
+          <div class="mb-4 documento-field" id="field-certificado_nacido_vivo" style="display: none;">
+            <label for="certificado_nacido_vivo" class="form-label fw-bold">
               Certificado de Nacido Vivo <span class="obligatorio-marker"></span>
             </label>
-            <input type="file" class="form-control" id="certificado_nacido_vivo" name="certificado_nacido_vivo" accept=".pdf,.jpg,.jpeg,.png">
+            <input type="file" class="form-control documento-input" id="certificado_nacido_vivo" 
+                   name="certificado_nacido_vivo" accept=".pdf,.jpg,.jpeg,.png" 
+                   data-nombre="Certificado de Nacido Vivo">
             <div class="form-text">Certificado emitido por la institución de salud</div>
+            <div class="preview-container mt-2" id="preview-certificado_nacido_vivo" style="display: none;"></div>
+            <div class="invalid-feedback"></div>
           </div>
 
           <!-- Registro Civil -->
-          <div class="mb-3 documento-field" id="field-registro_civil" style="display: none;">
-            <label for="registro_civil" class="form-label">
+          <div class="mb-4 documento-field" id="field-registro_civil" style="display: none;">
+            <label for="registro_civil" class="form-label fw-bold">
               Registro Civil <span class="obligatorio-marker"></span>
             </label>
-            <input type="file" class="form-control" id="registro_civil" name="registro_civil" accept=".pdf,.jpg,.jpeg,.png">
+            <input type="file" class="form-control documento-input" id="registro_civil" 
+                   name="registro_civil" accept=".pdf,.jpg,.jpeg,.png" 
+                   data-nombre="Registro Civil">
             <div class="form-text">Registro Civil de Nacimiento</div>
+            <div class="preview-container mt-2" id="preview-registro_civil" style="display: none;"></div>
+            <div class="invalid-feedback"></div>
           </div>
 
           <!-- Documento de Identidad de la Madre -->
-          <div class="mb-3 documento-field" id="field-documento_identidad_madre" style="display: none;">
-            <label for="documento_identidad_madre" class="form-label">
+          <div class="mb-4 documento-field" id="field-documento_identidad_madre" style="display: none;">
+            <label for="documento_identidad_madre" class="form-label fw-bold">
               Documento de Identidad de la Madre <span class="obligatorio-marker"></span>
             </label>
-            <input type="file" class="form-control" id="documento_identidad_madre" name="documento_identidad_madre" accept=".pdf,.jpg,.jpeg,.png">
+            <input type="file" class="form-control documento-input" id="documento_identidad_madre" 
+                   name="documento_identidad_madre" accept=".pdf,.jpg,.jpeg,.png" 
+                   data-nombre="Documento de Identidad de la Madre">
             <div class="form-text">Fotocopia del documento de identidad de la madre</div>
+            <div class="preview-container mt-2" id="preview-documento_identidad_madre" style="display: none;"></div>
+            <div class="invalid-feedback"></div>
+          </div>
+
+          <hr class="my-4">
+
+          <!-- Indicador de progreso de envío -->
+          <div id="uploadProgress" style="display: none;" class="mb-3">
+            <div class="alert alert-info">
+              <div class="d-flex align-items-center">
+                <div class="spinner-border spinner-border-sm me-2" role="status">
+                  <span class="visually-hidden">Cargando...</span>
+                </div>
+                <span>Procesando incapacidad... Por favor espere.</span>
+              </div>
+            </div>
           </div>
 
           <!-- Botones -->
           <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary">Registrar Incapacidad</button>
-            <a href="{{ url_for('incapacidades.mis_incapacidades') }}" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary btn-lg" id="btnSubmit">
+              <i class="bi bi-check-circle me-2"></i>Registrar Incapacidad
+            </button>
+            <a href="{{ url_for('incapacidades.mis_incapacidades') }}" class="btn btn-outline-secondary">
+              <i class="bi bi-x-circle me-2"></i>Cancelar
+            </a>
           </div>
         </form>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-labelledby="modalConfirmacionLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="modalConfirmacionLabel">
+          <i class="bi bi-check-circle-fill me-2"></i>¡Incapacidad Registrada!
+        </h5>
+      </div>
+      <div class="modal-body text-center py-4">
+        <div class="mb-4">
+          <i class="bi bi-file-earmark-check text-success" style="font-size: 4rem;"></i>
+        </div>
+        <h4 class="mb-3">Su incapacidad ha sido registrada exitosamente</h4>
+        
+        <div class="card border-primary mb-4">
+          <div class="card-body">
+            <p class="mb-2"><strong>Código de Radicación:</strong></p>
+            <h2 class="text-primary mb-0" id="codigoRadicacion" style="font-family: 'Courier New', monospace;">
+              ---
+            </h2>
+            <button class="btn btn-sm btn-outline-primary mt-2" onclick="copiarCodigo()">
+              <i class="bi bi-clipboard me-1"></i>Copiar código
+            </button>
+          </div>
+        </div>
+
+        <div class="alert alert-info text-start">
+          <strong>📋 Próximos pasos:</strong>
+          <ol class="mb-0 mt-2 small">
+            <li>Guarde su código de radicación para futuras consultas</li>
+            <li>Recibirá un email de confirmación</li>
+            <li>Gestión Humana validará los documentos adjuntos</li>
+            <li>Será notificado del resultado de la validación</li>
+          </ol>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a href="{{ url_for('incapacidades.mis_incapacidades') }}" class="btn btn-primary">
+          Ver Mis Incapacidades
+        </a>
+        <button type="button" class="btn btn-secondary" onclick="location.reload()">
+          Registrar Otra
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-// UC1: Validación dinámica de documentos según tipo de incapacidad
+// Configuración de documentos por tipo
+const documentosRequeridos = {
+  'Enfermedad General': {
+    obligatorios: ['certificado', 'epicrisis'],
+    opcionales: []
+  },
+  'Accidente Laboral': {
+    obligatorios: ['certificado', 'epicrisis'],
+    opcionales: []
+  },
+  'Accidente de Tránsito': {
+    obligatorios: ['certificado', 'furips'],
+    opcionales: ['epicrisis']
+  },
+  'Licencia de Maternidad': {
+    obligatorios: ['certificado', 'certificado_nacido_vivo', 'registro_civil'],
+    opcionales: []
+  },
+  'Licencia de Paternidad': {
+    obligatorios: ['certificado', 'certificado_nacido_vivo', 'registro_civil', 'documento_identidad_madre'],
+    opcionales: []
+  }
+};
+
+// Nombres descriptivos de documentos
+const nombresDocumentos = {
+  'certificado': 'Certificado de Incapacidad',
+  'epicrisis': 'Epicrisis o Documento Soporte',
+  'furips': 'FURIPS',
+  'certificado_nacido_vivo': 'Certificado de Nacido Vivo',
+  'registro_civil': 'Registro Civil',
+  'documento_identidad_madre': 'Documento de Identidad de la Madre'
+};
+
+// Estado de archivos seleccionados (para preservar entre validaciones)
+let archivosSeleccionados = {};
+
 document.addEventListener('DOMContentLoaded', function() {
+  const tipoSelect = document.getElementById('tipo');
   const fechaInicio = document.getElementById('fecha_inicio');
   const fechaFin = document.getElementById('fecha_fin');
-  const tipo = document.getElementById('tipo');
-  const diasCalculados = document.getElementById('diasCalculados');
-  const numeroDias = document.getElementById('numeroDias');
-
-  // Mapeo de documentos requeridos por tipo (debe coincidir con el backend)
-  const documentosRequeridos = {
-    'Enfermedad General': {
-      obligatorios: ['certificado'],
-      condicionales: {
-        'epicrisis': (dias) => dias > 2
-      }
-    },
-    'Accidente Laboral': {
-      obligatorios: ['certificado', 'epicrisis'],
-      condicionales: {}
-    },
-    'Accidente de Tránsito': {
-      obligatorios: ['certificado', 'epicrisis', 'furips'],
-      condicionales: {}
-    },
-    'Licencia de Maternidad': {
-      obligatorios: ['certificado', 'epicrisis', 'certificado_nacido_vivo', 'registro_civil'],
-      condicionales: {}
-    },
-    'Licencia de Paternidad': {
-      obligatorios: ['epicrisis', 'certificado_nacido_vivo', 'registro_civil', 'documento_identidad_madre'],
-      condicionales: {}
-    }
-  };
-
-  function actualizarDocumentosRequeridos() {
-    const tipoSeleccionado = tipo.value;
-    let dias = 0;
-
-    // Calcular días si hay fechas
-    if (fechaInicio.value && fechaFin.value) {
-      const inicio = new Date(fechaInicio.value);
-      const fin = new Date(fechaFin.value);
-      dias = Math.floor((fin - inicio) / (1000 * 60 * 60 * 24)) + 1;
+  const form = document.getElementById('formIncapacidad');
+  
+  // Listeners
+  tipoSelect.addEventListener('change', actualizarDocumentosRequeridos);
+  fechaInicio.addEventListener('change', calcularDias);
+  fechaFin.addEventListener('change', calcularDias);
+  form.addEventListener('submit', handleSubmit);
+  
+  // Agregar listeners a inputs de archivo para previews
+  document.querySelectorAll('.documento-input').forEach(input => {
+    input.addEventListener('change', function(e) {
+      const fieldId = this.id;
+      const file = this.files[0];
       
-      if (dias > 0) {
-        numeroDias.textContent = dias;
-        diasCalculados.style.display = 'block';
+      if (file) {
+        // Guardar archivo en estado
+        archivosSeleccionados[fieldId] = file;
+        
+        // Validar archivo
+        const validation = validarArchivo(file);
+        if (!validation.valido) {
+          this.classList.add('is-invalid');
+          const feedbackEl = this.parentElement.querySelector('.invalid-feedback');
+          if (feedbackEl) feedbackEl.textContent = validation.error;
+          document.getElementById(`preview-${fieldId}`).style.display = 'none';
+        } else {
+          this.classList.remove('is-invalid');
+          this.classList.add('is-valid');
+          mostrarPreview(fieldId, file);
+        }
+      } else {
+        delete archivosSeleccionados[fieldId];
+        document.getElementById(`preview-${fieldId}`).style.display = 'none';
+        this.classList.remove('is-valid', 'is-invalid');
       }
-    }
+    });
+  });
+  
+  // Restaurar archivos si existen (útil después de errores de validación)
+  restaurarArchivos();
+});
 
-    // Ocultar todos los campos de documentos primero
-    document.querySelectorAll('.documento-field').forEach(field => {
+function actualizarDocumentosRequeridos() {
+  const tipo = document.getElementById('tipo').value;
+  
+  // Ocultar todos los campos excepto certificado
+  document.querySelectorAll('.documento-field').forEach(field => {
+    if (field.id !== 'field-certificado') {
       field.style.display = 'none';
       const input = field.querySelector('input[type="file"]');
-      if (input) {
-        input.required = false;
-      }
-    });
-
-    // Si no hay tipo seleccionado, salir
-    if (!tipoSeleccionado || !documentosRequeridos[tipoSeleccionado]) {
-      return;
+      if (input) input.removeAttribute('required');
     }
-
-    const config = documentosRequeridos[tipoSeleccionado];
-    let documentosAMostrar = [...config.obligatorios];
-
-    // Agregar condicionales si aplican
-    for (const [doc, condicion] of Object.entries(config.condicionales)) {
-      if (condicion(dias)) {
-        if (!documentosAMostrar.includes(doc)) {
-          documentosAMostrar.push(doc);
-        }
-      }
-    }
-
-    // Mostrar y marcar como obligatorios los documentos necesarios
-    documentosAMostrar.forEach(doc => {
-      const field = document.getElementById(`field-${doc}`);
-      if (field) {
-        field.style.display = 'block';
-        const input = field.querySelector('input[type="file"]');
-        if (input) {
-          input.required = true;
-        }
-        // Marcar con asterisco rojo
-        const marker = field.querySelector('.obligatorio-marker');
-        if (marker) {
-          marker.innerHTML = '<span class="text-danger">*</span>';
-        }
-      }
-    });
+  });
+  
+  if (!tipo) {
+    document.getElementById('infoDocumentos').style.display = 'block';
+    document.getElementById('listaDocumentosRequeridos').style.display = 'none';
+    return;
   }
-
-  // Eventos
-  tipo.addEventListener('change', actualizarDocumentosRequeridos);
-  fechaInicio.addEventListener('change', actualizarDocumentosRequeridos);
-  fechaFin.addEventListener('change', actualizarDocumentosRequeridos);
-
-  // Validar tamaño de archivo
-  document.querySelectorAll('input[type="file"]').forEach(input => {
-    input.addEventListener('change', function() {
-      if (this.files[0]) {
-        const size = this.files[0].size / 1024 / 1024; // en MB
-        if (size > 10) {
-          alert('El archivo no debe superar 10MB. Por favor, comprima el archivo.');
-          this.value = '';
-        }
-      }
-    });
-  });
-
-  // Validación antes de enviar
-  document.getElementById('formIncapacidad').addEventListener('submit', function(e) {
-    const tipoSeleccionado = tipo.value;
+  
+  document.getElementById('infoDocumentos').style.display = 'none';
+  document.getElementById('listaDocumentosRequeridos').style.display = 'block';
+  
+  const docs = documentosRequeridos[tipo];
+  const listaObligatorios = document.getElementById('documentosObligatorios');
+  listaObligatorios.innerHTML = '';
+  
+  // Mostrar documentos obligatorios
+  docs.obligatorios.forEach(docId => {
+    const field = document.getElementById(`field-${docId}`);
+    const input = field.querySelector('input[type="file"]');
+    const marker = field.querySelector('.obligatorio-marker');
     
-    if (!tipoSeleccionado) {
-      e.preventDefault();
-      alert('Debe seleccionar un tipo de incapacidad');
-      return false;
+    field.style.display = 'block';
+    input.setAttribute('required', 'required');
+    if (marker) marker.innerHTML = '<span class="text-danger">*</span>';
+    
+    // Agregar a lista informativa
+    const li = document.createElement('li');
+    li.className = 'mb-1';
+    li.innerHTML = `<i class="bi bi-check-circle-fill text-success me-2"></i><strong>${nombresDocumentos[docId]}</strong> (Obligatorio)`;
+    listaObligatorios.appendChild(li);
+  });
+  
+  // Mostrar documentos opcionales
+  docs.opcionales.forEach(docId => {
+    const field = document.getElementById(`field-${docId}`);
+    const marker = field.querySelector('.obligatorio-marker');
+    
+    field.style.display = 'block';
+    if (marker) marker.textContent = '(Opcional)';
+    
+    // Agregar a lista informativa
+    const li = document.createElement('li');
+    li.className = 'mb-1';
+    li.innerHTML = `<i class="bi bi-circle text-muted me-2"></i>${nombresDocumentos[docId]} (Opcional)`;
+    listaObligatorios.appendChild(li);
+  });
+}
+
+function calcularDias() {
+  const inicio = document.getElementById('fecha_inicio').value;
+  const fin = document.getElementById('fecha_fin').value;
+  const container = document.getElementById('diasCalculados');
+  
+  if (inicio && fin) {
+    const fechaInicio = new Date(inicio);
+    const fechaFin = new Date(fin);
+    const diff = fechaFin - fechaInicio;
+    const dias = Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1;
+    
+    if (dias > 0) {
+      document.getElementById('numeroDias').textContent = dias;
+      document.getElementById('fechaInicioText').textContent = formatearFecha(inicio);
+      document.getElementById('fechaFinText').textContent = formatearFecha(fin);
+      container.style.display = 'block';
+    } else {
+      container.style.display = 'none';
+      alert('⚠️ La fecha de fin debe ser posterior a la fecha de inicio.');
     }
+  } else {
+    container.style.display = 'none';
+  }
+}
 
-    // Verificar que todos los documentos obligatorios estén cargados
-    const camposObligatorios = document.querySelectorAll('.documento-field:not([style*="display: none"]) input[required]');
-    let faltantes = [];
+function mostrarPreview(fieldId, file) {
+  const previewContainer = document.getElementById(`preview-${fieldId}`);
+  const fileType = file.type;
+  const fileSize = (file.size / 1024).toFixed(2); // KB
+  
+  previewContainer.innerHTML = '';
+  previewContainer.style.display = 'block';
+  
+  const previewCard = document.createElement('div');
+  previewCard.className = 'card border-success';
+  previewCard.style.maxWidth = '400px';
+  
+  let previewContent = '';
+  
+  // Preview según tipo de archivo
+  if (fileType.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      previewContent = `
+        <div class="card-body p-2">
+          <div class="row g-2 align-items-center">
+            <div class="col-auto">
+              <img src="${e.target.result}" alt="Preview" class="img-thumbnail" style="max-width: 120px; max-height: 120px;">
+            </div>
+            <div class="col">
+              <div class="small">
+                <strong>${file.name}</strong><br>
+                <span class="text-muted">Tamaño: ${fileSize} KB</span><br>
+                <span class="badge bg-success">Imagen válida</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      previewCard.innerHTML = previewContent;
+    };
+    reader.readAsDataURL(file);
+  } else if (fileType === 'application/pdf') {
+    previewContent = `
+      <div class="card-body p-2">
+        <div class="row g-2 align-items-center">
+          <div class="col-auto">
+            <i class="bi bi-file-pdf-fill text-danger" style="font-size: 4rem;"></i>
+          </div>
+          <div class="col">
+            <div class="small">
+              <strong>${file.name}</strong><br>
+              <span class="text-muted">Tamaño: ${fileSize} KB</span><br>
+              <span class="badge bg-success">PDF válido</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    previewCard.innerHTML = previewContent;
+  } else {
+    previewContent = `
+      <div class="card-body p-2">
+        <div class="small">
+          <i class="bi bi-file-earmark-check text-success me-2"></i>
+          <strong>${file.name}</strong> (${fileSize} KB)
+        </div>
+      </div>
+    `;
+    previewCard.innerHTML = previewContent;
+  }
+  
+  previewContainer.appendChild(previewCard);
+}
 
-    camposObligatorios.forEach(input => {
-      if (!input.files || input.files.length === 0) {
-        const label = input.parentElement.querySelector('label').textContent.replace('*', '').trim();
-        faltantes.push(label);
-      }
-    });
-
-    if (faltantes.length > 0) {
-      e.preventDefault();
-      alert('Faltan los siguientes documentos obligatorios:\n\n• ' + faltantes.join('\n• '));
-      return false;
+function handleSubmit(e) {
+  e.preventDefault();
+  
+  // Limpiar errores previos
+  document.getElementById('serverErrors').style.display = 'none';
+  document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+  
+  // Validar fechas
+  const fechaInicio = document.getElementById('fecha_inicio').value;
+  const fechaFin = document.getElementById('fecha_fin').value;
+  
+  if (new Date(fechaFin) < new Date(fechaInicio)) {
+    mostrarErroresServidor(['La fecha de fin debe ser posterior a la fecha de inicio']);
+    return;
+  }
+  
+  // Validar documentos requeridos
+  const tipo = document.getElementById('tipo').value;
+  const docs = documentosRequeridos[tipo];
+  const errores = [];
+  
+  docs.obligatorios.forEach(docId => {
+    const input = document.getElementById(docId);
+    if (!input.files.length) {
+      errores.push(`Falta el documento: ${nombresDocumentos[docId]}`);
+      input.classList.add('is-invalid');
     }
   });
-});
+  
+  if (errores.length > 0) {
+    mostrarErroresServidor(errores);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+  
+  // Mostrar indicador de progreso
+  document.getElementById('uploadProgress').style.display = 'block';
+  document.getElementById('btnSubmit').disabled = true;
+  
+  // Enviar formulario
+  const formData = new FormData(this);
+  
+  fetch(this.action || window.location.href, {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    document.getElementById('uploadProgress').style.display = 'none';
+    document.getElementById('btnSubmit').disabled = false;
+    
+    if (data.success) {
+      mostrarModalConfirmacion(data.codigo_radicacion);
+    } else {
+      mostrarErroresServidor(data.errors || ['Error al procesar la solicitud']);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    document.getElementById('uploadProgress').style.display = 'none';
+    document.getElementById('btnSubmit').disabled = false;
+    mostrarErroresServidor(['Error de conexión. Por favor, intente nuevamente.']);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+function mostrarErroresServidor(errores) {
+  const container = document.getElementById('serverErrors');
+  const lista = document.getElementById('serverErrorsList');
+  
+  lista.innerHTML = '';
+  errores.forEach(error => {
+    const li = document.createElement('li');
+    li.textContent = error;
+    lista.appendChild(li);
+  });
+  
+  container.style.display = 'block';
+}
+
+function mostrarModalConfirmacion(codigoRadicacion) {
+  document.getElementById('codigoRadicacion').textContent = codigoRadicacion;
+  const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
+  modal.show();
+}
+
+function copiarCodigo() {
+  const codigo = document.getElementById('codigoRadicacion').textContent;
+  navigator.clipboard.writeText(codigo).then(() => {
+    const btn = event.target.closest('button');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Copiado!';
+    btn.classList.remove('btn-outline-primary');
+    btn.classList.add('btn-success');
+    
+    setTimeout(() => {
+      btn.innerHTML = originalHTML;
+      btn.classList.remove('btn-success');
+      btn.classList.add('btn-outline-primary');
+    }, 2000);
+  });
+}
+
+function restaurarArchivos() {
+  // Esta función preserva los archivos seleccionados si hay errores de validación
+  Object.keys(archivosSeleccionados).forEach(fieldId => {
+    const input = document.getElementById(fieldId);
+    const file = archivosSeleccionados[fieldId];
+    
+    if (input && file) {
+      // Crear un DataTransfer para asignar el archivo
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      input.files = dataTransfer.files;
+      
+      // Mostrar preview
+      mostrarPreview(fieldId, file);
+      input.classList.add('is-valid');
+    }
+  });
+}
+
+// Función de formateo de fecha
+function formatearFecha(fecha) {
+  const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+  return new Date(fecha).toLocaleDateString('es-ES', opciones);
+}
+
+// Función de validación de archivo (compatible con main.js)
+function validarArchivo(file) {
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+  
+  if (!file) {
+    return { valido: false, error: 'No se seleccionó ningún archivo' };
+  }
+  
+  if (file.size > maxSize) {
+    return { valido: false, error: 'El archivo excede el tamaño máximo permitido (10MB)' };
+  }
+  
+  if (!allowedTypes.includes(file.type)) {
+    return { valido: false, error: 'Formato no permitido. Use PDF, JPG o PNG' };
+  }
+  
+  return { valido: true };
+}
 </script>
 {% endblock %}

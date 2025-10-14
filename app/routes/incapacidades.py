@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from datetime import datetime
@@ -58,15 +58,24 @@ def registrar():
         tipo = request.form.get('tipo')
         fecha_inicio_str = request.form.get('fecha_inicio')
         fecha_fin_str = request.form.get('fecha_fin')
+        
+        # Detectar si es petición AJAX
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or \
+                  request.accept_mimetypes.accept_json
 
         # Validar datos básicos
         if not all([tipo, fecha_inicio_str, fecha_fin_str]):
-            flash('Todos los campos son obligatorios', 'danger')
+            error_msg = 'Todos los campos son obligatorios'
+            if is_ajax:
+                return jsonify({'success': False, 'errors': [error_msg]}), 400
+            flash(error_msg, 'danger')
             return redirect(url_for('incapacidades.registrar'))
 
         # UC1: Validar tipo de incapacidad
         tipo_valido, error_tipo = validar_tipo_incapacidad(tipo)
         if not tipo_valido:
+            if is_ajax:
+                return jsonify({'success': False, 'errors': [error_tipo]}), 400
             flash(error_tipo, 'danger')
             return redirect(url_for('incapacidades.registrar'))
 
@@ -75,12 +84,18 @@ def registrar():
             fecha_inicio = datetime.strptime(fecha_inicio_str, '%Y-%m-%d').date()
             fecha_fin = datetime.strptime(fecha_fin_str, '%Y-%m-%d').date()
         except ValueError:
-            flash('Formato de fecha inválido', 'danger')
+            error_msg = 'Formato de fecha inválido'
+            if is_ajax:
+                return jsonify({'success': False, 'errors': [error_msg]}), 400
+            flash(error_msg, 'danger')
             return redirect(url_for('incapacidades.registrar'))
 
         # Validar rango de fechas
         if fecha_fin < fecha_inicio:
-            flash('La fecha de fin debe ser posterior a la fecha de inicio', 'danger')
+            error_msg = 'La fecha de fin debe ser posterior a la fecha de inicio'
+            if is_ajax:
+                return jsonify({'success': False, 'errors': [error_msg]}), 400
+            flash(error_msg, 'danger')
             return redirect(url_for('incapacidades.registrar'))
 
         dias = calcular_dias(fecha_inicio, fecha_fin)
@@ -93,6 +108,11 @@ def registrar():
         )
         
         if not documentos_validos:
+            if is_ajax:
+                errors = [error_docs]
+                if docs_faltantes:
+                    errors.append(f"Documentos faltantes: {', '.join(docs_faltantes)}")
+                return jsonify({'success': False, 'errors': errors}), 400
             flash(error_docs, 'danger')
             return redirect(url_for('incapacidades.registrar'))
 
@@ -126,7 +146,9 @@ def registrar():
                 raise ValueError('No se cargaron documentos. Se requiere al menos el certificado.')
             
             # Si hay errores en archivos, informar pero continuar
+            warnings = []
             if errores_archivos:
+                warnings = errores_archivos
                 for error in errores_archivos:
                     flash(error, 'warning')
             
@@ -154,12 +176,26 @@ def registrar():
                 notificaciones_ok = notificar_nueva_incapacidad(incapacidad)
                 if not notificaciones_ok:
                     print(f"⚠️ UC2: Advertencia al enviar notificaciones para #{incapacidad.id}")
-                    flash('Incapacidad registrada, pero no se pudieron enviar todas las notificaciones', 'warning')
+                    warning_msg = 'Incapacidad registrada, pero no se pudieron enviar todas las notificaciones'
+                    flash(warning_msg, 'warning')
+                    warnings.append(warning_msg)
             except Exception as e:
                 print(f"❌ UC2: Error al enviar notificaciones: {e}")
                 import traceback
                 traceback.print_exc()
-                flash('Incapacidad registrada, pero falló el envío de notificaciones', 'warning')
+                warning_msg = 'Incapacidad registrada, pero falló el envío de notificaciones'
+                flash(warning_msg, 'warning')
+                warnings.append(warning_msg)
+            
+            # Responder según tipo de petición
+            if is_ajax:
+                return jsonify({
+                    'success': True,
+                    'codigo_radicacion': incapacidad.codigo_radicacion,
+                    'incapacidad_id': incapacidad.id,
+                    'archivos_guardados': archivos_guardados,
+                    'warnings': warnings
+                }), 200
             
             # Mensaje de éxito con código de radicación
             flash(
@@ -188,12 +224,17 @@ def registrar():
             except:
                 pass  # Si falla limpieza, no importa
             
+            # Responder según tipo de petición
+            error_msg = f'Error al registrar incapacidad: {str(e)}. Por favor, intente nuevamente.'
+            
+            if is_ajax:
+                return jsonify({
+                    'success': False,
+                    'errors': [error_msg]
+                }), 500
+            
             # Mensaje de error al usuario
-            flash(
-                f'❌ Error al registrar incapacidad: {str(e)}. '
-                'No se guardó ningún dato. Por favor, intente nuevamente.', 
-                'danger'
-            )
+            flash(f'❌ {error_msg}', 'danger')
             return redirect(url_for('incapacidades.registrar'))
 
     return render_template('registro_incapacidad.html')
