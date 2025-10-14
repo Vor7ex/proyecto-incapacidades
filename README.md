@@ -2,7 +2,7 @@
 
 Sistema web para la gestión de incapacidades médicas de empleados, desarrollado con Flask.
 
-**Estado actual:** 55.6% completo | **Release:** 1.0 (en desarrollo)
+**Estado actual:** 61.1% completo | **Release:** 1.0 (en desarrollo)
 
 > 🚀 **Inicio rápido:** Ver [`GUIA_RAPIDA.md`](GUIA_RAPIDA.md) para setup en 5 minutos  
 > 📁 **Estructura:** Ver [`ESTRUCTURA.md`](ESTRUCTURA.md) para arquitectura completa  
@@ -14,7 +14,7 @@ Sistema web para la gestión de incapacidades médicas de empleados, desarrollad
 
 | UC | Caso de Uso | Estado |
 |----|------------|--------|
-| UC1 | Registrar incapacidad | ⚠️ 85% |
+| UC1 | Registrar incapacidad | ✅ 100% |
 | UC2 | Notificar RRHH | ⚠️ 70% |
 | UC3 | Consultar incapacidades | ⚠️ 60% |
 | UC4 | Validar documentación | ⚠️ 75% |
@@ -23,14 +23,19 @@ Sistema web para la gestión de incapacidades médicas de empleados, desarrollad
 | UC7 | Aprobar/Rechazar | ⚠️ 65% |
 | UC15 | Almacenar documentos | ⚠️ 50% |
 
+**✅ UC1 COMPLETADO:** Código de radicación + Transacciones atómicas implementados  
 **Bloqueadores críticos:** UC6 (0%), UC5 (40%)  
-**Ver detalles:** `docs/ESTADO_PROYECTO.md`
+**Ver detalles:** `docs/ESTADO_PROYECTO.md` | **UC1 completo:** `docs/TAREA4_CODIGO_RADICACION.md`
 
 ---
 
 ## ✨ Funcionalidades Principales
 
-- ✅ Registro de incapacidades con carga de documentos
+- ✅ Registro de incapacidades con código de radicación único (INC-YYYYMMDD-XXXX)
+- ✅ Transacciones atómicas (rollback automático en errores)
+- ✅ Validación de tipos de incapacidad (5 tipos permitidos)
+- ✅ Reglas documentales por tipo de incapacidad
+- ✅ Sistema de carga de archivos con metadatos (UUID, MD5, MIME)
 - ✅ Sistema de notificaciones por email (6 templates)
 - ✅ Validación de documentación por auxiliar
 - ✅ Aprobación/rechazo de incapacidades

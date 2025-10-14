@@ -28,6 +28,21 @@ incapacidades_bp = Blueprint('incapacidades', __name__, url_prefix='/incapacidad
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
 
+def limpiar_archivos_huerfanos(incapacidad_id):
+    """
+    Elimina archivos físicos de una incapacidad cuando falla la transacción.
+    Se usa en rollback para evitar archivos huérfanos en el sistema.
+    """
+    try:
+        documentos = Documento.query.filter_by(incapacidad_id=incapacidad_id).all()
+        for doc in documentos:
+            ruta_completa = os.path.join(Config.UPLOAD_FOLDER, doc.ruta_archivo)
+            if os.path.exists(ruta_completa):
+                os.remove(ruta_completa)
+                print(f"🗑️ Archivo huérfano eliminado: {ruta_completa}")
+    except Exception as e:
+        print(f"⚠️ Error al limpiar archivos huérfanos: {e}")
+
 def calcular_dias(fecha_inicio, fecha_fin):
     return (fecha_fin - fecha_inicio).days + 1
 
@@ -80,42 +95,89 @@ def registrar():
             flash(error_docs, 'danger')
             return redirect(url_for('incapacidades.registrar'))
 
-        # Crear incapacidad
-        incapacidad = Incapacidad(
-            usuario_id=current_user.id,
-            tipo=tipo,
-            fecha_inicio=fecha_inicio,
-            fecha_fin=fecha_fin,
-            dias=dias,
-            estado='Pendiente'
-        )
-
-        db.session.add(incapacidad)
-        db.session.commit()
-
-        # Procesar archivos (UC2 + Tarea 3: validación y metadatos completos)
-        archivos_guardados, errores_archivos = procesar_archivos(request.files, incapacidad.id)
-
-        # UC2: Enviar notificaciones por email
+        # ========================================
+        # TRANSACCIÓN ATÓMICA: Incapacidad + Documentos
+        # Si falla cualquier paso, se revierte todo
+        # ========================================
         try:
-            notificar_nueva_incapacidad(incapacidad)
+            # Crear incapacidad (sin commit aún)
+            incapacidad = Incapacidad(
+                usuario_id=current_user.id,
+                tipo=tipo,
+                fecha_inicio=fecha_inicio,
+                fecha_fin=fecha_fin,
+                dias=dias,
+                estado='Pendiente'
+            )
+            
+            # Asignar código de radicación único
+            incapacidad.asignar_codigo_radicacion()
+            
+            # Agregar a sesión (sin commit)
+            db.session.add(incapacidad)
+            db.session.flush()  # Obtener ID sin hacer commit
+            
+            # Procesar archivos (puede lanzar excepciones)
+            archivos_guardados, errores_archivos = procesar_archivos(request.files, incapacidad.id)
+            
+            # Verificar que se guardaron archivos
+            if archivos_guardados == 0:
+                raise ValueError('No se cargaron documentos. Se requiere al menos el certificado.')
+            
+            # Si hay errores en archivos, informar pero continuar
+            if errores_archivos:
+                for error in errores_archivos:
+                    flash(error, 'warning')
+            
+            # TODO: UC2 - Enviar notificaciones (después del commit exitoso)
+            # Las notificaciones NO deben estar dentro de la transacción
+            
+            # ✅ COMMIT: Todo exitoso
+            db.session.commit()
+            
+            # UC2: Enviar notificaciones DESPUÉS del commit
+            try:
+                notificar_nueva_incapacidad(incapacidad)
+            except Exception as e:
+                print(f"❌ Error al enviar notificacion: {e}")
+                import traceback
+                traceback.print_exc()
+                # No revertir transacción si falla email
+            
+            # Mensaje de éxito con código de radicación
+            flash(
+                f'✅ Incapacidad registrada exitosamente. '
+                f'Código de radicación: {incapacidad.codigo_radicacion}', 
+                'success'
+            )
+            flash(f'{archivos_guardados} documento(s) cargado(s)', 'info')
+            
+            return redirect(url_for('incapacidades.mis_incapacidades'))
+            
         except Exception as e:
-            print(f"❌ Error al enviar notificacion: {e}")
+            # ❌ ROLLBACK: Revertir todo si falla cualquier paso
+            db.session.rollback()
+            
+            # Log del error
+            print(f"❌ Error en transacción de registro: {e}")
             import traceback
             traceback.print_exc()
-            # No interrumpir el flujo si falla el email
-
-        # Mensajes de feedback
-        if errores_archivos:
-            for error in errores_archivos:
-                flash(error, 'warning')
-        
-        if archivos_guardados == 0:
-            flash('Incapacidad registrada, pero no se cargaron documentos', 'warning')
-        else:
-            flash(f'Incapacidad registrada exitosamente. {archivos_guardados} documento(s) cargado(s)', 'success')
-
-        return redirect(url_for('incapacidades.mis_incapacidades'))
+            
+            # Limpiar archivos huérfanos si se guardaron
+            # (los archivos físicos se guardan antes del commit)
+            try:
+                if 'incapacidad' in locals() and hasattr(incapacidad, 'id'):
+                    limpiar_archivos_huerfanos(incapacidad.id)
+            except:
+                pass  # Si falla limpieza, no importa
+            
+            # Mensaje de error al usuario
+            flash(
+                f'❌ Error al registrar incapacidad: {str(e)}. '
+                'No se guardó ningún dato. Por favor, intente nuevamente.', 
+                'danger'
+            )
+            return redirect(url_for('incapacidades.registrar'))
 
     return render_template('registro_incapacidad.html')
 

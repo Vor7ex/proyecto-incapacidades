@@ -19,9 +19,30 @@
 
     <div class="card shadow">
       <div class="card-header bg-primary text-white">
-        <h3 class="mb-0">Incapacidad #{{ incapacidad.id }}</h3>
+        <h3 class="mb-0">
+          Incapacidad: {{ incapacidad.codigo_radicacion or '#' + incapacidad.id|string }}
+        </h3>
       </div>
       <div class="card-body">
+        <!-- Código de Radicación (destacado) -->
+        {% if incapacidad.codigo_radicacion %}
+        <div class="alert alert-info mb-4">
+          <div class="row align-items-center">
+            <div class="col-md-3">
+              <strong>📋 Código de Radicación:</strong>
+            </div>
+            <div class="col-md-9">
+              <span style="font-size: 24px; color: #0d6efd; font-weight: bold; font-family: monospace;">
+                {{ incapacidad.codigo_radicacion }}
+              </span>
+              <button class="btn btn-sm btn-outline-primary ms-3" onclick="copiarCodigo('{{ incapacidad.codigo_radicacion }}')">
+                📋 Copiar
+              </button>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        
         <!-- Información del Colaborador -->
         <div class="row mb-4">
           <div class="col-md-6">
@@ -124,4 +145,19 @@
     </div>
   </div>
 </div>
+
+<script>
+function copiarCodigo(codigo) {
+  // Crear elemento temporal para copiar
+  const tempInput = document.createElement('input');
+  tempInput.value = codigo;
+  document.body.appendChild(tempInput);
+  tempInput.select();
+  document.execCommand('copy');
+  document.body.removeChild(tempInput);
+  
+  // Feedback visual
+  alert('Código copiado: ' + codigo);
+}
+</script>
 {% endblock %}

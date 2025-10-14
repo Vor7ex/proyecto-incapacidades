@@ -56,6 +56,7 @@
         
         <div class="info-box">
             <h3>Detalles de la Incapacidad</h3>
+            <p><strong>📋 Código de Radicación:</strong> <span style="font-size: 18px; color: #0d6efd; font-weight: bold;">{{ incapacidad.codigo_radicacion }}</span></p>
             <p><strong>Número:</strong> #{{ incapacidad.id }}</p>
             <p><strong>Tipo:</strong> {{ incapacidad.tipo }}</p>
             <p><strong>Período:</strong> {{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }} - {{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}</p>
@@ -70,7 +71,7 @@
             <li>Una vez aprobada, se procesará tu incapacidad</li>
         </ol>
         
-        <p><strong>Importante:</strong> Si falta algún documento, se te notificará para que lo adjuntes.</p>
+        <p><strong>Importante:</strong> Guarda tu código de radicación <span style="color: #0d6efd; font-weight: bold;">{{ incapacidad.codigo_radicacion }}</span> para futuras consultas.</p>
         
         <p>Puedes consultar el estado de tu incapacidad en cualquier momento ingresando al sistema.</p>
         
