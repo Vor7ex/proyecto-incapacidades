@@ -1,6 +1,29 @@
 from datetime import date
 import os
 
+def validar_tipo_incapacidad(tipo):
+    """
+    Validar que el tipo de incapacidad sea uno de los permitidos según UC1.
+    
+    Args:
+        tipo (str): Tipo de incapacidad a validar
+        
+    Returns:
+        tuple: (es_valido: bool, mensaje_error: str o None)
+    """
+    from app.models.incapacidad import TIPOS_VALIDOS
+    
+    if not tipo or tipo.strip() == '':
+        return False, 'El tipo de incapacidad es obligatorio'
+    
+    tipo_limpio = tipo.strip()
+    
+    if tipo_limpio not in TIPOS_VALIDOS:
+        tipos_permitidos = ', '.join(TIPOS_VALIDOS)
+        return False, f'Tipo de incapacidad no válido. Tipos permitidos: {tipos_permitidos}'
+    
+    return True, None
+
 def validar_rango_fechas(fecha_inicio, fecha_fin):
     """Validar que el rango de fechas sea coherente"""
     errores = []

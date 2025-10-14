@@ -7,6 +7,7 @@ from app.models import db
 from app.models.incapacidad import Incapacidad
 from app.models.documento import Documento
 from config import Config
+from app.utils.validaciones import validar_tipo_incapacidad, validar_rango_fechas, validar_archivo
 from app.utils.email_service import (
     notificar_nueva_incapacidad,
     notificar_validacion_completada,
@@ -35,9 +36,15 @@ def registrar():
         fecha_inicio_str = request.form.get('fecha_inicio')
         fecha_fin_str = request.form.get('fecha_fin')
 
-        # Validar datos
+        # Validar datos básicos
         if not all([tipo, fecha_inicio_str, fecha_fin_str]):
             flash('Todos los campos son obligatorios', 'danger')
+            return redirect(url_for('incapacidades.registrar'))
+
+        # UC1: Validar tipo de incapacidad
+        tipo_valido, error_tipo = validar_tipo_incapacidad(tipo)
+        if not tipo_valido:
+            flash(error_tipo, 'danger')
             return redirect(url_for('incapacidades.registrar'))
 
         # Convertir fechas
