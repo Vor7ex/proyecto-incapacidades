@@ -12,7 +12,8 @@ from app.utils.validaciones import (
     validar_rango_fechas, 
     validar_archivo,
     validar_documentos_incapacidad,
-    obtener_documentos_requeridos
+    obtener_documentos_requeridos,
+    procesar_archivo_completo
 )
 from app.utils.email_service import (
     notificar_nueva_incapacidad,
@@ -92,8 +93,8 @@ def registrar():
         db.session.add(incapacidad)
         db.session.commit()
 
-        # Procesar archivos (UC2)
-        archivos_guardados = procesar_archivos(request.files, incapacidad.id)
+        # Procesar archivos (UC2 + Tarea 3: validación y metadatos completos)
+        archivos_guardados, errores_archivos = procesar_archivos(request.files, incapacidad.id)
 
         # UC2: Enviar notificaciones por email
         try:
@@ -104,6 +105,11 @@ def registrar():
             traceback.print_exc()
             # No interrumpir el flujo si falla el email
 
+        # Mensajes de feedback
+        if errores_archivos:
+            for error in errores_archivos:
+                flash(error, 'warning')
+        
         if archivos_guardados == 0:
             flash('Incapacidad registrada, pero no se cargaron documentos', 'warning')
         else:
@@ -114,8 +120,20 @@ def registrar():
     return render_template('registro_incapacidad.html')
 
 def procesar_archivos(files, incapacidad_id):
-    """UC2: Cargar documentos - Versión mejorada con todos los tipos"""
+    """
+    UC2 + Tarea 3: Cargar documentos con validación completa y metadatos.
+    
+    Procesa todos los archivos subidos:
+    - Valida formato y tamaño
+    - Genera nombres únicos (UUID + timestamp)
+    - Calcula metadatos (tamaño, checksum, MIME type)
+    - Guarda en BD con toda la información
+    
+    Returns:
+        tuple: (archivos_guardados: int, errores: list)
+    """
     archivos_guardados = 0
+    errores_procesamiento = []
     
     # Lista de todos los tipos de documentos posibles
     tipos_documentos = [
@@ -130,24 +148,46 @@ def procesar_archivos(files, incapacidad_id):
     for tipo_doc in tipos_documentos:
         if tipo_doc in files:
             file = files[tipo_doc]
-            if file and file.filename != '' and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-                nuevo_nombre = f"{incapacidad_id}_{tipo_doc}_{timestamp}_{filename}"
-                ruta = os.path.join(Config.UPLOAD_FOLDER, nuevo_nombre)
-                file.save(ruta)
-
+            
+            # Verificar que hay archivo
+            if not file or file.filename == '':
+                continue
+            
+            # Procesar archivo completo (validar + guardar + metadatos)
+            resultado = procesar_archivo_completo(
+                file, 
+                tipo_doc, 
+                incapacidad_id,
+                Config.UPLOAD_FOLDER
+            )
+            
+            if resultado['exito']:
+                # Crear documento en BD con metadatos completos
+                metadatos = resultado['metadatos']
+                
                 documento = Documento(
                     incapacidad_id=incapacidad_id,
-                    nombre_archivo=filename,
-                    ruta=ruta,
-                    tipo_documento=tipo_doc
+                    nombre_archivo=metadatos['nombre_archivo'],
+                    nombre_unico=metadatos['nombre_unico'],
+                    ruta=metadatos['ruta'],
+                    tipo_documento=tipo_doc,
+                    tamaño_bytes=metadatos['tamaño_bytes'],
+                    checksum_md5=metadatos['checksum_md5'],
+                    mime_type=metadatos['mime_type']
                 )
+                
                 db.session.add(documento)
                 archivos_guardados += 1
+            else:
+                # Acumular errores
+                for error in resultado['errores']:
+                    errores_procesamiento.append(f"{tipo_doc}: {error}")
 
-    db.session.commit()
-    return archivos_guardados
+    # Commit solo si todo fue exitoso
+    if archivos_guardados > 0:
+        db.session.commit()
+    
+    return archivos_guardados, errores_procesamiento
 
 @incapacidades_bp.route('/mis-incapacidades')
 @login_required
