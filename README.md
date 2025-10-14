@@ -10,7 +10,7 @@ Sistema web para la gestión de incapacidades médicas de empleados, desarrollad
 
 ---
 
-## 📊 Estado del Proyecto
+## 📊 Estado del Proyecto (resumen)
 
 | UC | Caso de Uso | Estado |
 |----|------------|--------|
@@ -23,15 +23,15 @@ Sistema web para la gestión de incapacidades médicas de empleados, desarrollad
 | UC7 | Aprobar/Rechazar | ⚠️ 65% |
 | UC15 | Almacenar documentos | ⚠️ 70% |
 
-**✅ UC1 COMPLETADO:** Código de radicación + Transacciones atómicas + Notificaciones + Hooks  
-**✅ UC2 MEJORADO:** Sistema de reintentos + Logging robusto + Validaciones  
-**✅ UC15 MEJORADO:** Hook de verificación post-commit implementado  
-**Bloqueadores críticos:** UC6 (0%), UC5 (40%)  
-**Ver detalles:** `docs/ESTADO_PROYECTO.md` | **UC1 completo:** `docs/RESUMEN_UC1_COMPLETO.md`
+**Resumen de avances en esta sesión:**
+- Implementadas mejoras de UX en el formulario de registro (previews de archivos, preservación de archivos, modal de confirmación con código de radicación, indicador de progreso). Detalles en `docs/MEJORAS_UX_CLIENTE.md`.
+- Backend: la ruta `/incapacidades/registrar` ahora soporta peticiones AJAX/JSON y responde con JSON en caso de solicitud desde el cliente.
+- `crear_usuarios.py` reescrito para ser más robusto (detección de entorno, eliminación/creación de usuarios de prueba). Usuarios de prueba recreados.
+- Commit reciente con mejoras UX: `1217bae` (mensaje: feat(UX): Implementar mejoras client-side en registro de incapacidades).
 
 ---
 
-## ✨ Funcionalidades Principales
+## ✨ Funcionalidades Principales (actualizado)
 
 - ✅ Registro de incapacidades con código de radicación único (INC-YYYYMMDD-XXXX)
 - ✅ Transacciones atómicas (rollback automático en errores)
@@ -40,9 +40,10 @@ Sistema web para la gestión de incapacidades médicas de empleados, desarrollad
 - ✅ Sistema de carga de archivos con metadatos (UUID, MD5, MIME)
 - ✅ Sistema de notificaciones por email con reintentos configurables
 - ✅ Logging detallado de eventos del sistema
-- ✅ Hooks post-commit para almacenamiento y verificación
+- ✅ Hooks post-commit para almacenamiento y verificación (UC15)
 - ✅ Validación de documentación por auxiliar
 - ✅ Aprobación/rechazo de incapacidades
+- ✅ Mejoras UX cliente (previews, validación client-side, modal de confirmación, preservación de archivos)
 - ⚠️ Validación automática por tipo (parcial)
 - 🔴 Solicitud de documentos faltantes (pendiente)
 
@@ -67,7 +68,7 @@ Sistema web para la gestión de incapacidades médicas de empleados, desarrollad
 
 ### Instalación
 
-```bash
+```powershell
 # 1. Clonar proyecto
 cd proyecto-incapacidades
 
@@ -98,18 +99,20 @@ python run.py
 
 ---
 
-## 👤 Usuarios de Prueba
+## 👤 Usuarios de Prueba (actualizado)
 
 | Rol | Email | Contraseña |
 |-----|-------|------------|
-| Colaborador | `colaborador@test.com` | `123456` |
+| Colaborador | `empleado@test.com` | `123456` |
 | Auxiliar | `auxiliar@test.com` | `123456` |
+
+> Nota: el script `crear_usuarios.py` fue mejorado en esta sesión para recrear estos usuarios. Ejecutar `python crear_usuarios.py` si no existen.
 
 ---
 
 ## 📧 Control de Emails
 
-```bash
+```powershell
 python toggle_email.py on      # Activar emails reales (consume cuota)
 python toggle_email.py off     # Desactivar (modo simulación)
 python toggle_email.py status  # Ver estado actual
@@ -119,7 +122,7 @@ python toggle_email.py status  # Ver estado actual
 
 ---
 
-## 📁 Estructura del Proyecto
+## � Estructura del Proyecto
 
 > **Ver estructura completa:** [`ESTRUCTURA.md`](ESTRUCTURA.md)
 
@@ -132,49 +135,58 @@ proyecto-incapacidades/
 │   ├── static/             # CSS, JS, uploads
 │   └── utils/              # email_service, validaciones
 ├── docs/                   # Documentación
-│   ├── ESTADO_PROYECTO.md  # ⭐ Estado detallado (55.6%)
-│   ├── CONTROL_EMAILS.md   # Control de cuota emails
-│   ├── BUG_FIX_ALERTAS.md  # Fix alertas JavaScript
-│   ├── manual_usuario.md   # Manual de usuario
-│   └── roles_permisos.md   # Matriz de permisos
+│   ├── ESTADO_PROYECTO.md
+│   ├── CONTROL_EMAILS.md
+│   ├── BUG_FIX_ALERTAS.md
+│   ├── manual_usuario.md
+│   ├── roles_permisos.md
++│   └── MEJORAS_UX_CLIENTE.md   # (nuevo) Detalle de mejoras UX implementadas
 ├── instance/
 │   └── database.db         # SQLite
 ├── .env                    # Configuración (NO versionar)
 ├── config.py               # Config Flask
 ├── run.py                  # Ejecutar aplicación
-├── crear_usuarios.py       # Script usuarios de prueba
+├── crear_usuarios.py       # Script usuarios de prueba (mejorado)
 ├── toggle_email.py         # Control on/off emails
-├── GUIA_RAPIDA.md         # 🚀 Inicio rápido en 5 minutos
-├── SCRIPTS_UTILIDAD.md    # Descripción de scripts
+├── GUIA_RAPIDA.md          # 🚀 Inicio rápido en 5 minutos
+├── SCRIPTS_UTILIDAD.md     # Descripción de scripts
 └── requirements.txt        # Dependencias
 ```
 
 ---
 
-## �️ Comandos Útiles
+## 🧭 Cambios Destacados (esta sesión)
+
+- feat(UX): Previews de archivos en `registro_incapacidad.html` (imágenes y PDFs)
+- feat(UX): Preservación de archivos seleccionados cuando hay errores (DataTransfer)
+- feat(UX): Modal de confirmación con código de radicación y botón copiar
+- feat(routes): `/incapacidades/registrar` ahora responde JSON para peticiones AJAX
+- refactor: `crear_usuarios.py` reescrito y robustecido (recrea usuarios de prueba)
+- docs: `docs/MEJORAS_UX_CLIENTE.md` añadido con detalles, pruebas y diagramas
+- commit: `1217bae` contiene las mejoras UX y cambios relacionados
+
+---
+
+## �️ Comandos Útiles (resumen)
 
 ### Ejecutar aplicación
-```bash
+```powershell
 python run.py
 ```
 
 ### Crear usuarios de prueba
-```bash
+```powershell
 python crear_usuarios.py
 ```
 
-### Control de emails
-```bash
-python toggle_email.py on      # Activar emails reales
-python toggle_email.py off     # Desactivar (modo simulación)
-python toggle_email.py status  # Ver estado
+### Ejecutar tests (ejemplo)
+```powershell
+python -m pytest tests/test_validacion_documentos.py -q
 ```
-
-**Nota:** Ver `SCRIPTS_UTILIDAD.md` para más detalles sobre los scripts disponibles.
 
 ---
 
-## 🔥 Flujo de Trabajo
+## 🔥 Flujo de Trabajo (breve)
 
 ### Colaborador:
 1. Login → Dashboard
@@ -182,68 +194,22 @@ python toggle_email.py status  # Ver estado
 3. Cargar documentos (certificado, epicrisis si aplica)
 4. Recibir email de confirmación ✉️
 5. Consultar estado de mis incapacidades
-6. Recibir notificaciones de validación/aprobación
 
 ### Auxiliar RRHH:
 1. Login → Dashboard Auxiliar
 2. Ver incapacidades pendientes
 3. Revisar documentación cargada
-4. Validar o solicitar documentos faltantes (⚠️ parcialmente implementado)
+4. Validar o solicitar documentos faltantes (pendiente UC6)
 5. Aprobar o rechazar incapacidad
-6. Sistema envía notificaciones automáticas ✉️
 
 ---
 
 ## 🎯 Próximos Pasos
 
-**Release 1.0 Completo (14 días):**
-
-1. **Sprint 1** - Implementar UC6: Solicitar documentos faltantes (4 días)
-2. **Sprint 2** - Completar UC5: Validación automática por tipo (3 días)
-3. **Sprint 3** - Mejoras UC2, UC7, UC15 (3 días)
-4. **Sprint 4** - Mejoras UC1, UC3, UC4 (2 días)
-5. **Testing final** (2 días)
-
-Ver detalles en `docs/ESTADO_PROYECTO.md`
-
----
-
-## 🐛 Problemas Conocidos
-
-1. **Rate Limit Mailtrap** - Solo 1 email/segundo (✅ SOLUCIONADO con delay de 10s)
-2. **Notificación al líder** - Solo notifica a RRHH y colaborador (⏳ Pendiente: agregar notificación a líder directo)
-3. **Validación automática parcial** - UC5 requiere completar validación automática
-
-Ver más en `docs/SOLUCION_PROBLEMAS.md`
-
----
-
-## 📋 Pendientes y Mejoras Futuras
-
-### UC2 - Notificaciones (85% completo)
-- [ ] Agregar notificación a líder directo del colaborador
-- [ ] Implementar plantilla de email para líder
-- [ ] Dashboard de histórico de notificaciones enviadas
-- [x] Sistema de reintentos configurables
-- [x] Logging detallado de eventos
-- [x] Validación de destinatarios
-
-### UC15 - Almacenamiento de Documentos (70% completo)
-- [ ] Implementar movimiento a carpeta de archivo definitivo
-- [ ] Crear backup en storage externo (S3, Azure Blob)
-- [ ] Indexar documentos en sistema de búsqueda
-- [ ] Generar thumbnails para PDFs
-- [ ] Escaneo con antivirus de archivos subidos
-- [x] Hook de verificación post-commit
-- [x] Logging de archivos almacenados
-
-### Otras Mejoras
-- [ ] UC6: Implementar solicitud de documentos faltantes (0%)
-- [ ] UC5: Completar validación automática por tipo (40%)
-- [ ] UC3: Agregar búsqueda por código de radicación
-- [ ] Implementar exportación de reportes (PDF, Excel)
-- [ ] API REST para consultas externas
-- [ ] Generación de QR codes para códigos de radicación
+1. Implementar UC6: Solicitar documentos faltantes (prioridad alta)
+2. Completar UC5: Validación automática por tipo
+3. UC2: Notificar líder directo (completar)
+4. UC15: Backups externos y thumbnails para PDFs
 
 ---
 
@@ -252,7 +218,7 @@ Ver más en `docs/SOLUCION_PROBLEMAS.md`
 **Inicio rápido:** Ver `GUIA_RAPIDA.md` para setup en 5 minutos
 
 **Problemas con emails:**
-```bash
+```powershell
 python toggle_email.py status  # Ver estado
 ```
 
@@ -262,8 +228,17 @@ python toggle_email.py status  # Ver estado
 
 **Consultar logs:**
 - Ver consola del servidor para mensajes con emojis: ✅ (éxito), ❌ (error), ⚠️ (advertencia), 📧 (email), 💾 (almacenamiento), 🔔 (notificación)
-- Logs detallados con timestamps en formato: `YYYY-MM-DD HH:MM:SS [NIVEL] mensaje`
 - Configurar nivel de logging en `.env`: `LOG_LEVEL=INFO` (opciones: DEBUG, INFO, WARNING, ERROR)
+
+---
+
+# Resumen de Cambios (Sesión 13 Octubre 2025)
+
+- **Mejoras de UX:** Se implementaron interfaces de usuario mejoradas, incluyendo modales de confirmación, previsualización de archivos y una experiencia de usuario más intuitiva.
+- **Backend:** Se actualizó la lógica de respuestas AJAX/JSON en las rutas (por ejemplo, en `/incapacidades/registrar`) para mejorar la validación y el manejo de datos.
+- **Script de Creación de Usuarios:** Se refactorizó el archivo `crear_usuarios.py` para manejar de forma robusta errores (como problemas de codificación) y validar contraseñas, eliminando usuarios existentes antes de crear nuevos registros de prueba.
+- **Tests:** Se ejecutaron pruebas (por ejemplo, `tests/test_validacion_documentos.py`) con resultados exitosos.
+- **Documentación:** Este README se actualiza para reflejar los cambios realizados durante esta sesión. Consulte `docs/MEJORAS_UX_CLIENTE.md` para obtener detalles adicionales de las mejoras en la experiencia de usuario.
 
 ---
 
