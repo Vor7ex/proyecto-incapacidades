@@ -6,12 +6,16 @@ from app.models.usuario import Usuario
 from app.utils.email_service import mail
 import os
 import logging
+from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 login_manager = LoginManager()
 
 
 def create_app():
+    # Cargar variables de entorno desde .env
+    load_dotenv()
+
     app = Flask(__name__)
     app.config.from_object(Config)
 

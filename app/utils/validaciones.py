@@ -4,32 +4,33 @@ import uuid
 import hashlib
 
 # Mapeo de documentos obligatorios según tipo de incapacidad (UC1 - Sección 5.1.2)
+# ACTUALIZADO: Usar valores del enum TipoDocumentoEnum para compatibilidad con UC6
 DOCUMENTOS_REQUERIDOS_POR_TIPO = {
     'Enfermedad General': {
-        'obligatorios': ['certificado'],
-        'opcionales': ['epicrisis'],  # Obligatorio si > 2 días
+        'obligatorios': ['CERTIFICADO_INCAPACIDAD'],
+        'opcionales': ['EPICRISIS'],  # Obligatorio si > 2 días
         'reglas_especiales': {
-            'epicrisis': lambda dias: dias > 2
+            'EPICRISIS': lambda dias: dias > 2
         }
     },
     'Accidente Laboral': {
-        'obligatorios': ['certificado', 'epicrisis'],
+        'obligatorios': ['CERTIFICADO_INCAPACIDAD', 'EPICRISIS'],
         'opcionales': [],
         'reglas_especiales': {}
     },
     'Accidente de Tránsito': {
-        'obligatorios': ['certificado', 'epicrisis', 'furips'],
+        'obligatorios': ['CERTIFICADO_INCAPACIDAD', 'EPICRISIS', 'FURIPS'],
         'opcionales': [],
         'reglas_especiales': {}
     },
     'Licencia de Maternidad': {
-        'obligatorios': ['certificado', 'epicrisis', 'certificado_nacido_vivo', 'registro_civil'],
-        'opcionales': ['documento_identidad_madre'],
+        'obligatorios': ['CERTIFICADO_INCAPACIDAD', 'EPICRISIS', 'CERTIFICADO_NACIDO_VIVO', 'REGISTRO_CIVIL'],
+        'opcionales': ['DOCUMENTO_IDENTIDAD'],
         'reglas_especiales': {}
     },
     'Licencia de Paternidad': {
-        'obligatorios': ['epicrisis', 'certificado_nacido_vivo', 'registro_civil', 'documento_identidad_madre'],
-        'opcionales': ['certificado'],
+        'obligatorios': ['EPICRISIS', 'CERTIFICADO_NACIDO_VIVO', 'REGISTRO_CIVIL', 'DOCUMENTO_IDENTIDAD'],
+        'opcionales': ['CERTIFICADO_INCAPACIDAD'],
         'reglas_especiales': {}
     }
 }
@@ -101,8 +102,15 @@ def validar_documentos_incapacidad(tipo_incapacidad, documentos_subidos, dias=0)
             documentos_faltantes.append(doc)
     
     if documentos_faltantes:
-        # Traducir nombres técnicos a nombres legibles
+        # Traducir nombres técnicos a nombres legibles (usando enums)
         nombres_legibles = {
+            'CERTIFICADO_INCAPACIDAD': 'Certificado de Incapacidad',
+            'EPICRISIS': 'Epicrisis o Documento Soporte',
+            'FURIPS': 'FURIPS (Formulario Único de Reclamación)',
+            'CERTIFICADO_NACIDO_VIVO': 'Certificado de Nacido Vivo',
+            'REGISTRO_CIVIL': 'Registro Civil',
+            'DOCUMENTO_IDENTIDAD': 'Documento de Identidad',
+            # Mantener retrocompatibilidad con nombres antiguos
             'certificado': 'Certificado de Incapacidad',
             'epicrisis': 'Epicrisis o Documento Soporte',
             'furips': 'FURIPS (Formulario Único de Reclamación)',

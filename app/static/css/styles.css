@@ -111,18 +111,48 @@ body {
 /* Colores mejorados para estados */
 .estado-pendiente {
   background-color: #ffc107 !important;
+  color: #000 !important;
 }
 
 .estado-en-revision {
   background-color: #17a2b8 !important;
+  color: #fff !important;
 }
 
 .estado-aprobada {
   background-color: #28a745 !important;
+  color: #fff !important;
 }
 
 .estado-rechazada {
   background-color: #dc3545 !important;
+  color: #fff !important;
+}
+
+/* Nuevos estados UC6 */
+.estado-documentacion-incompleta {
+  background-color: #fd7e14 !important;
+  color: #fff !important;
+}
+
+.estado-documentacion-completa {
+  background-color: #20c997 !important;
+  color: #fff !important;
+}
+
+.estado-pendiente-validacion {
+  background-color: #0dcaf0 !important;
+  color: #000 !important;
+}
+
+.estado-validada {
+  background-color: #198754 !important;
+  color: #fff !important;
+}
+
+.estado-rechazada-documentacion {
+  background-color: #dc3545 !important;
+  color: #fff !important;
 }
 
 /* Tarjetas de estadisticas */
@@ -175,6 +205,20 @@ body {
 .badge {
     font-weight: 500;
     padding: 0.4rem 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Badges de estado con mejor contraste */
+.badge-estado {
+    font-weight: 600 !important;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    min-width: 150px;
+    text-align: center;
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem !important;
 }
 
 /* Botones en tablas */

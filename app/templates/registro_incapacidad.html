@@ -79,15 +79,23 @@
 
           <!-- Sección de Documentos -->
           <h5 class="mb-3">📎 Adjuntar Documentos</h5>
+          
+          <!-- UC6: Información sobre documentos opcionales -->
+          <div class="alert alert-warning mb-4">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            <strong>Importante:</strong> La carga de documentos es <strong>OPCIONAL</strong> en el registro inicial.
+            Si no tiene todos los documentos listos, puede registrar la incapacidad ahora y Gestión Humana le solicitará
+            los documentos faltantes posteriormente.
+          </div>
 
           <!-- Certificado de Incapacidad -->
           <div class="mb-4 documento-field" id="field-certificado">
             <label for="certificado" class="form-label fw-bold">
-              Certificado de Incapacidad <span class="text-danger">*</span>
+              Certificado de Incapacidad <span class="text-muted">(Opcional)</span>
             </label>
             <input type="file" class="form-control documento-input" id="certificado" name="certificado" 
                    accept=".pdf,.jpg,.jpeg,.png" data-nombre="Certificado de Incapacidad">
-            <div class="form-text">Obligatorio para todos los tipos. Formato: PDF, JPG, PNG. Máx: 10MB</div>
+            <div class="form-text">Formato: PDF, JPG, PNG. Máx: 10MB</div>
             <div class="preview-container mt-2" id="preview-certificado" style="display: none;"></div>
             <div class="invalid-feedback"></div>
           </div>
@@ -352,13 +360,14 @@ function actualizarDocumentosRequeridos() {
     const marker = field.querySelector('.obligatorio-marker');
     
     field.style.display = 'block';
-    input.setAttribute('required', 'required');
-    if (marker) marker.innerHTML = '<span class="text-danger">*</span>';
+    // UC6: Ya NO requerimos documentos en registro inicial
+    // input.setAttribute('required', 'required');
+    if (marker) marker.innerHTML = '<span class="text-muted">(Opcional)</span>';
     
     // Agregar a lista informativa
     const li = document.createElement('li');
     li.className = 'mb-1';
-    li.innerHTML = `<i class="bi bi-check-circle-fill text-success me-2"></i><strong>${nombresDocumentos[docId]}</strong> (Obligatorio)`;
+    li.innerHTML = `<i class="bi bi-circle text-muted me-2"></i><strong>${nombresDocumentos[docId]}</strong> (Recomendado - puede ser solicitado después)`;
     listaObligatorios.appendChild(li);
   });
   
@@ -490,6 +499,9 @@ function handleSubmit(e) {
   }
   
   // Validar documentos requeridos
+  // UC6: Ya NO validamos documentos obligatorios en registro inicial
+  // El auxiliar los solicitará después mediante UC6 si faltan
+  /*
   const tipo = document.getElementById('tipo').value;
   const docs = documentosRequeridos[tipo];
   const errores = [];
@@ -507,6 +519,7 @@ function handleSubmit(e) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     return;
   }
+  */
   
   // Mostrar indicador de progreso
   document.getElementById('uploadProgress').style.display = 'block';

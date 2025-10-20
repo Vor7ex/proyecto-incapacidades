@@ -201,54 +201,25 @@
                                 class="btn btn-success btn-lg" id="btnCompletar">
                             <i class="bi bi-check-lg"></i> Marcar Documentacion como Completa
                         </button>
-                        <button type="button" class="btn btn-warning" 
-                                data-bs-toggle="collapse" data-bs-target="#formSolicitar">
-                            <i class="bi bi-exclamation-triangle"></i> 
-                            Solicitar Documentos Adicionales
+                        <button type="submit" name="accion" value="solicitar_documentos_uc6" 
+                                class="btn btn-warning">
+                            <i class="bi bi-file-earmark-plus"></i> 
+                            Solicitar Documentos Adicionales (UC6)
                         </button>
                     </div>
                     
-                    <!-- Formulario colapsable para solicitar documentos -->
-                    <div class="collapse mt-3" id="formSolicitar">
-                        <div class="card">
-                            <div class="card-body">
-                                <h6>Observaciones sobre documentos faltantes:</h6>
-                                <textarea class="form-control mb-2" name="observaciones" rows="3" 
-                                          placeholder="Describa que documentos adicionales se requieren..."></textarea>
-                                <button type="submit" name="accion" value="solicitar_documentos" 
-                                        class="btn btn-warning">
-                                    <i class="bi bi-send"></i> Enviar Solicitud
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
                     {% else %}
-                    <!-- Documentacion incompleta - No puede aprobar -->
+                    <!-- Documentacion incompleta - Redirigir a UC6 -->
                     <div class="alert alert-danger">
                         <i class="bi bi-x-circle-fill"></i>
-                        <strong>No se puede completar la validacion:</strong> 
-                        Faltan documentos obligatorios. Debe notificar al colaborador.
-                    </div>
-                    <div class="mb-3">
-                        <label for="observaciones" class="form-label">
-                            <strong>Observaciones para el colaborador:</strong>
-                        </label>
-                        <textarea class="form-control" name="observaciones" id="observaciones" 
-                                  rows="4" required
-                                  placeholder="Especifique claramente que documentos faltan y por que...">Los siguientes documentos son requeridos:
-{% for adv in validacion.advertencias %}
-- {{ adv }}
-{% endfor %}</textarea>
-                        <div class="form-text">
-                            El colaborador recibira este mensaje. Sea claro y especifico.
-                        </div>
+                        <strong>Documentación incompleta:</strong> 
+                        Faltan documentos obligatorios. Use el formulario de solicitud de documentos UC6.
                     </div>
                     <div class="d-grid">
-                        <button type="submit" name="accion" value="solicitar_documentos" 
-                                class="btn btn-warning btn-lg">
-                            <i class="bi bi-send"></i> 
-                            Notificar Documentos Faltantes al Colaborador
+                        <button type="submit" name="accion" value="solicitar_documentos_uc6" 
+                                class="btn btn-primary btn-lg">
+                            <i class="bi bi-file-earmark-plus"></i> 
+                            Ir a Formulario de Solicitud de Documentos (UC6)
                         </button>
                     </div>
                     {% endif %}

@@ -64,8 +64,14 @@ class SolicitudDocumentosService:
             if not incapacidad:
                 return False, f"Incapacidad {incapacidad_id} no encontrada", None
             
-            # Validar que el estado es PENDIENTE_VALIDACION
-            if incapacidad.estado != EstadoIncapacidadEnum.PENDIENTE_VALIDACION.value:
+            # Validar que el estado es PENDIENTE_VALIDACION (o legacy 'Pendiente')
+            # Aceptar ambos para retrocompatibilidad con datos legacy
+            estados_validos = [
+                EstadoIncapacidadEnum.PENDIENTE_VALIDACION.value,
+                'Pendiente'  # Estado legacy
+            ]
+            
+            if incapacidad.estado not in estados_validos:
                 return False, f"Incapacidad debe estar en PENDIENTE_VALIDACION (actual: {incapacidad.estado})", None
             
             # Validar que hay documentos a solicitar
@@ -169,6 +175,16 @@ class SolicitudDocumentosService:
             errores = []
             tipos_entregados = set()
             
+            # MAPEO: Convertir tipos enum a simples para coincidencia
+            mapeo_tipo_simple = {
+                'CERTIFICADO_INCAPACIDAD': 'certificado',
+                'EPICRISIS': 'epicrisis',
+                'FURIPS': 'furips',
+                'CERTIFICADO_NACIDO_VIVO': 'certificado_nacido_vivo',
+                'REGISTRO_CIVIL': 'registro_civil',
+                'DOCUMENTO_IDENTIDAD': 'documento_identidad_madre',
+            }
+            
             for doc in documentos_entregados:
                 # Validar formato
                 extensiones_validas = ['.pdf', '.jpg', '.jpeg', '.png']
@@ -183,6 +199,8 @@ class SolicitudDocumentosService:
                     continue
                 
                 # Marcar tipo como entregado
+                # IMPORTANTE: Agregar tanto el tipo simple (como se guarda en BD)
+                # como cualquier enum correspondiente para compatibilidad
                 tipos_entregados.add(doc.tipo_documento)
             
             # c) Si hay documentos inválidos, retornar errores
@@ -190,14 +208,26 @@ class SolicitudDocumentosService:
                 return False, errores, solicitudes_pendientes
             
             # Marcar solicitudes como entregadas según documentos válidos
+            # IMPORTANTE: Comparar convertiendo enum a simple
             for solicitud in solicitudes_pendientes:
-                if solicitud.tipo_documento in tipos_entregados:
+                # Convertir el tipo enum de la solicitud a simple
+                tipo_solicitud_simple = mapeo_tipo_simple.get(
+                    solicitud.tipo_documento, 
+                    solicitud.tipo_documento
+                )
+                
+                # Verificar si algún documento entregado coincide
+                # Buscar por tipo simple (como se guarda en BD)
+                if tipo_solicitud_simple in tipos_entregados:
                     solicitud.estado = EstadoSolicitudDocumentoEnum.ENTREGADO.value
                     solicitud.fecha_entrega = datetime.utcnow()
             
             db.session.commit()
             
             # d) Verificar si TODAS las solicitudes fueron respondidas
+            # ⚠️ IMPORTANTE: Refrescar solicitudes_pendientes desde BD para asegurar datos actualizados
+            # No usar la lista en memoria que puede estar desincronizada
+            db.session.refresh(incapacidad)
             solicitudes_aun_pendientes = incapacidad.obtener_solicitudes_pendientes()
             
             if not solicitudes_aun_pendientes:

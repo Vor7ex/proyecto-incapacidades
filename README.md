@@ -166,15 +166,51 @@ proyecto-incapacidades/
 
 ---
 
-## 🧭 Cambios Destacados (esta sesión)
+## 🧭 Cambios Destacados (esta sesión - 20 Octubre 2025)
 
-- feat(UX): Previews de archivos en `registro_incapacidad.html` (imágenes y PDFs)
-- feat(UX): Preservación de archivos seleccionados cuando hay errores (DataTransfer)
-- feat(UX): Modal de confirmación con código de radicación y botón copiar
-- feat(routes): `/incapacidades/registrar` ahora responde JSON para peticiones AJAX
-- refactor: `crear_usuarios.py` reescrito y robustecido (recrea usuarios de prueba)
-- docs: `docs/MEJORAS_UX_CLIENTE.md` añadido con detalles, pruebas y diagramas
-- commit: `1217bae` contiene las mejoras UX y cambios relacionados
+### Fixes Críticos UC6 - Gestión de Documentos:
+- 🐛 **FIJO:** Documentos cargados mostraban "Falta" incorrectamente
+  - Causa raíz: Inconsistencia en `tipo_documento` (mix de strings simples y enums)
+  - Solución: Normalizar almacenamiento a tipos simples en línea 1010 `incapacidades.py`
+  
+- 🐛 **FIJO:** Estado no cambiaba después de subir documentos
+  - Causa: Comparación de enums vs strings nunca coincidía en validación
+  - Solución: Agregar `mapeo_tipo_simple` en `solicitud_documentos_service.py` línea 197
+  
+- 🐛 **FIJO:** Permitía subir documentos indefinidamente
+  - Causa: Solicitudes nunca marcadas como `ENTREGADO`
+  - Solución: Una vez estado cambia a `PENDIENTE_VALIDACION`, frontend redirige
+  
+- 🐛 **FIJO:** Mensajes de respuesta mostraban valores enum (CERTIFICADO_INCAPACIDAD)
+  - Causa: JSON retornaba directamente `p.tipo_documento`
+  - Solución: Agregar mapeo de nombres legibles en línea 1044-1056 `incapacidades.py`
+
+### Mejoras de Estilización:
+- 📱 **Estilización completa de estados en `mis_incapacidades.html`:**
+  - Agregados emojis de estatus con nombres legibles (⏳ Pendiente, ✅ Aprobada, etc)
+  - Colores diferenciados para cada estado UC6:
+    - 🟠 `DOCUMENTACION_INCOMPLETA` → naranja (#fd7e14)
+    - 🟢 `DOCUMENTACION_COMPLETA` → verde claro (#20c997)
+    - 🔵 `PENDIENTE_VALIDACION` → celeste (#0dcaf0)
+    - ✅ `VALIDADA` → verde oscuro (#198754)
+  
+- 🎨 **CSS mejorado en `styles.css`:**
+  - `.badge-estado` con mejor contraste y spacing
+  - Soporte responsive para tablets/móviles
+  - Botones agrupados en tabla más compactos
+  - Mínimo ancho de 150px en badges para claridad
+
+- 🖥️ **Tabla más legible:**
+  - Iconos Bootstrap en encabezados
+  - Espaciado mejorado
+  - Badges secundarios para tipo e indicadores
+  - Acciones en botones grupo (btn-group-sm)
+
+### Archivos Modificados:
+- ✏️ `app/routes/incapacidades.py` (líneas 710-780, 994-1010, 1044-1072)
+- ✏️ `app/services/solicitud_documentos_service.py` (línea 173-197)
+- ✏️ `app/templates/mis_incapacidades.html` (rediseño completo)
+- ✏️ `app/static/css/styles.css` (nuevos estados UC6)
 
 ---
 
@@ -256,42 +292,36 @@ python toggle_email.py status  # Ver estado
 
 # Resumen de Cambios
 
-## **Sesión 19 Octubre 2025 - Tarea 6: Scheduler, Testing y Documentación UC6**
+# Resumen de Cambios
 
-- **Scheduler Automático:** Se implementó `app/tasks/scheduler_uc6.py` con APScheduler
-  - Tarea diaria a las 08:00 AM para procesar recordatorios
-  - Configuración en `app/__init__.py` con flag `SCHEDULER_ENABLED`
-  - Función `procesar_recordatorios_documentos()` ejecuta lógica de negocio
-  - Timezone: America/Bogota
+## **Sesión 20 Octubre 2025 - Bug Fixes Críticos UC6 y Estilización**
 
-- **Tests Implementados:**
-  - ✅ `tests/test_notificaciones_uc6.py`: 9/9 tests passing (100%)
-  - ⚠️ `tests/test_uc6_completo_e2e.py`: Creado (requiere ajustes)
-  - ⚠️ `tests/test_excepciones_uc6.py`: Creado (requiere ajustes)
+### Bugs Corregidos:
+1. **Documentos mostraban "Falta" después de ser cargados**
+   - Problema: `tipo_documento` almacenado de forma inconsistente (enums vs strings)
+   - Solución: Normalizar a strings simples en todas partes
+   - Impacto: UC6 ahora funciona correctamente
 
-- **Documentación Completa:**
-  - ✅ `docs/UC6_SOLICITUD_DOCUMENTOS.md`: 600+ líneas
-  - Diagramas ASCII de estados y secuencia
-  - Línea de tiempo completa (día 0 a día 6+)
-  - Ejemplos de uso para usuarios finales y desarrolladores
-  - Logs esperados y troubleshooting
-  - Arquitectura técnica y FAQ
+2. **Estado no cambiaba a PENDIENTE_VALIDACION**
+   - Problema: Comparación de tipos nunca coincidía (CERTIFICADO_INCAPACIDAD vs certificado)
+   - Solución: Mapeo en `solicitud_documentos_service.py` antes de comparar
+   - Impacto: Flujo de validación de documentos restaurado
 
-- **README Actualizado:**
-  - UC6 cambiado de 🔴 0% a ✅ 95%
-  - Agregado APScheduler al stack tecnológico
-  - Link a documentación completa de UC6
+3. **Mensajes JSON mostraban valores enum**
+   - Problema: Response incluía `CERTIFICADO_INCAPACIDAD` en lugar de texto legible
+   - Solución: Diccionario de mapeo para nombres amigables
+   - Impacto: UX mejorada, usuarios entienden qué documentos faltan
 
-## **Sesión 13 Octubre 2025 - Mejoras UX y Backend**
+### Mejoras de UI/UX:
+- Tabla "Mis Incapacidades" completamente rediseñada
+- Estados UC6 con colores diferenciados y emojis
+- Responsive design mejorado para mobile
+- Badges con mejor contraste (fix letras blancas sobre fondo blanco)
 
-- **Mejoras de UX:** Interfaces mejoradas con modales de confirmación, previsualización de archivos y experiencia de usuario más intuitiva.
-- **Backend:** Lógica de respuestas AJAX/JSON actualizada en `/incapacidades/registrar`.
-- **Script de Creación de Usuarios:** Refactorización de `crear_usuarios.py` con manejo robusto de errores.
-- **Tests:** Pruebas ejecutadas exitosamente (ej: `tests/test_validacion_documentos.py`).
-- **Documentación:** Ver `docs/MEJORAS_UX_CLIENTE.md` para detalles adicionales.
+### Status: ✅ 95% → 📈 Mejora de confiabilidad
 
 ---
 
-**Última actualización:** 2025-10-19  
-**Estado:** Pre-Release 1.0 (70% completo - UC6 implementado)  
+**Última actualización:** 2025-10-20  
+**Estado:** Pre-Release 1.0 (75% completo - UC6 bugs fixed y UI mejorada)  
 **Próximo hito:** Tests E2E de UC6 y validación automática (UC5)

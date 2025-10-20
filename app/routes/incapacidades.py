@@ -100,27 +100,20 @@ def registrar():
 
         dias = calcular_dias(fecha_inicio, fecha_fin)
 
-        # UC1: Validar documentos obligatorios según tipo de incapacidad
-        documentos_validos, docs_faltantes, error_docs = validar_documentos_incapacidad(
-            tipo, 
-            request.files,
-            dias
-        )
-        
-        if not documentos_validos:
-            if is_ajax:
-                errors = [error_docs]
-                if docs_faltantes:
-                    errors.append(f"Documentos faltantes: {', '.join(docs_faltantes)}")
-                return jsonify({'success': False, 'errors': errors}), 400
-            flash(error_docs, 'danger')
-            return redirect(url_for('incapacidades.registrar'))
+        # ========================================
+        # CAMBIO UC6: Documentos son OPCIONALES en registro inicial
+        # El auxiliar los solicitará después mediante UC6 si faltan
+        # ========================================
+        # Ya no validamos documentos obligatorios aquí
+        # El colaborador puede registrar sin documentos o con documentos parciales
 
         # ========================================
         # TRANSACCIÓN ATÓMICA: Incapacidad + Documentos
         # Si falla cualquier paso, se revierte todo
         # ========================================
         try:
+            from app.models.enums import EstadoIncapacidadEnum
+            
             # Crear incapacidad (sin commit aún)
             incapacidad = Incapacidad(
                 usuario_id=current_user.id,
@@ -128,7 +121,7 @@ def registrar():
                 fecha_inicio=fecha_inicio,
                 fecha_fin=fecha_fin,
                 dias=dias,
-                estado='Pendiente'
+                estado=EstadoIncapacidadEnum.PENDIENTE_VALIDACION.value
             )
             
             # Asignar código de radicación único
@@ -141,9 +134,10 @@ def registrar():
             # Procesar archivos (puede lanzar excepciones)
             archivos_guardados, errores_archivos = procesar_archivos(request.files, incapacidad.id)
             
-            # Verificar que se guardaron archivos
-            if archivos_guardados == 0:
-                raise ValueError('No se cargaron documentos. Se requiere al menos el certificado.')
+            # UC6: Ya NO requerimos documentos en el registro inicial
+            # El auxiliar los solicitará después si faltan
+            # if archivos_guardados == 0:
+            #     raise ValueError('No se cargaron documentos.')
             
             # Si hay errores en archivos, informar pero continuar
             warnings = []
@@ -198,12 +192,13 @@ def registrar():
                 }), 200
             
             # Mensaje de éxito con código de radicación
-            flash(
-                f'✅ Incapacidad registrada exitosamente. '
-                f'Código de radicación: {incapacidad.codigo_radicacion}', 
-                'success'
-            )
-            flash(f'{archivos_guardados} documento(s) cargado(s)', 'info')
+            success_msg = f'✅ Incapacidad registrada exitosamente. Código de radicación: {incapacidad.codigo_radicacion}'
+            flash(success_msg, 'success')
+            
+            if archivos_guardados > 0:
+                flash(f'{archivos_guardados} documento(s) cargado(s)', 'info')
+            else:
+                flash('⚠️ No se cargaron documentos. Gestión Humana podrá solicitarlos posteriormente.', 'warning')
             
             return redirect(url_for('incapacidades.mis_incapacidades'))
             
@@ -327,14 +322,40 @@ def mis_incapacidades():
 @login_required
 def dashboard_auxiliar():
     """Dashboard de Auxiliar RRHH (CU-006 y CU-007)"""
+    from app.models.enums import EstadoIncapacidadEnum
+    
     if current_user.rol != 'auxiliar':
         flash('Acceso denegado. Solo Auxiliar RRHH puede acceder.', 'danger')
         return redirect(url_for('auth.index'))
 
-    pendientes = Incapacidad.query.filter_by(estado='Pendiente').all()
-    en_revision = Incapacidad.query.filter_by(estado='En revision').all()
-    aprobadas = Incapacidad.query.filter_by(estado='Aprobada').all()
-    rechazadas = Incapacidad.query.filter_by(estado='Rechazada').all()
+    # Obtener incapacidades en diferentes estados (compatibilidad legacy + nuevos)
+    pendientes = Incapacidad.query.filter(
+        Incapacidad.estado.in_([
+            EstadoIncapacidadEnum.PENDIENTE_VALIDACION.value,
+            'Pendiente'  # Legacy
+        ])
+    ).all()
+    
+    en_revision = Incapacidad.query.filter(
+        Incapacidad.estado.in_([
+            EstadoIncapacidadEnum.DOCUMENTACION_COMPLETA.value,
+            'En revision'  # Legacy
+        ])
+    ).all()
+    
+    aprobadas = Incapacidad.query.filter(
+        Incapacidad.estado.in_([
+            EstadoIncapacidadEnum.APROBADA_PENDIENTE_TRANSCRIPCION.value,
+            'Aprobada'  # Legacy
+        ])
+    ).all()
+    
+    rechazadas = Incapacidad.query.filter(
+        Incapacidad.estado.in_([
+            EstadoIncapacidadEnum.RECHAZADA.value,
+            'Rechazada'  # Legacy
+        ])
+    ).all()
 
     return render_template('dashboard_auxiliar.html', 
                          pendientes=pendientes, 
@@ -359,6 +380,8 @@ def detalle(id):
 @login_required
 def validar(id):
     """CU-006: Validar documentación (Auxiliar RRHH)"""
+    from app.models.enums import EstadoIncapacidadEnum
+    
     if current_user.rol != 'auxiliar':
         flash('Acceso denegado. Solo Auxiliar RRHH puede validar documentación.', 'danger')
         return redirect(url_for('auth.index'))
@@ -369,8 +392,8 @@ def validar(id):
         accion = request.form.get('accion')
         
         if accion == 'completar_revision':
-            # Marcar como en revision (documentacion completa)
-            incapacidad.estado = 'En revision'
+            # Marcar como documentacion completa
+            incapacidad.estado = EstadoIncapacidadEnum.DOCUMENTACION_COMPLETA.value
             db.session.commit()
             
             # UC2: Notificar validacion completada
@@ -384,20 +407,9 @@ def validar(id):
             flash('Documentacion marcada como completa. Ahora puede aprobar o rechazar.', 'success')
             return redirect(url_for('incapacidades.aprobar_rechazar', id=id))
         
-        elif accion == 'solicitar_documentos':
-            # Mantener en pendiente (documentacion incompleta)
-            observaciones = request.form.get('observaciones', '')
-            
-            # UC2: Notificar documentos faltantes
-            try:
-                notificar_documentos_faltantes(incapacidad, observaciones)
-            except Exception as e:
-                print(f"❌ Error al enviar notificacion: {e}")
-                import traceback
-                traceback.print_exc()
-            
-            flash(f'Solicitud registrada: {observaciones}. Notificacion enviada al colaborador.', 'warning')
-            return redirect(url_for('incapacidades.dashboard_auxiliar'))
+        elif accion == 'solicitar_documentos_uc6':
+            # UC6: Redirigir a formulario de solicitud de documentos
+            return redirect(url_for('incapacidades.solicitar_documentos', incapacidad_id=id))
     
     # UC10: Validacion automatica de requisitos
     validacion = validar_requisitos_automatico(incapacidad)
@@ -460,14 +472,23 @@ def validar_requisitos_automatico(incapacidad):
 @login_required
 def aprobar_rechazar(id):
     """CU-007: Aprobar o rechazar incapacidad (Auxiliar RRHH)"""
+    from app.models.enums import EstadoIncapacidadEnum
+    
     if current_user.rol != 'auxiliar':
         flash('Acceso denegado. Solo Auxiliar RRHH puede aprobar/rechazar incapacidades.', 'danger')
         return redirect(url_for('auth.index'))
     
     incapacidad = Incapacidad.query.get_or_404(id)
     
-    # Solo se puede aprobar/rechazar si esta en revision
-    if incapacidad.estado not in ['En revision', 'Pendiente']:
+    # Solo se puede aprobar/rechazar si esta en revision/documentacion completa
+    estados_validos = [
+        EstadoIncapacidadEnum.DOCUMENTACION_COMPLETA.value,
+        'En revision',  # Legacy
+        EstadoIncapacidadEnum.PENDIENTE_VALIDACION.value,
+        'Pendiente'  # Legacy
+    ]
+    
+    if incapacidad.estado not in estados_validos:
         flash('Esta incapacidad ya fue procesada', 'warning')
         return redirect(url_for('incapacidades.dashboard_auxiliar'))
     
@@ -475,7 +496,7 @@ def aprobar_rechazar(id):
         decision = request.form.get('decision')
         
         if decision == 'aprobar':
-            incapacidad.estado = 'Aprobada'
+            incapacidad.estado = EstadoIncapacidadEnum.APROBADA_PENDIENTE_TRANSCRIPCION.value
             incapacidad.motivo_rechazo = None
             db.session.commit()
             
@@ -496,7 +517,7 @@ def aprobar_rechazar(id):
                 flash('Debe especificar un motivo de rechazo (minimo 10 caracteres)', 'danger')
                 return render_template('aprobar_rechazar.html', incapacidad=incapacidad)
             
-            incapacidad.estado = 'Rechazada'
+            incapacidad.estado = EstadoIncapacidadEnum.RECHAZADA.value
             incapacidad.motivo_rechazo = motivo
             db.session.commit()
             
@@ -517,15 +538,41 @@ def aprobar_rechazar(id):
 @login_required
 def estadisticas():
     """Vista de estadísticas básicas (Auxiliar RRHH)"""
+    from app.models.enums import EstadoIncapacidadEnum
+    
     if current_user.rol != 'auxiliar':
         flash('Acceso denegado', 'danger')
         return redirect(url_for('auth.index'))
     
     total = Incapacidad.query.count()
-    pendientes = Incapacidad.query.filter_by(estado='Pendiente').count()
-    en_revision = Incapacidad.query.filter_by(estado='En revision').count()
-    aprobadas = Incapacidad.query.filter_by(estado='Aprobada').count()
-    rechazadas = Incapacidad.query.filter_by(estado='Rechazada').count()
+    
+    pendientes = Incapacidad.query.filter(
+        Incapacidad.estado.in_([
+            EstadoIncapacidadEnum.PENDIENTE_VALIDACION.value,
+            'Pendiente'
+        ])
+    ).count()
+    
+    en_revision = Incapacidad.query.filter(
+        Incapacidad.estado.in_([
+            EstadoIncapacidadEnum.DOCUMENTACION_COMPLETA.value,
+            'En revision'
+        ])
+    ).count()
+    
+    aprobadas = Incapacidad.query.filter(
+        Incapacidad.estado.in_([
+            EstadoIncapacidadEnum.APROBADA_PENDIENTE_TRANSCRIPCION.value,
+            'Aprobada'
+        ])
+    ).count()
+    
+    rechazadas = Incapacidad.query.filter(
+        Incapacidad.estado.in_([
+            EstadoIncapacidadEnum.RECHAZADA.value,
+            'Rechazada'
+        ])
+    ).count()
     
     total_documentos = Documento.query.count()
     
@@ -624,9 +671,15 @@ def solicitar_documentos(incapacidad_id):
     """
     RUTA 1 UC6: Mostrar formulario para solicitar documentos faltantes.
     Acceso: Solo AUXILIAR_GH
+    
+    Lógica:
+    1. Si hay solicitudes PENDIENTES → Mostrar esas solicitudes con estado de documentos
+    2. Si NO hay solicitudes PENDIENTES → Mostrar documentos requeridos para crear nuevas
     """
     from app.routes.auth import require_role
-    from app.models.enums import EstadoIncapacidadEnum, TipoDocumentoEnum
+    from app.models.enums import EstadoIncapacidadEnum, TipoDocumentoEnum, EstadoSolicitudDocumentoEnum
+    from app.models.solicitud_documento import SolicitudDocumento
+    from app.utils.validaciones import obtener_documentos_requeridos
     
     # Verificar rol auxiliar
     if current_user.rol != 'auxiliar':
@@ -636,45 +689,107 @@ def solicitar_documentos(incapacidad_id):
     # Obtener incapacidad
     incapacidad = Incapacidad.query.get_or_404(incapacidad_id)
     
-    # Verificar estado válido
-    if incapacidad.estado != EstadoIncapacidadEnum.PENDIENTE_VALIDACION.value:
-        flash(f'La incapacidad debe estar en estado PENDIENTE_VALIDACION. Estado actual: {incapacidad.estado}', 'warning')
+    # Verificar estado válido - Aceptar tanto el nuevo estado como el antiguo
+    estados_validos = [
+        EstadoIncapacidadEnum.PENDIENTE_VALIDACION.value,
+        'Pendiente'  # Estado legacy para retrocompatibilidad
+    ]
+    
+    if incapacidad.estado not in estados_validos:
+        flash(f'La incapacidad debe estar en estado PENDIENTE. Estado actual: {incapacidad.estado}', 'warning')
         return redirect(url_for('incapacidades.dashboard_auxiliar'))
     
-    # Obtener documentos requeridos según tipo
-    from app.utils.validaciones import obtener_documentos_requeridos
-    requisitos = obtener_documentos_requeridos(incapacidad.tipo, incapacidad.dias)
+    # MAPEO: Convertir tipos de documento para mostrar correctamente
+    mapeo_inverso = {
+        'CERTIFICADO_INCAPACIDAD': 'certificado',
+        'EPICRISIS': 'epicrisis',
+        'FURIPS': 'furips',
+        'CERTIFICADO_NACIDO_VIVO': 'certificado_nacido_vivo',
+        'REGISTRO_CIVIL': 'registro_civil',
+        'DOCUMENTO_IDENTIDAD': 'documento_identidad_madre',
+    }
+    
+    # Nombres legibles para mostrar en el template
+    nombres_legibles = {
+        'certificado': 'Certificado de Incapacidad',
+        'epicrisis': 'Epicrisis o Documento Soporte',
+        'furips': 'FURIPS',
+        'certificado_nacido_vivo': 'Certificado de Nacido Vivo',
+        'registro_civil': 'Registro Civil',
+        'documento_identidad_madre': 'Documento de Identidad de la Madre',
+    }
     
     # Obtener documentos ya cargados
     documentos_cargados = Documento.query.filter_by(incapacidad_id=incapacidad.id).all()
     tipos_cargados = {doc.tipo_documento for doc in documentos_cargados}
     
-    # Construir lista de documentos con estado
+    # Obtener solicitudes de documentos PENDIENTES (no respondidas)
+    solicitudes_pendientes = SolicitudDocumento.query.filter_by(
+        incapacidad_id=incapacidad.id,
+        estado=EstadoSolicitudDocumentoEnum.PENDIENTE.value
+    ).all()
+    
     documentos_disponibles = []
+    es_visualizacion = False
     
-    # Documentos obligatorios
-    for doc_tipo in requisitos.get('obligatorios', []):
-        documentos_disponibles.append({
-            'tipo': doc_tipo,
-            'requerido': True,
-            'cargado': doc_tipo in tipos_cargados,
-            'falta': doc_tipo not in tipos_cargados
-        })
-    
-    # Documentos opcionales
-    for doc_tipo in requisitos.get('opcionales', []):
-        documentos_disponibles.append({
-            'tipo': doc_tipo,
-            'requerido': False,
-            'cargado': doc_tipo in tipos_cargados,
-            'falta': doc_tipo not in tipos_cargados
-        })
+    if solicitudes_pendientes:
+        # CASO 1: Hay solicitudes pendientes → Mostrar esas (visualización de solicitudes existentes)
+        es_visualizacion = True
+        
+        for solicitud in solicitudes_pendientes:
+            # El tipo_documento en solicitud está guardado como enum (CERTIFICADO_INCAPACIDAD)
+            doc_tipo_enum = solicitud.tipo_documento
+            doc_tipo_simple = mapeo_inverso.get(doc_tipo_enum, doc_tipo_enum)
+            
+            # Verificar si el documento está cargado
+            documento_cargado = doc_tipo_simple in tipos_cargados
+            
+            documentos_disponibles.append({
+                'tipo': doc_tipo_simple,
+                'tipo_enum': doc_tipo_enum,
+                'nombre_legible': nombres_legibles.get(doc_tipo_simple, doc_tipo_simple),
+                'requerido': True,  # Todo lo que está en solicitud es requerido
+                'cargado': documento_cargado,
+                'falta': not documento_cargado,
+                'solicitud_id': solicitud.id,
+                'observaciones_auxiliar': solicitud.observaciones_auxiliar
+            })
+    else:
+        # CASO 2: No hay solicitudes pendientes → Mostrar documentos requeridos para crear nuevas
+        requisitos = obtener_documentos_requeridos(incapacidad.tipo, incapacidad.dias)
+        
+        # Documentos obligatorios
+        for doc_tipo_enum in requisitos.get('obligatorios', []):
+            doc_tipo_simple = mapeo_inverso.get(doc_tipo_enum, doc_tipo_enum)
+            documento_cargado = doc_tipo_simple in tipos_cargados
+            documentos_disponibles.append({
+                'tipo': doc_tipo_simple,
+                'tipo_enum': doc_tipo_enum,
+                'nombre_legible': nombres_legibles.get(doc_tipo_simple, doc_tipo_simple),
+                'requerido': True,
+                'cargado': documento_cargado,
+                'falta': not documento_cargado
+            })
+        
+        # Documentos opcionales
+        for doc_tipo_enum in requisitos.get('opcionales', []):
+            doc_tipo_simple = mapeo_inverso.get(doc_tipo_enum, doc_tipo_enum)
+            documento_cargado = doc_tipo_simple in tipos_cargados
+            documentos_disponibles.append({
+                'tipo': doc_tipo_simple,
+                'tipo_enum': doc_tipo_enum,
+                'nombre_legible': nombres_legibles.get(doc_tipo_simple, doc_tipo_simple),
+                'requerido': False,
+                'cargado': documento_cargado,
+                'falta': not documento_cargado
+            })
     
     return render_template(
         'solicitar_documentos.html',
         incapacidad=incapacidad,
         documentos_disponibles=documentos_disponibles,
-        TipoDocumentoEnum=TipoDocumentoEnum
+        TipoDocumentoEnum=TipoDocumentoEnum,
+        es_visualizacion=es_visualizacion
     )
 
 
@@ -704,17 +819,33 @@ def procesar_solicitud_documentos(incapacidad_id):
         flash('Debe seleccionar al menos un documento para solicitar.', 'warning')
         return redirect(url_for('incapacidades.solicitar_documentos', incapacidad_id=incapacidad_id))
     
-    # Construir observaciones_por_tipo
-    observaciones_por_tipo = {}
-    for doc_tipo in documentos_seleccionados:
-        observacion = request.form.get(f'observacion_{doc_tipo}', '')
-        if observacion.strip():
-            observaciones_por_tipo[doc_tipo] = observacion.strip()
+    # MAPEO: Convertir tipos de documento legibles a valores del enum
+    mapeo_tipos = {
+        'certificado': TipoDocumentoEnum.CERTIFICADO_INCAPACIDAD.value,
+        'epicrisis': TipoDocumentoEnum.EPICRISIS.value,
+        'furips': TipoDocumentoEnum.FURIPS.value,
+        'certificado_nacido_vivo': TipoDocumentoEnum.CERTIFICADO_NACIDO_VIVO.value,
+        'registro_civil': TipoDocumentoEnum.REGISTRO_CIVIL.value,
+        'documento_identidad_madre': TipoDocumentoEnum.DOCUMENTO_IDENTIDAD.value,
+    }
     
-    # Llamar al servicio
+    # Convertir documentos seleccionados usando el mapeo
+    documentos_mapeados = []
+    for doc in documentos_seleccionados:
+        doc_mapeado = mapeo_tipos.get(doc, doc)  # Usar valor mapeado o el original si no existe
+        documentos_mapeados.append(doc_mapeado)
+    
+    # Construir observaciones_por_tipo (usando tipos mapeados como key)
+    observaciones_por_tipo = {}
+    for doc_original, doc_mapeado in zip(documentos_seleccionados, documentos_mapeados):
+        observacion = request.form.get(f'observacion_{doc_original}', '')
+        if observacion.strip():
+            observaciones_por_tipo[doc_mapeado] = observacion.strip()
+    
+    # Llamar al servicio con documentos mapeados
     exito, mensaje, solicitudes = SolicitudDocumentosService.crear_solicitud_documentos(
         incapacidad_id=incapacidad.id,
-        documentos_a_solicitar=documentos_seleccionados,
+        documentos_a_solicitar=documentos_mapeados,
         observaciones_por_tipo=observaciones_por_tipo,
         usuario_auxiliar=current_user
     )
@@ -863,13 +994,25 @@ def procesar_cargar_documentos_solicitados(incapacidad_id):
             
             metadatos = resultado['metadatos']
             
+            # IMPORTANTE: Convertir tipo_documento a tipo simple (no enum)
+            # Los documentos en BD deben guardarse siempre como tipos simples
+            mapeo_tipo_simple = {
+                'CERTIFICADO_INCAPACIDAD': 'certificado',
+                'EPICRISIS': 'epicrisis',
+                'FURIPS': 'furips',
+                'CERTIFICADO_NACIDO_VIVO': 'certificado_nacido_vivo',
+                'REGISTRO_CIVIL': 'registro_civil',
+                'DOCUMENTO_IDENTIDAD': 'documento_identidad_madre',
+            }
+            tipo_simple = mapeo_tipo_simple.get(solicitud.tipo_documento, solicitud.tipo_documento)
+            
             # Crear objeto Documento
             documento = Documento(
                 incapacidad_id=incapacidad.id,
                 nombre_archivo=metadatos['nombre_archivo'],
                 nombre_unico=metadatos['nombre_unico'],
                 ruta=metadatos['ruta'],
-                tipo_documento=solicitud.tipo_documento,
+                tipo_documento=tipo_simple,  # Guardar como tipo simple
                 tamaño_bytes=metadatos['tamaño_bytes'],
                 mime_type=metadatos['mime_type']
             )
@@ -914,13 +1057,25 @@ def procesar_cargar_documentos_solicitados(incapacidad_id):
         }), 200
     else:
         # Entrega parcial
-        documentos_pendientes = [p.tipo_documento for p in pendientes]
+        # Mapear tipos enum a nombres legibles
+        nombres_legibles = {
+            'CERTIFICADO_INCAPACIDAD': 'Certificado de Incapacidad',
+            'EPICRISIS': 'Epicrisis o Documento Soporte',
+            'FURIPS': 'FURIPS',
+            'CERTIFICADO_NACIDO_VIVO': 'Certificado de Nacido Vivo',
+            'REGISTRO_CIVIL': 'Registro Civil',
+            'DOCUMENTO_IDENTIDAD': 'Documento de Identidad de la Madre',
+        }
+        documentos_pendientes_nombres = [
+            nombres_legibles.get(p.tipo_documento, p.tipo_documento) 
+            for p in pendientes
+        ]
         return jsonify({
             'success': True,
-            'message': f'✅ Documentos cargados. Aún faltan: {", ".join(documentos_pendientes)}',
+            'message': f'✅ Documentos cargados. Aún faltan: {", ".join(documentos_pendientes_nombres)}',
             'codigo_radicacion': incapacidad.codigo_radicacion,
             'completo': False,
-            'pendientes': documentos_pendientes
+            'pendientes': documentos_pendientes_nombres
         }), 200
 
 
