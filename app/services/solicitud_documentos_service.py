@@ -1,4 +1,5 @@
 """Servicio de negocio para UC6 - Solicitud de Documentos Faltantes."""
+import logging
 from datetime import datetime
 from typing import List, Dict, Tuple, Optional
 
@@ -21,6 +22,9 @@ from app.utils.eventos_uc6 import (
     emitir_solicitud_vencida,
 )
 from app.utils.maquina_estados import validar_cambio_estado
+
+# Logger
+logger = logging.getLogger(__name__)
 
 
 class SolicitudDocumentosService:
@@ -114,7 +118,18 @@ class SolicitudDocumentosService:
                 auxiliar_id=usuario_auxiliar.id
             )
             
-            # f) Retornar éxito
+            # f) Enviar notificación al colaborador
+            try:
+                from app.utils.email_service import notificar_solicitud_documentos
+                notificar_solicitud_documentos(
+                    incapacidad=incapacidad,
+                    solicitudes=solicitudes_creadas,
+                    usuario_auxiliar=usuario_auxiliar
+                )
+            except Exception as email_error:
+                logger.warning(f"No se pudo enviar notificación de solicitud: {email_error}")
+            
+            # g) Retornar éxito
             return True, f"Solicitud creada exitosamente. Vencimiento: {fecha_vencimiento}", solicitudes_creadas
         
         except Exception as e:
@@ -204,6 +219,25 @@ class SolicitudDocumentosService:
                     solicitud_completa=True
                 )
                 
+                # Notificar al auxiliar que se completó la documentación
+                try:
+                    from app.utils.email_service import notificar_documentacion_completada
+                    # Buscar email del auxiliar que creó la solicitud
+                    solicitud_ejemplo = solicitudes_pendientes[0] if solicitudes_pendientes else None
+                    email_auxiliar = None
+                    if solicitud_ejemplo and solicitud_ejemplo.historial_estados:
+                        for historial in solicitud_ejemplo.historial_estados:
+                            if historial.usuario and historial.usuario.rol.value in ['AUXILIAR', 'GESTION_HUMANA']:
+                                email_auxiliar = historial.usuario.email
+                                break
+                    
+                    notificar_documentacion_completada(
+                        incapacidad=incapacidad,
+                        email_auxiliar=email_auxiliar
+                    )
+                except Exception as email_error:
+                    logger.warning(f"No se pudo notificar documentación completada: {email_error}")
+                
                 return True, [], []
             
             # e) Algunas pendientes
@@ -260,6 +294,21 @@ class SolicitudDocumentosService:
                             solicitud.intentos_notificacion = 1
                             solicitud.ultima_notificacion = datetime.utcnow()
                             
+                            # Agrupar solicitudes pendientes por incapacidad
+                            incapacidad = solicitud.incapacidad
+                            solicitudes_pendientes_inc = incapacidad.obtener_solicitudes_pendientes()
+                            
+                            # Enviar recordatorio
+                            try:
+                                from app.utils.email_service import notificar_recordatorio_documentos
+                                notificar_recordatorio_documentos(
+                                    incapacidad=incapacidad,
+                                    numero_recordatorio=1,
+                                    solicitudes_pendientes=solicitudes_pendientes_inc
+                                )
+                            except Exception as email_error:
+                                logger.warning(f"Error al enviar recordatorio #1 para #{incapacidad.id}: {email_error}")
+                            
                             emitir_recordatorio_enviado(
                                 incapacidad_id=solicitud.incapacidad_id,
                                 numero_recordatorio=1,
@@ -275,6 +324,21 @@ class SolicitudDocumentosService:
                             solicitud.numero_reintentos = 1
                             solicitud.intentos_notificacion += 1
                             solicitud.ultima_notificacion = datetime.utcnow()
+                            
+                            # Agrupar solicitudes pendientes por incapacidad
+                            incapacidad = solicitud.incapacidad
+                            solicitudes_pendientes_inc = incapacidad.obtener_solicitudes_pendientes()
+                            
+                            # Enviar recordatorio urgente
+                            try:
+                                from app.utils.email_service import notificar_recordatorio_documentos
+                                notificar_recordatorio_documentos(
+                                    incapacidad=incapacidad,
+                                    numero_recordatorio=2,
+                                    solicitudes_pendientes=solicitudes_pendientes_inc
+                                )
+                            except Exception as email_error:
+                                logger.warning(f"Error al enviar recordatorio #2 para #{incapacidad.id}: {email_error}")
                             
                             emitir_recordatorio_enviado(
                                 incapacidad_id=solicitud.incapacidad_id,

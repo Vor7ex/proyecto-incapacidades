@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recordatorio Urgente - Documentos Faltantes</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 10px 0 0;
+            font-size: 15px;
+            opacity: 0.95;
+        }
+        .urgencia-banner {
+            background-color: #f39c12;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 18px;
+            letter-spacing: 1px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .greeting {
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .alert-message {
+            background-color: #ffe6e6;
+            border-left: 6px solid #e74c3c;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .alert-message h3 {
+            margin: 0 0 10px;
+            color: #c0392b;
+            font-size: 18px;
+        }
+        .alert-message p {
+            margin: 0;
+            color: #c0392b;
+            font-weight: 600;
+        }
+        .incapacidad-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+        .info-value {
+            color: #333;
+        }
+        .deadline-critical {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(231, 76, 60, 0.3);
+        }
+        .deadline-critical h3 {
+            margin: 0 0 15px;
+            font-size: 20px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .deadline-critical .fecha {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 15px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .deadline-critical .warning {
+            font-size: 16px;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+        .documentos-pendientes {
+            background-color: #fff9e6;
+            border: 2px solid #f39c12;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .documentos-pendientes h4 {
+            margin: 0 0 15px;
+            color: #e67e22;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .documentos-pendientes ul {
+            margin: 0;
+            padding-left: 25px;
+            list-style-type: none;
+        }
+        .documentos-pendientes li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ffe6b3;
+            color: #856404;
+            font-weight: 500;
+        }
+        .documentos-pendientes li:last-child {
+            border-bottom: none;
+        }
+        .documentos-pendientes li:before {
+            content: "❌ ";
+            margin-right: 8px;
+        }
+        .consecuencias {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .consecuencias h4 {
+            margin: 0 0 10px;
+            color: #721c24;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .consecuencias p {
+            margin: 5px 0;
+            color: #721c24;
+        }
+        .cta-button {
+            display: block;
+            width: fit-content;
+            margin: 25px auto;
+            padding: 18px 50px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 18px;
+            text-align: center;
+            text-transform: uppercase;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+        }
+        .footer {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            text-align: center;
+            font-size: 13px;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .footer .contacto {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #455a64;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>⚠️ RECORDATORIO URGENTE</h1>
+            <p>Documentos Pendientes</p>
+        </div>
+
+        <!-- Urgencia Banner -->
+        <div class="urgencia-banner">
+            🚨 EL PLAZO VENCE MAÑANA 🚨
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Greeting -->
+            <div class="greeting">
+                Estimado/a <strong>{{ colaborador.nombre }}</strong>,
+            </div>
+
+            <!-- Alert Message -->
+            <div class="alert-message">
+                <h3>⏰ Tiempo Límite Próximo</h3>
+                <p>
+                    Este es un recordatorio urgente: <strong>MAÑANA</strong> vence el plazo para 
+                    cargar los documentos faltantes de tu incapacidad.
+                </p>
+            </div>
+
+            <!-- Incapacidad Info -->
+            <div class="incapacidad-info">
+                <div class="info-row">
+                    <span class="info-label">Código de Radicación:</span>
+                    <span class="info-value"><strong>{{ incapacidad.codigo_radicacion }}</strong></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Estado Actual:</span>
+                    <span class="info-value">{{ incapacidad.estado }}</span>
+                </div>
+            </div>
+
+            <!-- Deadline Critical -->
+            <div class="deadline-critical">
+                <h3>⏱️ Vencimiento del Plazo</h3>
+                <div class="fecha">MAÑANA</div>
+                <div class="warning">
+                    Solo quedan <strong>24 HORAS</strong> para completar la carga de documentos
+                </div>
+            </div>
+
+            <!-- Documentos Pendientes -->
+            <div class="documentos-pendientes">
+                <h4>📄 Documentos que aún faltan:</h4>
+                <ul>
+                    {% for doc in documentos_pendientes %}
+                    <li>{{ doc.tipo }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Consecuencias -->
+            <div class="consecuencias">
+                <h4>⚠️ Importante:</h4>
+                <p>
+                    Si no cargas los documentos dentro del plazo, tu incapacidad será 
+                    <strong>RECHAZADA</strong> y deberás iniciar el proceso desde cero.
+                </p>
+            </div>
+
+            <!-- CTA Button -->
+            <a href="{{ url_for('incapacidades.mis_incapacidades', _external=True) }}" class="cta-button">
+                📤 Cargar Documentos Ahora
+            </a>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Sistema de Gestión de Incapacidades</strong></p>
+            <p>Este es un mensaje automático, por favor no responder.</p>
+            <div class="contacto">
+                <p>Para asistencia urgente, contacta inmediatamente a Gestión Humana</p>
+                <p>📧 gestion.humana@empresa.com | ☎ (123) 456-7890</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -400,6 +400,240 @@ def notificar_rechazo(incapacidad):
 
 
 # ============================================================================
+# UC6: Notificaciones de Solicitud de Documentos
+# ============================================================================
+
+def notificar_solicitud_documentos(incapacidad, solicitudes, usuario_auxiliar):
+    """
+    UC6: Notifica al colaborador sobre documentos faltantes solicitados
+    
+    Args:
+        incapacidad: Instancia de Incapacidad
+        solicitudes: Lista de SolicitudDocumento creadas
+        usuario_auxiliar: Usuario auxiliar que realizó la solicitud
+        
+    Returns:
+        bool: True si la notificación se envió exitosamente
+    """
+    from flask import current_app
+    from app.utils.calendario import dias_habiles_restantes, formatar_fecha_legible
+    
+    logger.info(f"🔔 UC6: Notificando solicitud de documentos para #{incapacidad.id} ({incapacidad.codigo_radicacion})")
+    
+    try:
+        # Validar MAIL_ENABLED
+        if not current_app.config.get('MAIL_ENABLED', True):
+            logger.info(f"📧 [SIMULADO] Solicitud de documentos NO enviada (MAIL_ENABLED=False)")
+            logger.info(f"   Destinatario: {incapacidad.usuario.email}")
+            logger.info(f"   Documentos solicitados: {len(solicitudes)}")
+            return True
+        
+        # Validar email del colaborador
+        if not incapacidad.usuario or not incapacidad.usuario.email:
+            logger.error(f"❌ UC6: No se puede notificar #{incapacidad.id}: colaborador sin email")
+            return False
+        
+        # Construir datos para template
+        documentos_solicitados = []
+        for sol in solicitudes:
+            documentos_solicitados.append({
+                'tipo': sol.tipo_documento.replace('_', ' ').title(),
+                'tipo_raw': sol.tipo_documento,
+                'observaciones': sol.observaciones_auxiliar or 'Sin observaciones adicionales',
+                'fecha_vencimiento': formatar_fecha_legible(sol.fecha_vencimiento)
+            })
+        
+        # Obtener fecha de vencimiento (todas las solicitudes tienen el mismo plazo)
+        fecha_vencimiento = solicitudes[0].fecha_vencimiento
+        dias_restantes = dias_habiles_restantes(datetime.utcnow().date(), fecha_vencimiento)
+        
+        # Renderizar template
+        html_body = render_template(
+            'emails/solicitud_documentos.html',
+            incapacidad=incapacidad,
+            colaborador=incapacidad.usuario,
+            documentos_solicitados=documentos_solicitados,
+            fecha_vencimiento_str=formatar_fecha_legible(fecha_vencimiento),
+            dias_restantes=dias_restantes,
+            auxiliar_nombre=usuario_auxiliar.nombre if usuario_auxiliar else 'Gestión Humana'
+        )
+        
+        # Enviar email con reintentos
+        exito = send_email(
+            subject=f'📄 Documentos faltantes - Incapacidad {incapacidad.codigo_radicacion}',
+            recipients=[incapacidad.usuario.email],
+            html_body=html_body,
+            reintentos=3
+        )
+        
+        if exito:
+            # Actualizar ultima_notificacion en todas las solicitudes
+            for sol in solicitudes:
+                sol.ultima_notificacion = datetime.utcnow()
+            
+            logger.info(
+                f"✅ UC6: Solicitud de documentos enviada a {incapacidad.usuario.email} "
+                f"({len(solicitudes)} documentos, vence en {dias_restantes} días hábiles)"
+            )
+        
+        return exito
+        
+    except Exception as e:
+        logger.error(f"❌ UC6: Error al notificar solicitud de documentos para #{incapacidad.id}: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return False
+
+
+def notificar_recordatorio_documentos(incapacidad, numero_recordatorio, solicitudes_pendientes):
+    """
+    UC6: Envía recordatorio urgente sobre documentos pendientes
+    
+    Args:
+        incapacidad: Instancia de Incapacidad
+        numero_recordatorio: int (1 = día antes, 2 = día de vencimiento)
+        solicitudes_pendientes: Lista de SolicitudDocumento pendientes
+        
+    Returns:
+        bool: True si la notificación se envió exitosamente
+    """
+    from flask import current_app
+    from app.utils.calendario import formatar_fecha_legible
+    
+    logger.info(
+        f"🔔 UC6: Enviando recordatorio #{numero_recordatorio} para #{incapacidad.id} "
+        f"({incapacidad.codigo_radicacion})"
+    )
+    
+    try:
+        # Validar MAIL_ENABLED
+        if not current_app.config.get('MAIL_ENABLED', True):
+            logger.info(f"📧 [SIMULADO] Recordatorio #{numero_recordatorio} NO enviado (MAIL_ENABLED=False)")
+            logger.info(f"   Destinatario: {incapacidad.usuario.email}")
+            return True
+        
+        # Validar email
+        if not incapacidad.usuario or not incapacidad.usuario.email:
+            logger.error(f"❌ UC6: No se puede enviar recordatorio para #{incapacidad.id}: sin email")
+            return False
+        
+        # Preparar datos de documentos
+        documentos_pendientes = []
+        for sol in solicitudes_pendientes:
+            documentos_pendientes.append({
+                'tipo': sol.tipo_documento.replace('_', ' ').title(),
+                'tipo_raw': sol.tipo_documento,
+                'observaciones': sol.observaciones_auxiliar or '',
+                'fecha_vencimiento': formatar_fecha_legible(sol.fecha_vencimiento),
+                'vencida': sol.esta_vencida()
+            })
+        
+        # Seleccionar template según número de recordatorio
+        if numero_recordatorio == 1:
+            template = 'emails/recordatorio_documentos_dia2.html'
+            asunto = f'⏰ RECORDATORIO: Documentos vencen mañana - {incapacidad.codigo_radicacion}'
+        else:  # numero_recordatorio == 2
+            template = 'emails/segunda_notificacion_documentos.html'
+            asunto = f'🚨 URGENTE: Vencimiento de plazo - {incapacidad.codigo_radicacion}'
+        
+        # Renderizar template
+        html_body = render_template(
+            template,
+            incapacidad=incapacidad,
+            colaborador=incapacidad.usuario,
+            documentos_pendientes=documentos_pendientes,
+            numero_recordatorio=numero_recordatorio
+        )
+        
+        # Enviar con reintentos
+        exito = send_email(
+            subject=asunto,
+            recipients=[incapacidad.usuario.email],
+            html_body=html_body,
+            reintentos=3
+        )
+        
+        if exito:
+            # Actualizar ultima_notificacion
+            for sol in solicitudes_pendientes:
+                sol.ultima_notificacion = datetime.utcnow()
+            
+            logger.info(
+                f"✅ UC6: Recordatorio #{numero_recordatorio} enviado a {incapacidad.usuario.email} "
+                f"({len(solicitudes_pendientes)} documentos pendientes)"
+            )
+        
+        return exito
+        
+    except Exception as e:
+        logger.error(
+            f"❌ UC6: Error al enviar recordatorio #{numero_recordatorio} para #{incapacidad.id}: {str(e)}"
+        )
+        import traceback
+        logger.error(traceback.format_exc())
+        return False
+
+
+def notificar_documentacion_completada(incapacidad, email_auxiliar=None):
+    """
+    UC6: Notifica a auxiliar que el colaborador completó la carga de documentos
+    
+    Args:
+        incapacidad: Instancia de Incapacidad
+        email_auxiliar: Email del auxiliar (opcional, usa Config.GESTION_HUMANA_EMAIL si no se provee)
+        
+    Returns:
+        bool: True si la notificación se envió exitosamente
+    """
+    from flask import current_app
+    from config import Config
+    
+    logger.info(f"🔔 UC6: Notificando documentación completada para #{incapacidad.id} ({incapacidad.codigo_radicacion})")
+    
+    try:
+        # Validar MAIL_ENABLED
+        if not current_app.config.get('MAIL_ENABLED', True):
+            logger.info(f"📧 [SIMULADO] Documentación completada NO enviada (MAIL_ENABLED=False)")
+            logger.info(f"   Destinatario: auxiliar/RRHH")
+            return True
+        
+        # Determinar destinatario
+        destinatario = email_auxiliar or Config.GESTION_HUMANA_EMAIL
+        
+        if not destinatario:
+            logger.error(f"❌ UC6: No se puede notificar documentación completada: sin email de auxiliar")
+            return False
+        
+        # Renderizar template
+        html_body = render_template(
+            'emails/documentacion_completada.html',
+            incapacidad=incapacidad,
+            colaborador=incapacidad.usuario
+        )
+        
+        # Enviar email
+        exito = send_email(
+            subject=f'✅ Documentación completada - {incapacidad.codigo_radicacion}',
+            recipients=[destinatario],
+            html_body=html_body,
+            reintentos=3
+        )
+        
+        if exito:
+            logger.info(
+                f"✅ UC6: Notificación de documentación completada enviada a {destinatario}"
+            )
+        
+        return exito
+        
+    except Exception as e:
+        logger.error(f"❌ UC6: Error al notificar documentación completada para #{incapacidad.id}: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return False
+
+
+# ============================================================================
 # UC15: Hook de Almacenamiento Definitivo
 # ============================================================================
 

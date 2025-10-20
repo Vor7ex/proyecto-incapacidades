@@ -5,7 +5,9 @@ from app.models import db
 from app.models.usuario import Usuario
 from app.utils.email_service import mail
 import os
+import logging
 
+logger = logging.getLogger(__name__)
 login_manager = LoginManager()
 
 
@@ -39,6 +41,16 @@ def create_app():
     with app.app_context():
         db.create_all()
         # crear_usuarios_prueba()  # Desactivado - usar crear_usuarios.py
+
+    # Inicializar scheduler de tareas periódicas (UC6)
+    # Solo iniciar en producción o si está explícitamente habilitado
+    if app.config.get('SCHEDULER_ENABLED', False):
+        try:
+            from app.tasks.scheduler_uc6 import iniciar_scheduler
+            iniciar_scheduler(app)
+            logger.info("✅ Scheduler de tareas periódicas iniciado")
+        except Exception as e:
+            logger.error(f"❌ Error al iniciar scheduler: {str(e)}", exc_info=True)
 
     return app
 

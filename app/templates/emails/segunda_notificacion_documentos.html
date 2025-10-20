@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URGENTE - Plazo Vencido</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            border: 3px solid #dc3545;
+        }
+        .header {
+            background: linear-gradient(135deg, #dc3545, #bd2130);
+            color: white;
+            padding: 35px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .header p {
+            margin: 10px 0 0;
+            font-size: 16px;
+            opacity: 0.95;
+            font-weight: 600;
+        }
+        .urgencia-critica {
+            background: repeating-linear-gradient(
+                45deg,
+                #dc3545,
+                #dc3545 20px,
+                #c82333 20px,
+                #c82333 40px
+            );
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-weight: 900;
+            font-size: 22px;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
+        }
+        .content {
+            padding: 30px;
+        }
+        .greeting {
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .critical-alert {
+            background-color: #f8d7da;
+            border: 3px solid #dc3545;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+        }
+        .critical-alert h3 {
+            margin: 0 0 15px;
+            color: #721c24;
+            font-size: 22px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        .critical-alert p {
+            margin: 10px 0;
+            color: #721c24;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .critical-alert .highlight {
+            background-color: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+        .incapacidad-info {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #ffe69c;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: 700;
+            color: #856404;
+        }
+        .info-value {
+            color: #333;
+            font-weight: 600;
+        }
+        .vencimiento-box {
+            background: linear-gradient(135deg, #dc3545, #bd2130);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+            box-shadow: 0 6px 12px rgba(220, 53, 69, 0.4);
+        }
+        .vencimiento-box h3 {
+            margin: 0 0 15px;
+            font-size: 24px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .vencimiento-box .status {
+            font-size: 36px;
+            font-weight: 900;
+            margin: 15px 0;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+            letter-spacing: 2px;
+        }
+        .vencimiento-box .warning {
+            font-size: 18px;
+            margin-top: 15px;
+            font-weight: 700;
+        }
+        .documentos-faltantes {
+            background-color: #ffe6e6;
+            border: 3px solid #dc3545;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .documentos-faltantes h4 {
+            margin: 0 0 15px;
+            color: #dc3545;
+            font-size: 18px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        .documentos-faltantes ul {
+            margin: 0;
+            padding-left: 25px;
+            list-style-type: none;
+        }
+        .documentos-faltantes li {
+            padding: 10px 0;
+            border-bottom: 2px solid #ffb3b3;
+            color: #721c24;
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .documentos-faltantes li:last-child {
+            border-bottom: none;
+        }
+        .documentos-faltantes li:before {
+            content: "🚫 ";
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        .consecuencias-criticas {
+            background-color: #343a40;
+            color: white;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 6px solid #dc3545;
+        }
+        .consecuencias-criticas h4 {
+            margin: 0 0 15px;
+            color: #dc3545;
+            font-size: 20px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        .consecuencias-criticas p {
+            margin: 10px 0;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+        .consecuencias-criticas strong {
+            color: #ffc107;
+        }
+        .ultima-oportunidad {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            color: #212529;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+        }
+        .ultima-oportunidad h4 {
+            margin: 0 0 10px;
+            font-size: 20px;
+            font-weight: 800;
+        }
+        .ultima-oportunidad p {
+            margin: 5px 0;
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .cta-button {
+            display: block;
+            width: fit-content;
+            margin: 30px auto;
+            padding: 22px 60px;
+            background: linear-gradient(135deg, #dc3545, #bd2130);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 900;
+            font-size: 20px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+            animation: buttonPulse 2s infinite;
+        }
+        @keyframes buttonPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .cta-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+        }
+        .footer {
+            background-color: #212529;
+            color: #ecf0f1;
+            padding: 20px;
+            text-align: center;
+            font-size: 13px;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .footer .contacto {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #495057;
+        }
+        .footer .urgente {
+            color: #ffc107;
+            font-weight: 700;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🚨 PLAZO VENCIDO 🚨</h1>
+            <p>Acción Requerida Inmediatamente</p>
+        </div>
+
+        <!-- Urgencia Critica Banner -->
+        <div class="urgencia-critica">
+            ⚠️ SEGUNDA NOTIFICACIÓN - URGENTE ⚠️
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Greeting -->
+            <div class="greeting">
+                Estimado/a <strong>{{ colaborador.nombre }}</strong>,
+            </div>
+
+            <!-- Critical Alert -->
+            <div class="critical-alert">
+                <h3>🔴 Situación Crítica</h3>
+                <p>
+                    El plazo para cargar los documentos de tu incapacidad 
+                    <span class="highlight">HA VENCIDO</span>.
+                </p>
+                <p>
+                    Esta es la <strong>SEGUNDA Y ÚLTIMA NOTIFICACIÓN</strong> antes de que 
+                    se proceda con el rechazo automático de tu solicitud.
+                </p>
+            </div>
+
+            <!-- Incapacidad Info -->
+            <div class="incapacidad-info">
+                <div class="info-row">
+                    <span class="info-label">Código de Radicación:</span>
+                    <span class="info-value">{{ incapacidad.codigo_radicacion }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Estado Actual:</span>
+                    <span class="info-value">{{ incapacidad.estado }}</span>
+                </div>
+            </div>
+
+            <!-- Vencimiento Box -->
+            <div class="vencimiento-box">
+                <h3>⏰ Estado del Plazo</h3>
+                <div class="status">VENCIDO</div>
+                <div class="warning">
+                    El tiempo límite para cargar documentos ha expirado
+                </div>
+            </div>
+
+            <!-- Documentos Faltantes -->
+            <div class="documentos-faltantes">
+                <h4>🚫 Documentos que NO has cargado:</h4>
+                <ul>
+                    {% for doc in documentos_pendientes %}
+                    <li>{{ doc.tipo }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Consecuencias -->
+            <div class="consecuencias-criticas">
+                <h4>⚠️ Consecuencias Inmediatas</h4>
+                <p>
+                    <strong>1. Rechazo de la incapacidad:</strong> Tu solicitud será 
+                    <strong>RECHAZADA AUTOMÁTICAMENTE</strong> en las próximas horas.
+                </p>
+                <p>
+                    <strong>2. Nuevo proceso requerido:</strong> Deberás iniciar 
+                    <strong>TODO EL PROCESO DESDE CERO</strong>, incluyendo nueva radicación.
+                </p>
+                <p>
+                    <strong>3. Citación a Gestión Humana:</strong> Es posible que seas 
+                    <strong>CITADO/A PRESENCIALMENTE</strong> para aclarar la situación.
+                </p>
+            </div>
+
+            <!-- Ultima Oportunidad -->
+            <div class="ultima-oportunidad">
+                <h4>⚡ ÚLTIMA OPORTUNIDAD</h4>
+                <p>
+                    Carga los documentos <strong>INMEDIATAMENTE</strong> para evitar el 
+                    rechazo de tu incapacidad.
+                </p>
+                <p>
+                    Gestión Humana revisará tu caso de manera excepcional si cargas 
+                    los documentos hoy.
+                </p>
+            </div>
+
+            <!-- CTA Button -->
+            <a href="{{ url_for('incapacidades.mis_incapacidades', _external=True) }}" class="cta-button">
+                🚀 Cargar Documentos YA
+            </a>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Sistema de Gestión de Incapacidades</strong></p>
+            <p>Este es un mensaje automático, por favor no responder.</p>
+            <div class="contacto">
+                <p class="urgente">⚠️ CONTACTA URGENTEMENTE A GESTIÓN HUMANA ⚠️</p>
+                <p>📧 gestion.humana@empresa.com | ☎ (123) 456-7890</p>
+                <p>Si tienes alguna dificultad técnica o situación especial, 
+                   contacta INMEDIATAMENTE antes de que se rechace tu solicitud.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

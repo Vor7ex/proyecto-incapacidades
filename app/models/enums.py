@@ -54,3 +54,11 @@ class EstadoNotificacionEnum(StrEnum):
     ENVIADA = "ENVIADA"
     ENTREGADA = "ENTREGADA"
     ERROR = "ERROR"
+
+
+# Alias para retrocompatibilidad y conveniencia
+TipoDocumento = TipoDocumentoEnum
+EstadoSolicitudDocumento = EstadoSolicitudDocumentoEnum
+EstadoIncapacidad = EstadoIncapacidadEnum
+TipoNotificacion = TipoNotificacionEnum
+EstadoNotificacion = EstadoNotificacionEnum

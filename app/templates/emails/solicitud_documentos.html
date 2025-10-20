@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentos Faltantes - Incapacidad</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 10px 0 0;
+            font-size: 14px;
+            opacity: 0.95;
+        }
+        .content {
+            padding: 30px;
+        }
+        .greeting {
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .message {
+            background-color: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .message p {
+            margin: 0;
+            color: #2c3e50;
+        }
+        .incapacidad-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .incapacidad-info h3 {
+            margin: 0 0 10px;
+            color: #2c3e50;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+        .info-value {
+            color: #333;
+        }
+        .documentos-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .documentos-table th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .documentos-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+        }
+        .documentos-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        .doc-tipo {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .doc-observaciones {
+            color: #555;
+            font-size: 13px;
+        }
+        .deadline-box {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .deadline-box h3 {
+            margin: 0 0 10px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .deadline-box .fecha {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .deadline-box .dias {
+            font-size: 14px;
+            opacity: 0.95;
+        }
+        .instrucciones {
+            background-color: #fff3cd;
+            border-left: 4px solid #f39c12;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .instrucciones h4 {
+            margin: 0 0 10px;
+            color: #856404;
+            font-size: 15px;
+        }
+        .instrucciones ol {
+            margin: 10px 0 0;
+            padding-left: 20px;
+            color: #856404;
+        }
+        .instrucciones li {
+            margin: 5px 0;
+        }
+        .cta-button {
+            display: block;
+            width: fit-content;
+            margin: 25px auto;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #27ae60, #229954);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .footer {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            text-align: center;
+            font-size: 13px;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .footer .contacto {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #455a64;
+        }
+        .note {
+            font-size: 12px;
+            color: #7f8c8d;
+            font-style: italic;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📄 Documentos Faltantes</h1>
+            <p>Solicitud de Documentación Adicional</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Greeting -->
+            <div class="greeting">
+                Hola <strong>{{ colaborador.nombre }}</strong>,
+            </div>
+
+            <!-- Message -->
+            <div class="message">
+                <p>
+                    <strong>{{ auxiliar_nombre }}</strong> ha revisado tu incapacidad y requiere 
+                    documentación adicional para completar el proceso de validación.
+                </p>
+            </div>
+
+            <!-- Información de la Incapacidad -->
+            <div class="incapacidad-info">
+                <h3>📋 Información de la Incapacidad</h3>
+                <div class="info-row">
+                    <span class="info-label">Código de Radicación:</span>
+                    <span class="info-value">{{ incapacidad.codigo_radicacion }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Tipo:</span>
+                    <span class="info-value">{{ incapacidad.tipo }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Fecha de Inicio:</span>
+                    <span class="info-value">{{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Estado Actual:</span>
+                    <span class="info-value">{{ incapacidad.estado }}</span>
+                </div>
+            </div>
+
+            <!-- Documentos Solicitados -->
+            <table class="documentos-table">
+                <thead>
+                    <tr>
+                        <th>Documento Solicitado</th>
+                        <th>Observaciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in documentos_solicitados %}
+                    <tr>
+                        <td class="doc-tipo">{{ doc.tipo }}</td>
+                        <td class="doc-observaciones">{{ doc.observaciones }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Deadline -->
+            <div class="deadline-box">
+                <h3>⏰ Plazo de Entrega</h3>
+                <div class="fecha">{{ fecha_vencimiento_str }}</div>
+                <div class="dias">
+                    {% if dias_restantes == 1 %}
+                        Queda <strong>1 día hábil</strong> para cargar los documentos
+                    {% elif dias_restantes > 1 %}
+                        Quedan <strong>{{ dias_restantes }} días hábiles</strong> para cargar los documentos
+                    {% else %}
+                        El plazo vence <strong>hoy</strong>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Instrucciones -->
+            <div class="instrucciones">
+                <h4>📌 Instrucciones para cargar los documentos:</h4>
+                <ol>
+                    <li>Ingresa al sistema con tu usuario y contraseña</li>
+                    <li>Ve a la sección "Mis Incapacidades"</li>
+                    <li>Busca la incapacidad <strong>{{ incapacidad.codigo_radicacion }}</strong></li>
+                    <li>Haz clic en "Cargar Documentos Solicitados"</li>
+                    <li>Sube cada documento en formato PDF (máximo 10 MB)</li>
+                    <li>Confirma la carga de todos los documentos</li>
+                </ol>
+            </div>
+
+            <!-- CTA Button -->
+            <a href="{{ url_for('incapacidades.mis_incapacidades', _external=True) }}" class="cta-button">
+                📤 Cargar Documentos Ahora
+            </a>
+
+            <!-- Note -->
+            <div class="note">
+                <strong>Nota importante:</strong> Si no cargas los documentos dentro del plazo establecido, 
+                tu incapacidad podría ser rechazada y deberás iniciar el proceso nuevamente. 
+                En caso de tener inconvenientes, contacta a Gestión Humana.
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Sistema de Gestión de Incapacidades</strong></p>
+            <p>Este es un mensaje automático, por favor no responder.</p>
+            <div class="contacto">
+                <p>Para asistencia, contacta a Gestión Humana</p>
+                <p>📧 gestion.humana@empresa.com | ☎ (123) 456-7890</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

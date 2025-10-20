@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación Completada</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #27ae60, #229954);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 10px 0 0;
+            font-size: 14px;
+            opacity: 0.95;
+        }
+        .success-banner {
+            background-color: #d4edda;
+            border-left: 6px solid #28a745;
+            padding: 20px;
+            text-align: center;
+        }
+        .success-banner h2 {
+            margin: 0;
+            color: #155724;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .content {
+            padding: 30px;
+        }
+        .greeting {
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .notification-message {
+            background-color: #e8f5e9;
+            border-left: 4px solid #27ae60;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .notification-message p {
+            margin: 0 0 10px;
+            color: #2c3e50;
+        }
+        .notification-message p:last-child {
+            margin-bottom: 0;
+        }
+        .incapacidad-card {
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .incapacidad-card h3 {
+            margin: 0 0 15px;
+            color: #2c3e50;
+            font-size: 18px;
+            font-weight: 600;
+            border-bottom: 2px solid #27ae60;
+            padding-bottom: 10px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .info-item {
+            background-color: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        .info-label {
+            font-size: 12px;
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            font-size: 15px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        .colaborador-info {
+            background-color: #fff9e6;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .colaborador-info h4 {
+            margin: 0 0 10px;
+            color: #856404;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .colaborador-info p {
+            margin: 5px 0;
+            color: #856404;
+        }
+        .action-required {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .action-required h3 {
+            margin: 0 0 15px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .action-required p {
+            margin: 5px 0;
+            font-size: 15px;
+        }
+        .action-list {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .action-list h4 {
+            margin: 0 0 15px;
+            color: #0d47a1;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .action-list ol {
+            margin: 0;
+            padding-left: 25px;
+            color: #1565c0;
+        }
+        .action-list li {
+            margin: 8px 0;
+            font-weight: 500;
+        }
+        .action-list strong {
+            color: #0d47a1;
+        }
+        .cta-button {
+            display: block;
+            width: fit-content;
+            margin: 25px auto;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .reminder {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .reminder p {
+            margin: 5px 0;
+            color: #856404;
+            font-size: 14px;
+        }
+        .footer {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            text-align: center;
+            font-size: 13px;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .footer .contacto {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #455a64;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>✅ Documentación Completada</h1>
+            <p>Notificación para Auxiliar / Gestión Humana</p>
+        </div>
+
+        <!-- Success Banner -->
+        <div class="success-banner">
+            <h2>✔️ El colaborador ha cargado todos los documentos solicitados</h2>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Greeting -->
+            <div class="greeting">
+                Estimado/a Auxiliar de Gestión Humana,
+            </div>
+
+            <!-- Notification Message -->
+            <div class="notification-message">
+                <p>
+                    <strong>{{ colaborador.nombre }}</strong> ha completado exitosamente la carga 
+                    de todos los documentos que fueron solicitados para la validación de su incapacidad.
+                </p>
+                <p>
+                    La incapacidad ha retornado automáticamente al estado 
+                    <strong>"DOCUMENTACION_COMPLETA"</strong> y requiere tu revisión.
+                </p>
+            </div>
+
+            <!-- Incapacidad Card -->
+            <div class="incapacidad-card">
+                <h3>📋 Información de la Incapacidad</h3>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Código Radicación</div>
+                        <div class="info-value">{{ incapacidad.codigo_radicacion }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label">Tipo</div>
+                        <div class="info-value">{{ incapacidad.tipo }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label">Fecha Inicio</div>
+                        <div class="info-value">{{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label">Días</div>
+                        <div class="info-value">{{ incapacidad.dias }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label">Estado Actual</div>
+                        <div class="info-value">{{ incapacidad.estado }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label">Estado Anterior</div>
+                        <div class="info-value">PENDIENTE_DOCUMENTOS</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colaborador Info -->
+            <div class="colaborador-info">
+                <h4>👤 Información del Colaborador</h4>
+                <p><strong>Nombre:</strong> {{ colaborador.nombre }}</p>
+                <p><strong>Email:</strong> {{ colaborador.email }}</p>
+                <p><strong>Rol:</strong> {{ colaborador.rol }}</p>
+            </div>
+
+            <!-- Action Required -->
+            <div class="action-required">
+                <h3>🔍 Acción Requerida</h3>
+                <p>
+                    Debes <strong>RE-VALIDAR</strong> la incapacidad considerando 
+                    los documentos adicionales cargados.
+                </p>
+            </div>
+
+            <!-- Action List -->
+            <div class="action-list">
+                <h4>📝 Pasos a seguir:</h4>
+                <ol>
+                    <li>
+                        Ingresa al sistema y ve a <strong>"Validar Incapacidades"</strong>
+                    </li>
+                    <li>
+                        Busca la incapacidad <strong>{{ incapacidad.codigo_radicacion }}</strong> 
+                        en estado "DOCUMENTACION_COMPLETA"
+                    </li>
+                    <li>
+                        Revisa cuidadosamente <strong>todos los documentos</strong> cargados 
+                        por el colaborador
+                    </li>
+                    <li>
+                        Verifica que la documentación sea completa, legible y correcta
+                    </li>
+                    <li>
+                        Decide si <strong>APROBAR o RECHAZAR</strong> la incapacidad según 
+                        tu criterio profesional
+                    </li>
+                </ol>
+            </div>
+
+            <!-- CTA Button -->
+            <a href="{{ url_for('incapacidades.mis_incapacidades', _external=True) }}" class="cta-button">
+                🔍 Ver Mis Incapacidades
+            </a>
+
+            <!-- Reminder -->
+            <div class="reminder">
+                <p>
+                    <strong>Recordatorio:</strong> La incapacidad permanecerá en estado 
+                    "DOCUMENTACION_COMPLETA" hasta que completes la re-validación.
+                </p>
+                <p>
+                    Si detectas que aún falta documentación o hay problemas, puedes volver 
+                    a solicitar documentos adicionales.
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Sistema de Gestión de Incapacidades</strong></p>
+            <p>Este es un mensaje automático, por favor no responder.</p>
+            <div class="contacto">
+                <p>Para soporte técnico, contacta al administrador del sistema</p>
+                <p>📧 soporte.sistemas@empresa.com | ☎ Ext. 1234</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
