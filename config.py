@@ -28,6 +28,7 @@ class Config:
 	# Emails de notificación
 	ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL') or 'admin@empresa.com'
 	GESTION_HUMANA_EMAIL = os.environ.get('GESTION_HUMANA_EMAIL') or 'gestionhumana@empresa.com'
+	COLABORADOR_EMAIL = os.environ.get('COLABORADOR_EMAIL') or 'colaborador@empresa.com'
 	
 	# Configuración de reintentos para emails (UC2)
 	EMAIL_MAX_REINTENTOS = int(os.environ.get('EMAIL_MAX_REINTENTOS') or 3)

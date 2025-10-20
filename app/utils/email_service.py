@@ -21,6 +21,21 @@ logger = logging.getLogger(__name__)
 
 mail = Mail()
 
+def get_email_notificaciones(usuario):
+    """
+    Obtiene el email de notificaciones de un usuario.
+    Si no existe email_notificaciones, usa el email de login como fallback.
+    
+    Args:
+        usuario: Instancia de Usuario
+    
+    Returns:
+        str: Email de notificaciones del usuario
+    """
+    if not usuario:
+        return None
+    return usuario.email_notificaciones or usuario.email
+
 # Configuración de reintentos (se puede sobrescribir desde Config)
 def get_max_reintentos():
     """Obtiene el número máximo de reintentos desde Config o usa default"""
@@ -124,14 +139,14 @@ def send_email(subject, recipients, html_body, text_body=None, reintentos=MAX_RE
         return False
 
 
-def send_multiple_emails(emails_data, delay=10.0):
+def send_multiple_emails(emails_data, delay=1.0):
     """
     Envía múltiples emails con delay entre ellos para evitar rate limit
     Incluye logging detallado y manejo de errores por email
     
     Args:
         emails_data: Lista de diccionarios con keys: subject, recipients, html_body
-        delay: Segundos entre envíos (default: 10s)
+        delay: Segundos entre envíos (default: 1s)
     
     Returns:
         None (procesa en background)
@@ -231,6 +246,9 @@ def notificar_nueva_incapacidad(incapacidad):
             logger.error(f"❌ No se puede notificar incapacidad #{incapacidad.id}: usuario sin email")
             return False
         
+        # Obtener email de notificaciones (fallback a email de login si no existe)
+        email_colaborador = incapacidad.usuario.email_notificaciones or incapacidad.usuario.email
+        
         # Verificar email de Gestión Humana
         email_gestion = Config.GESTION_HUMANA_EMAIL
         if not email_gestion or email_gestion == 'gestionhumana@empresa.com':
@@ -243,7 +261,7 @@ def notificar_nueva_incapacidad(incapacidad):
         emails = [
             {
                 'subject': f'✅ Incapacidad {incapacidad.codigo_radicacion} registrada exitosamente',
-                'recipients': [incapacidad.usuario.email],
+                'recipients': [email_colaborador],
                 'html_body': render_template(
                     'emails/confirmacion_registro.html',
                     incapacidad=incapacidad,
@@ -263,7 +281,7 @@ def notificar_nueva_incapacidad(incapacidad):
         ]
         
         # Enviar batch de emails
-        send_multiple_emails(emails, delay=10.0)
+        send_multiple_emails(emails, delay=1.0)
         
         logger.info(
             f"✅ UC2: 2 notificaciones programadas para incapacidad #{incapacidad.id} "
@@ -294,9 +312,11 @@ def notificar_validacion_completada(incapacidad):
     """
     logger.info(f"🔔 UC2: Notificando validación completada para #{incapacidad.id}")
     
+    email_colaborador = get_email_notificaciones(incapacidad.usuario)
+    
     exito = send_email(
         subject=f'✅ Incapacidad {incapacidad.codigo_radicacion} - Documentación validada',
-        recipients=[incapacidad.usuario.email],
+        recipients=[email_colaborador],
         html_body=render_template(
             'emails/validacion_completada.html',
             incapacidad=incapacidad,
@@ -324,9 +344,11 @@ def notificar_documentos_faltantes(incapacidad, observaciones):
     """
     logger.info(f"🔔 UC2: Notificando documentos faltantes para #{incapacidad.id}")
     
+    email_colaborador = get_email_notificaciones(incapacidad.usuario)
+    
     exito = send_email(
         subject=f'📄 Incapacidad {incapacidad.codigo_radicacion} - Documentos faltantes',
-        recipients=[incapacidad.usuario.email],
+        recipients=[email_colaborador],
         html_body=render_template(
             'emails/documentos_faltantes.html',
             incapacidad=incapacidad,
@@ -354,9 +376,11 @@ def notificar_aprobacion(incapacidad):
     """
     logger.info(f"🔔 UC2: Notificando aprobación para #{incapacidad.id}")
     
+    email_colaborador = get_email_notificaciones(incapacidad.usuario)
+    
     exito = send_email(
         subject=f'✅ Incapacidad {incapacidad.codigo_radicacion} APROBADA',
-        recipients=[incapacidad.usuario.email],
+        recipients=[email_colaborador],
         html_body=render_template(
             'emails/incapacidad_aprobada.html',
             incapacidad=incapacidad,
@@ -383,9 +407,11 @@ def notificar_rechazo(incapacidad):
     """
     logger.info(f"🔔 UC2: Notificando rechazo para #{incapacidad.id}")
     
+    email_colaborador = get_email_notificaciones(incapacidad.usuario)
+    
     exito = send_email(
         subject=f'❌ Incapacidad {incapacidad.codigo_radicacion} RECHAZADA',
-        recipients=[incapacidad.usuario.email],
+        recipients=[email_colaborador],
         html_body=render_template(
             'emails/incapacidad_rechazada.html',
             incapacidad=incapacidad,
@@ -423,8 +449,9 @@ def notificar_solicitud_documentos(incapacidad, solicitudes, usuario_auxiliar):
     try:
         # Validar MAIL_ENABLED
         if not current_app.config.get('MAIL_ENABLED', True):
+            email_colaborador = get_email_notificaciones(incapacidad.usuario)
             logger.info(f"📧 [SIMULADO] Solicitud de documentos NO enviada (MAIL_ENABLED=False)")
-            logger.info(f"   Destinatario: {incapacidad.usuario.email}")
+            logger.info(f"   Destinatario: {email_colaborador}")
             logger.info(f"   Documentos solicitados: {len(solicitudes)}")
             return True
         
@@ -432,6 +459,9 @@ def notificar_solicitud_documentos(incapacidad, solicitudes, usuario_auxiliar):
         if not incapacidad.usuario or not incapacidad.usuario.email:
             logger.error(f"❌ UC6: No se puede notificar #{incapacidad.id}: colaborador sin email")
             return False
+        
+        # Obtener email de notificaciones
+        email_colaborador = get_email_notificaciones(incapacidad.usuario)
         
         # Construir datos para template
         documentos_solicitados = []
@@ -461,7 +491,7 @@ def notificar_solicitud_documentos(incapacidad, solicitudes, usuario_auxiliar):
         # Enviar email con reintentos
         exito = send_email(
             subject=f'📄 Documentos faltantes - Incapacidad {incapacidad.codigo_radicacion}',
-            recipients=[incapacidad.usuario.email],
+            recipients=[email_colaborador],
             html_body=html_body,
             reintentos=3
         )
@@ -508,14 +538,18 @@ def notificar_recordatorio_documentos(incapacidad, numero_recordatorio, solicitu
     try:
         # Validar MAIL_ENABLED
         if not current_app.config.get('MAIL_ENABLED', True):
+            email_colaborador = get_email_notificaciones(incapacidad.usuario)
             logger.info(f"📧 [SIMULADO] Recordatorio #{numero_recordatorio} NO enviado (MAIL_ENABLED=False)")
-            logger.info(f"   Destinatario: {incapacidad.usuario.email}")
+            logger.info(f"   Destinatario: {email_colaborador}")
             return True
         
         # Validar email
         if not incapacidad.usuario or not incapacidad.usuario.email:
             logger.error(f"❌ UC6: No se puede enviar recordatorio para #{incapacidad.id}: sin email")
             return False
+        
+        # Obtener email de notificaciones
+        email_colaborador = get_email_notificaciones(incapacidad.usuario)
         
         # Preparar datos de documentos
         documentos_pendientes = []
@@ -548,7 +582,7 @@ def notificar_recordatorio_documentos(incapacidad, numero_recordatorio, solicitu
         # Enviar con reintentos
         exito = send_email(
             subject=asunto,
-            recipients=[incapacidad.usuario.email],
+            recipients=[email_colaborador],
             html_body=html_body,
             reintentos=3
         )
