@@ -1,9 +1,32 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
-from flask_login import login_user, logout_user, login_required
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask_login import login_user, logout_user, login_required, current_user
+from functools import wraps
 from app.models import db
 from app.models.usuario import Usuario
 
 auth_bp = Blueprint('auth', __name__)
+
+
+def require_role(*roles):
+    """
+    Decorador para proteger rutas por rol.
+    
+    Uso:
+        @require_role('auxiliar')
+        @require_role('colaborador', 'admin')
+    """
+    def decorator(f):
+        @wraps(f)
+        @login_required
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated:
+                abort(401)
+            if current_user.rol not in roles:
+                flash(f'Acceso denegado. Se requiere rol: {", ".join(roles)}', 'danger')
+                abort(403)
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 @auth_bp.route('/')
 def index():

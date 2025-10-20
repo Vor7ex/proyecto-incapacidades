@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Solicitar Documentos - {{ incapacidad.codigo_radicacion }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('incapacidades.dashboard_auxiliar') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Solicitar Documentos</li>
+                </ol>
+            </nav>
+
+            <!-- Card principal -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-file-earmark-text"></i>
+                        Solicitar Documentos Faltantes
+                    </h4>
+                    <small>Incapacidad: <strong>{{ incapacidad.codigo_radicacion }}</strong></small>
+                </div>
+
+                <div class="card-body">
+                    <!-- Información de la incapacidad -->
+                    <div class="alert alert-info">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Colaborador:</strong> {{ incapacidad.usuario.nombre }}</p>
+                                <p class="mb-1"><strong>Tipo:</strong> {{ incapacidad.tipo }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Periodo:</strong> {{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }} - {{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}</p>
+                                <p class="mb-1"><strong>Días:</strong> {{ incapacidad.dias }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulario -->
+                    <form method="POST" action="{{ url_for('incapacidades.procesar_solicitud_documentos', incapacidad_id=incapacidad.id) }}" id="formSolicitarDocs">
+
+                        <h5 class="mb-3">Seleccione los documentos a solicitar:</h5>
+
+                        <!-- Tabla de documentos -->
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 5%;">Solicitar</th>
+                                        <th style="width: 25%;">Documento</th>
+                                        <th style="width: 10%;">Tipo</th>
+                                        <th style="width: 10%;">Estado</th>
+                                        <th style="width: 50%;">Observaciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for doc in documentos_disponibles %}
+                                    <tr class="{% if doc.falta %}table-warning{% endif %}">
+                                        <td class="text-center">
+                                            {% if doc.falta %}
+                                            <input type="checkbox" 
+                                                   class="form-check-input doc-checkbox" 
+                                                   name="documentos[]" 
+                                                   value="{{ doc.tipo }}"
+                                                   id="check_{{ doc.tipo }}"
+                                                   checked>
+                                            {% else %}
+                                            <i class="bi bi-check-circle-fill text-success" title="Ya está cargado"></i>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <label for="check_{{ doc.tipo }}" class="mb-0">
+                                                {{ doc.tipo.replace('_', ' ').title() }}
+                                            </label>
+                                        </td>
+                                        <td>
+                                            {% if doc.requerido %}
+                                            <span class="badge bg-danger">Requerido</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">Opcional</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if doc.cargado %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-lg"></i> Cargado
+                                            </span>
+                                            {% else %}
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="bi bi-exclamation-triangle"></i> Falta
+                                            </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if doc.falta %}
+                                            <textarea 
+                                                class="form-control form-control-sm" 
+                                                name="observacion_{{ doc.tipo }}"
+                                                rows="2"
+                                                placeholder="Ej: El documento está ilegible, faltan datos, etc."></textarea>
+                                            {% else %}
+                                            <span class="text-muted fst-italic">No aplica (ya cargado)</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Mensaje informativo -->
+                        <div class="alert alert-warning mt-3" id="alertNoSeleccionados" style="display: none;">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Debe seleccionar al menos un documento para continuar.
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('incapacidades.dashboard_auxiliar') }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="btnEnviar">
+                                <i class="bi bi-send"></i> Enviar Solicitud
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Información adicional -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="bi bi-info-circle"></i> Información</h6>
+                    <ul class="mb-0">
+                        <li>El colaborador recibirá una notificación por correo electrónico.</li>
+                        <li>Tendrá <strong>3 días hábiles</strong> para entregar los documentos solicitados.</li>
+                        <li>Los documentos con <span class="badge bg-warning text-dark">Falta</span> ya están marcados por defecto.</li>
+                        <li>Puede agregar observaciones específicas para cada documento.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('formSolicitarDocs');
+    const checkboxes = document.querySelectorAll('.doc-checkbox');
+    const btnEnviar = document.getElementById('btnEnviar');
+    const alertNoSeleccionados = document.getElementById('alertNoSeleccionados');
+    
+    function validarSeleccion() {
+        const seleccionados = Array.from(checkboxes).filter(cb => cb.checked);
+        
+        if (seleccionados.length === 0) {
+            btnEnviar.disabled = true;
+            alertNoSeleccionados.style.display = 'block';
+        } else {
+            btnEnviar.disabled = false;
+            alertNoSeleccionados.style.display = 'none';
+        }
+    }
+    
+    // Validar al cambiar checkboxes
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', validarSeleccion);
+    });
+    
+    // Validar al cargar
+    validarSeleccion();
+    
+    // Validar antes de enviar
+    form.addEventListener('submit', function(e) {
+        const seleccionados = Array.from(checkboxes).filter(cb => cb.checked);
+        if (seleccionados.length === 0) {
+            e.preventDefault();
+            alertNoSeleccionados.style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+    });
+});
+</script>
+{% endblock %}

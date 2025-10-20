@@ -15,7 +15,7 @@ class HistorialEstado(db.Model):
         nullable=False,
         index=True,
     )
-    estado_anterior = db.Column(db.String(50), nullable=False)
+    estado_anterior = db.Column(db.String(50), nullable=True)  # Puede ser NULL en el primer registro
     estado_nuevo = db.Column(db.String(50), nullable=False)
     fecha_cambio = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False)

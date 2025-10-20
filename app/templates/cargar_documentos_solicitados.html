@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block title %}Cargar Documentos Solicitados - {{ incapacidad.codigo_radicacion }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('incapacidades.mis_incapacidades') }}">Mis Incapacidades</a></li>
+                    <li class="breadcrumb-item active">Cargar Documentos</li>
+                </ol>
+            </nav>
+
+            <!-- Alerta si hay plazos vencidos -->
+            {% if tiene_vencidas %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> ¡Atención!</h5>
+                <p class="mb-0">Tiene documentos con plazo <strong>VENCIDO</strong>. Cárguelos lo antes posible para evitar sanciones.</p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+
+            <!-- Card principal -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="bi bi-cloud-upload"></i>
+                        Carga de Documentos Solicitados
+                    </h4>
+                    <small>Incapacidad: <strong>{{ incapacidad.codigo_radicacion }}</strong></small>
+                </div>
+
+                <div class="card-body">
+                    <!-- Información de la incapacidad -->
+                    <div class="alert alert-info">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Tipo:</strong> {{ incapacidad.tipo }}</p>
+                                <p class="mb-1"><strong>Estado:</strong> 
+                                    <span class="badge bg-warning text-dark">{{ incapacidad.estado }}</span>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Periodo:</strong> {{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }} - {{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}</p>
+                                <p class="mb-1"><strong>Días:</strong> {{ incapacidad.dias }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mensaje importante -->
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Importante:</strong> Debe cargar <strong>TODOS</strong> los documentos solicitados. 
+                        Formatos permitidos: PDF, JPG, PNG, JPEG. Tamaño máximo: <strong>10 MB</strong> por archivo.
+                    </div>
+
+                    <!-- Formulario -->
+                    <form method="POST" 
+                          enctype="multipart/form-data" 
+                          id="formCargarDocs"
+                          action="{{ url_for('incapacidades.procesar_cargar_documentos_solicitados', incapacidad_id=incapacidad.id) }}">
+                        
+                        <h5 class="mb-3">Documentos solicitados:</h5>
+
+                        <!-- Lista de solicitudes -->
+                        <div class="row">
+                            {% for solicitud in solicitudes %}
+                            <div class="col-md-6 mb-4">
+                                <div class="card border-{{ solicitud.clase_urgencia }}">
+                                    <div class="card-header bg-{{ solicitud.clase_urgencia }} text-white">
+                                        <h6 class="mb-0">
+                                            {{ solicitud.tipo_documento.replace('_', ' ').title() }}
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Estado y plazo -->
+                                        <div class="mb-2">
+                                            <strong>Estado:</strong> 
+                                            <span class="badge bg-{{ solicitud.clase_urgencia }}">
+                                                {{ solicitud.estado }}
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="mb-2">
+                                            <strong>Vencimiento:</strong> {{ solicitud.fecha_vencimiento_formateada }}
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            {% if solicitud.esta_vencida_calc %}
+                                            <span class="text-danger fw-bold">
+                                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                                VENCIDO hace {{ solicitud.dias_restantes_calc|abs }} día(s)
+                                            </span>
+                                            {% elif solicitud.dias_restantes_calc == 0 %}
+                                            <span class="text-warning fw-bold">
+                                                <i class="bi bi-clock-fill"></i>
+                                                Vence HOY
+                                            </span>
+                                            {% else %}
+                                            <span class="text-{{ solicitud.clase_urgencia }}">
+                                                <i class="bi bi-calendar-check"></i>
+                                                {{ solicitud.dias_restantes_calc }} día(s) restante(s)
+                                            </span>
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- Observaciones del auxiliar -->
+                                        {% if solicitud.observaciones_auxiliar %}
+                                        <div class="alert alert-light mb-3">
+                                            <small class="text-muted"><strong>Observaciones del auxiliar:</strong></small>
+                                            <p class="mb-0 small">{{ solicitud.observaciones_auxiliar }}</p>
+                                        </div>
+                                        {% endif %}
+
+                                        <!-- Input de archivo -->
+                                        <div class="mb-2">
+                                            <label for="documento_{{ solicitud.tipo_documento }}" class="form-label fw-bold">
+                                                Seleccionar archivo:
+                                            </label>
+                                            <input type="file" 
+                                                   class="form-control file-input" 
+                                                   id="documento_{{ solicitud.tipo_documento }}"
+                                                   name="documento_{{ solicitud.tipo_documento }}"
+                                                   accept=".pdf,.jpg,.jpeg,.png"
+                                                   data-tipo="{{ solicitud.tipo_documento }}"
+                                                   required>
+                                            <small class="text-muted">PDF, JPG, PNG, JPEG (máx. 10MB)</small>
+                                        </div>
+
+                                        <!-- Preview -->
+                                        <div id="preview_{{ solicitud.tipo_documento }}" class="mt-2" style="display: none;">
+                                            <div class="alert alert-success small mb-0">
+                                                <i class="bi bi-file-earmark-check"></i>
+                                                <span id="filename_{{ solicitud.tipo_documento }}"></span>
+                                                <span id="filesize_{{ solicitud.tipo_documento }}" class="text-muted"></span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Error específico -->
+                                        <div id="error_{{ solicitud.tipo_documento }}" class="alert alert-danger small mt-2" style="display: none;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Área de errores globales -->
+                        <div id="erroresGlobales" class="alert alert-danger" style="display: none;">
+                            <h6><i class="bi bi-exclamation-circle"></i> Errores encontrados:</h6>
+                            <ul id="listaErrores" class="mb-0"></ul>
+                        </div>
+
+                        <!-- Área de éxito -->
+                        <div id="mensajeExito" class="alert alert-success" style="display: none;">
+                            <h6><i class="bi bi-check-circle"></i> <span id="textoExito"></span></h6>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('incapacidades.mis_incapacidades') }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Volver
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="btnEnviar">
+                                <i class="bi bi-cloud-upload"></i> Enviar Documentos
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('formCargarDocs');
+    const fileInputs = document.querySelectorAll('.file-input');
+    const btnEnviar = document.getElementById('btnEnviar');
+    const erroresGlobales = document.getElementById('erroresGlobales');
+    const mensajeExito = document.getElementById('mensajeExito');
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+    
+    // Validación client-side de archivos
+    fileInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const tipo = this.dataset.tipo;
+            const preview = document.getElementById(`preview_${tipo}`);
+            const errorDiv = document.getElementById(`error_${tipo}`);
+            const filenameSpan = document.getElementById(`filename_${tipo}`);
+            const filesizeSpan = document.getElementById(`filesize_${tipo}`);
+            
+            errorDiv.style.display = 'none';
+            preview.style.display = 'none';
+            
+            if (this.files.length === 0) return;
+            
+            const file = this.files[0];
+            const ext = file.name.split('.').pop().toLowerCase();
+            const validExtensions = ['pdf', 'jpg', 'jpeg', 'png'];
+            
+            // Validar extensión
+            if (!validExtensions.includes(ext)) {
+                errorDiv.textContent = `Formato no válido. Use: ${validExtensions.join(', ').toUpperCase()}`;
+                errorDiv.style.display = 'block';
+                this.value = '';
+                return;
+            }
+            
+            // Validar tamaño
+            if (file.size > MAX_SIZE) {
+                const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+                errorDiv.textContent = `Archivo muy grande (${sizeMB} MB). Máximo: 10 MB`;
+                errorDiv.style.display = 'block';
+                this.value = '';
+                return;
+            }
+            
+            // Mostrar preview
+            filenameSpan.textContent = file.name;
+            filesizeSpan.textContent = `(${(file.size / 1024).toFixed(2)} KB)`;
+            preview.style.display = 'block';
+        });
+    });
+    
+    // Submit con AJAX
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        erroresGlobales.style.display = 'none';
+        mensajeExito.style.display = 'none';
+        btnEnviar.disabled = true;
+        btnEnviar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Enviando...';
+        
+        const formData = new FormData(form);
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            btnEnviar.disabled = false;
+            btnEnviar.innerHTML = '<i class="bi bi-cloud-upload"></i> Enviar Documentos';
+            
+            if (data.success) {
+                mensajeExito.style.display = 'block';
+                document.getElementById('textoExito').textContent = data.message;
+                
+                // Si está completo, redirigir después de 2 segundos
+                if (data.completo) {
+                    setTimeout(() => {
+                        window.location.href = "{{ url_for('incapacidades.mis_incapacidades') }}";
+                    }, 2000);
+                } else {
+                    // Recargar para mostrar documentos actualizados
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                }
+            } else {
+                // Mostrar errores
+                erroresGlobales.style.display = 'block';
+                const listaErrores = document.getElementById('listaErrores');
+                listaErrores.innerHTML = '';
+                
+                data.errors.forEach(error => {
+                    const li = document.createElement('li');
+                    li.textContent = error;
+                    listaErrores.appendChild(li);
+                });
+                
+                window.scrollTo(0, 0);
+            }
+        })
+        .catch(error => {
+            btnEnviar.disabled = false;
+            btnEnviar.innerHTML = '<i class="bi bi-cloud-upload"></i> Enviar Documentos';
+            
+            erroresGlobales.style.display = 'block';
+            document.getElementById('listaErrores').innerHTML = 
+                `<li>Error de conexión: ${error.message}</li>`;
+            window.scrollTo(0, 0);
+        });
+    });
+});
+</script>
+{% endblock %}
