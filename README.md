@@ -1,12 +1,28 @@
-# Sistema de Gestión de Incapacidades
+# 🏥 Sistema de Gestión de Incapacidades
 
-Sistema web para la gestión de incapacidades médicas de empleados, desarrollado con Flask.
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org)
+[![Flask](https://img.shields.io/badge/Flask-3.0.0-green.svg)](https://flask.palletsprojects.com/)
+[![Estado](https://img.shields.io/badge/Estado-95%25%20Completo-brightgreen.svg)](docs/GUIA_COMPLETA.md)
+[![Licencia](https://img.shields.io/badge/Licencia-MIT-yellow.svg)](LICENSE)
 
-**Estado:** 65.5% completo | **Release:** 1.0 (en desarrollo)
+Sistema web completo para la gestión digital de incapacidades médicas de empleados, desarrollado con Flask.
 
-> 🚀 **Inicio rápido:** Ver [`GUIA_RAPIDA.md`](GUIA_RAPIDA.md) para setup en 5 minutos  
-> 📁 **Estructura:** Ver [`ESTRUCTURA.md`](ESTRUCTURA.md) para arquitectura completa  
-> 🔧 **Scripts:** Ver [`SCRIPTS_UTILIDAD.md`](SCRIPTS_UTILIDAD.md) para comandos disponibles
+**🚀 Release 1.0** en desarrollo | **16 Casos de Uso** implementados
+
+---
+
+## � Documentación
+
+La documentación completa está organizada en la carpeta [`/docs`](docs/):
+
+| Documento | Descripción | Para quién |
+|-----------|-------------|------------|
+| **[📘 GUIA_COMPLETA.md](docs/GUIA_COMPLETA.md)** | Guía principal del sistema | 👨‍💻 Desarrolladores, PM |
+| **[⚙️ CONFIGURACION_TECNICA.md](docs/CONFIGURACION_TECNICA.md)** | Setup y deployment completo | 🔧 DevOps, SysAdmins |
+| **[📖 MANUAL_USUARIO.md](docs/MANUAL_USUARIO.md)** | Guía paso a paso | 👥 Usuarios finales |
+| **[📄 CASOS_DE_USO.md](docs/CASOS_DE_USO.md)** | 16 UC detallados | 📋 Analistas, QA |
+
+> 💡 **¿Nuevo en el proyecto?** Comienza con [GUIA_COMPLETA.md](docs/GUIA_COMPLETA.md)
 
 ---
 

@@ -1,75 +1,162 @@
-# Manual de Usuario
-## Sistema de Gestion de Incapacidades - MVP
+# 📖 Manual de Usuario - Sistema de Incapacidades
 
-### 1. Introduccion
-Este sistema permite gestionar incapacidades medicas de forma digital,
-desde el registro hasta la aprobacion.
+**Última actualización:** Octubre 2025  
+**Versión:** 1.0  
+**Dirigido a:** Colaboradores y Personal de Gestión Humana
 
-### 2. Acceso al Sistema
-- URL: http://localhost:5000
-- Usuarios de prueba disponibles en pantalla de login
+---
 
-### 3. Para Colaboradores
+## 📘 Introducción
 
-#### 3.1 Registrar Incapacidad
-1. Iniciar sesion
-2. Click en "Registrar Incapacidad"
-3. Completar formulario:
-   - Seleccionar tipo
-   - Ingresar fechas
-   - Subir certificado (obligatorio)
-   - Subir epicrisis (si aplica)
-4. Click en "Registrar Incapacidad"
+El Sistema de Gestión de Incapacidades permite gestionar de forma digital todo el proceso de registro, validación y aprobación de incapacidades médicas.
 
-#### 3.2 Consultar Incapacidades
-1. Click en "Mis Incapacidades"
-2. Ver lista completa con estados
-3. Click en "Ver Detalle" para mas informacion
-4. Descargar documentos si es necesario
+**Beneficios:**
+- ✅ Digital, rápido y trazable
+- ✅ Notificaciones automáticas
+- ✅ Consulta de estado en tiempo real
 
-#### 3.3 Estados Posibles
-- **Pendiente**: Esperando validacion
-- **En revision**: Documentacion siendo revisada
-- **Aprobada**: Incapacidad aprobada
-- **Rechazada**: No cumple requisitos (ver motivo)
+**Tipos soportados:** Enfermedad general, Accidente laboral, Accidente de tránsito, Licencias de maternidad/paternidad
 
-### 4. Para Auxiliares de Gestion Humana
+---
 
-#### 4.1 Dashboard
-- Ver todas las incapacidades pendientes
-- Ver incapacidades en revision
-- Estadisticas generales
+## 🔐 Acceso al Sistema
 
-#### 4.2 Validar Documentacion
-1. Click en "Validar" en incapacidad pendiente
-2. Revisar validacion automatica
-3. Descargar y revisar documentos
-4. Completar checklist manual
-5. Marcar como "Documentacion Completa"
+**URL:** http://localhost:5000
 
-#### 4.3 Aprobar o Rechazar
-1. Acceder a incapacidad en revision
-2. Seleccionar decision:
-   - **Aprobar**: Si todo esta correcto
-   - **Rechazar**: Especificar motivo detallado
-3. Confirmar decision
+**Credenciales de prueba:**
+- Colaborador: `empleado@test.com` / `123456`
+- Auxiliar RRHH: `auxiliar@test.com` / `123456`
 
-### 5. Documentos Requeridos
+---
 
-#### Enfermedad General (≤2 dias)
-- Certificado de incapacidad (obligatorio)
+## 👤 Guía para Colaboradores
 
-#### Enfermedad General (>2 dias)
-- Certificado de incapacidad (obligatorio)
-- Epicrisis (obligatorio)
+### 1. Registrar Incapacidad
 
-#### Accidente Laboral
-- Certificado de incapacidad (obligatorio)
-- Epicrisis (obligatorio)
+1. Login → "Registrar Incapacidad"
+2. **Seleccionar tipo** de incapacidad
+3. **Ingresar fechas** (inicio y fin)
+4. **Cargar documentos:**
+   - Certificado (obligatorio) - PDF/JPG/PNG, max 10MB
+   - Epicrisis (si >2 días o accidente)
+   - FURIPS (solo accidente tránsito)
+5. **Enviar** y guardar código: `INC-YYYYMMDD-XXXX`
 
-### 6. Formatos Aceptados
-- PDF, JPG, JPEG, PNG
-- Tamano maximo: 10MB por archivo
+### 2. Consultar Incapacidades
 
-### 7. Soporte
-Para problemas tecnicos, contactar al administrador del sistema.
+- Menú → "Mis Incapacidades"
+- Ver estado, descargar documentos
+
+### 3. Estados
+
+| Estado | Significado | Acción |
+|--------|-------------|--------|
+| ⏳ Pendiente Validación | RRHH revisando | Esperar |
+| 📄 Documentación Incompleta | Faltan docs | Cargar en 3 días |
+| ✅ Aprobada | Aprobada | Ninguna |
+| ❌ Rechazada | No cumple | Ver motivo |
+
+### 4. Cargar Documentos Solicitados
+
+**Cuando recibes solicitud:**
+1. Click en enlace del email
+2. Subir archivos solicitados
+3. Enviar antes de 3 días hábiles
+
+**Recordatorios:** Día 3 y Día 6 automáticos
+
+---
+
+## 👨‍💼 Guía para Auxiliares RRHH
+
+### 1. Validar Documentación
+
+1. "Validar Incapacidades" → Seleccionar
+2. **Revisar checklist automático**
+3. Descargar y verificar documentos
+4. **Decisión:**
+   - ✅ Completa → "Marcar Documentación Completa"
+   - ❌ Incompleta → "Solicitar Documentos"
+
+**Checklist por tipo:**
+- Enfermedad ≤2 días: Certificado
+- Enfermedad >2 días: Certificado + Epicrisis
+- Accidente laboral: Certificado + Epicrisis
+- Accidente tránsito: + FURIPS
+- Maternidad/Paternidad: + Docs nacimiento
+
+### 2. Solicitar Documentos Faltantes
+
+1. "Solicitar Documentos" desde validación
+2. Marcar documentos faltantes
+3. **Agregar observaciones específicas**
+4. Confirmar → email automático
+
+**Sistema automático:**
+- Email inmediato
+- Recordatorio día 3 (08:00 AM)
+- 2da notificación día 6
+- Si no responde: "Requiere Citación"
+
+### 3. Aprobar/Rechazar
+
+**Aprobar:**
+- "Aprobar/Rechazar" → Revisar → "Aprobar"
+- Email automático → Estado "Aprobada"
+
+**Rechazar:**
+- Seleccionar motivo + observaciones
+- Confirmar (definitivo)
+
+---
+
+## ❓ Preguntas Frecuentes
+
+**Colaboradores:**
+
+**P: ¿Cuánto tarda validación?**
+R: 1-2 días hábiles
+
+**P: ¿Qué si me equivoqué?**
+R: Contacta RRHH inmediatamente
+
+**P: ¿Qué si no cargo en 3 días?**
+R: Recordatorios automáticos. Día 6+: citación
+
+**Auxiliares:**
+
+**P: ¿Cancelar solicitud?**
+R: Dashboard solicitudes → "Cancelar" con motivo
+
+**P: ¿Modificar plazo?**
+R: No. Estándar 3 días. Casos especiales: administrador
+
+---
+
+## 📚 Glosario
+
+| Término | Definición |
+|---------|-----------|
+| Código Radicación | ID único (INC-YYYYMMDD-XXXX) |
+| Epicrisis | Resumen clínico médico |
+| FURIPS | Formato Accidente Tránsito |
+| EPS | Entidad Promotora de Salud |
+| ARL | Administradora Riesgos Laborales |
+| Días Hábiles | Lunes-viernes (sin festivos) |
+
+---
+
+## 📞 Soporte
+
+**Gestión Humana:** `rrhh@empresa.com`  
+**Soporte TI:** `soporte.ti@empresa.com`
+
+**Problemas comunes:**
+- No inicio sesión → Recuperar contraseña
+- No emails → Revisar spam
+- No cargar archivos → Verificar <10MB, PDF/JPG/PNG
+- Página no carga → Ctrl+F5, limpiar caché
+
+---
+
+**🎉 ¡Gracias por usar el Sistema de Incapacidades!**
