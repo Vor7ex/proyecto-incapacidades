@@ -1,78 +1,56 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
-Script para crear usuarios de prueba en la base de datos.
-Ejecutar: python crear_usuarios.py
+Script para crear usuarios de prueba con los nuevos campos email_notificaciones.
+Usa COLABORADOR_EMAIL del .env para las notificaciones.
 """
-import sys
+
 import os
-
-# Asegurar que no se ejecute el servidor Flask
-os.environ['FLASK_RUN_FROM_CLI'] = 'false'
-
-from app import create_app, db
+from dotenv import load_dotenv
+from app import create_app
+from app.models import db
 from app.models.usuario import Usuario
 
-def crear_usuarios():
-    """Crea usuarios de prueba en la base de datos."""
-    app = create_app()
-    
-    with app.app_context():
-        try:
-            # Verificar usuarios existentes
-            usuarios_existentes = Usuario.query.all()
-            print(f"Usuarios actuales en BD: {len(usuarios_existentes)}")
-            
-            # Limpiar usuarios existentes
-            if usuarios_existentes:
-                print("Eliminando usuarios existentes...")
-                Usuario.query.delete()
-                db.session.commit()
-                print("Usuarios anteriores eliminados")
-            
-            # Crear usuarios de prueba
-            print("\nCreando nuevos usuarios de prueba...")
-            usuarios = [
-                Usuario(
-                    nombre="Juan Empleado",
-                    email="empleado@test.com",
-                    rol="colaborador"
-                ),
-                Usuario(
-                    nombre="Maria Garcia",
-                    email="auxiliar@test.com",
-                    rol="auxiliar"
-                )
-            ]
-            
-            for usuario in usuarios:
-                usuario.set_password("123456")
-                db.session.add(usuario)
-                print(f"  + {usuario.nombre} ({usuario.rol})")
-            
-            db.session.commit()
-            
-            # Verificar creación
-            total = Usuario.query.count()
-            print(f"\nTotal de usuarios en BD: {total}")
-            
-            print("\n" + "="*50)
-            print("USUARIOS CREADOS EXITOSAMENTE")
-            print("="*50)
-            print("\nCredenciales de acceso:")
-            print("  - Colaborador: empleado@test.com / 123456")
-            print("  - Auxiliar RRHH: auxiliar@test.com / 123456")
-            print("="*50)
-            
-            return True
-            
-        except Exception as e:
-            print(f"\nERROR al crear usuarios: {e}")
-            import traceback
-            traceback.print_exc()
-            db.session.rollback()
-            return False
+# Cargar .env
+load_dotenv()
 
-if __name__ == "__main__":
-    success = crear_usuarios()
-    sys.exit(0 if success else 1)
+# Crear app
+app = create_app()
+
+with app.app_context():
+    # Crear las tablas
+    print("Creando tablas de BD...")
+    db.create_all()
+    
+    # Obtener email de notificaciones desde .env
+    email_notificaciones = os.getenv('COLABORADOR_EMAIL', 'noreply@test.com')
+    
+    # Crear usuario colaborador
+    print("\nCreando usuario colaborador...")
+    usuario_colaborador = Usuario(
+        nombre='Juan Empleado',
+        email='empleado@test.com',
+        email_notificaciones=email_notificaciones,
+        rol='colaborador'
+    )
+    usuario_colaborador.set_password('123456')
+    
+    # Crear usuario auxiliar
+    print("Creando usuario auxiliar...")
+    usuario_auxiliar = Usuario(
+        nombre='Maria Garcia',
+        email='auxiliar@test.com',
+        email_notificaciones=email_notificaciones,
+        rol='auxiliar'
+    )
+    usuario_auxiliar.set_password('123456')
+    
+    # Guardar usuarios
+    db.session.add(usuario_colaborador)
+    db.session.add(usuario_auxiliar)
+    db.session.commit()
+    
+    print("\n✅ Usuarios creados exitosamente:")
+    print(f"  Colaborador: empleado@test.com / 123456")
+    print(f"  - Email notificaciones: {email_notificaciones}")
+    print(f"  Auxiliar: auxiliar@test.com / 123456")
+    print(f"  - Email notificaciones: {email_notificaciones}")
+    print(f"\n📧 Todos los emails de notificación van a: {email_notificaciones}")
