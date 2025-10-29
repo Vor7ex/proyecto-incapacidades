@@ -248,8 +248,8 @@ python run.py
 ### 4. Acceso al Sistema
 
 - **URL**: `http://localhost:5000`
-- **Usuario Empleado**: `juan.perez@empresa.com` / `123456`
-- **Usuario Auxiliar**: `maria.admin@empresa.com` / `123456`
+- **Usuario Colaborador**: `empleado@test.com` / `123456`
+- **Usuario Auxiliar**: `auxiliar@test.com` / `123456`
 
 ---
 
