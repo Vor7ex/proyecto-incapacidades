@@ -105,6 +105,10 @@ class Incapacidad(db.Model):
         index=True,
     )
     motivo_rechazo = db.Column(db.Text, nullable=True)
+    
+    # UC5: Resultado de validación de requisitos (JSON)
+    validacion_uc5 = db.Column(db.JSON, nullable=True)
+    
     fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
     fecha_actualizacion = db.Column(
         db.DateTime,

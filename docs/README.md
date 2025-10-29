@@ -38,6 +38,7 @@ Contenido:
 - ⚙️ Instalación detallada paso a paso
 - ⚙️ Variables de entorno (.env completo)
 - ⚙️ Configuración de base de datos
+- ⚙️ **Servicios implementados (ValidadorRequisitos UC5)**
 - ⚙️ Sistema de emails (Mailtrap, SendGrid, Gmail)
 - ⚙️ Scheduler y tareas automáticas (UC6)
 - ⚙️ Deployment en producción (Gunicorn, Nginx, Docker)

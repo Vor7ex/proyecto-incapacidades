@@ -257,6 +257,8 @@
 | **Nombre del Caso de Uso** | Verificar requisitos por tipo                                                                                                                                                                                                                       |
 | **Identificación**         | UC5                                                                                                                                                                                                                                                 |
 | **Fecha Inicial**          | 04/10/2025                                                                                                                                                                                                                                          |
+| **Fecha Implementación**   | 28/10/2025                                                                                                                                                                                                                                          |
+| **Estado**                 | **IMPLEMENTADO ✅**                                                                                                                                                                                                                                  |
 | **Referencia**             | CAR-02, ON-05                                                                                                                                                                                                                                       |
 | **Tipo implementación**    | Release 1.0                                                                                                                                                                                                                                         |
 | **Actores**                | Sistema (automático)                                                                                                                                                                                                                                |
@@ -266,26 +268,54 @@
 
 ---
 
+### **Implementación Técnica**
+
+| **Componente**             | **Descripción**                                                                                                 |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Archivo Principal**      | `app/services/validacion_requisitos_service.py` (494 líneas)                                                   |
+| **Clase Principal**        | `ValidadorRequisitos` - Servicio centralizado de validación                                                    |
+| **Métodos Públicos**       | `validar()`, `get_faltantes()`, `get_presentes()`, `es_completo()`, `obtener_requisitos_para_tipo()`          |
+| **Excepciones Custom**     | `TipoIncapacidadNoDefinido` (E1), `ReglasNoConfiguradas` (E2)                                                 |
+| **Tests Unitarios**        | `tests/test_validacion_requisitos.py` (19 tests, 100% passing)                                                |
+| **Cobertura de Testing**   | Todos los tipos, reglas condicionales, excepciones, métodos auxiliares                                        |
+
+---
+
 ### **Flujo Normal de los Eventos**
 
 | **#** | **Acción de los Actores** | **Respuesta del Sistema**                                                                                                                                     |
 | ----- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1     | Se invoca desde UC1 o UC4 | Identifica el tipo de incapacidad                                                                                                                             |
-| 2     |                           | Carga reglas de validación para ese tipo específico                                                                                                           |
+| 2     |                           | Carga reglas de validación para ese tipo específico desde `REQUISITOS_POR_TIPO`                                                                              |
 | 3     |                           | Verifica presencia de certificado de incapacidad (obligatorio para todos)                                                                                     |
 | 4     |                           | Si tipo = Enfermedad general y días > 2: verifica presencia de Epicrisis                                                                                      |
 | 5     |                           | Si tipo = Accidente de tránsito: verifica Epicrisis y FURIPS                                                                                                  |
 | 6     |                           | Si tipo = Accidente laboral: verifica Epicrisis                                                                                                               |
-| 7     |                           | Si tipo = Licencia de maternidad: verifica Epicrisis, certificado de nacido vivo, registro civil, documento de identidad                                      |
-| 8     |                           | Si tipo = Licencia de paternidad: verifica Epicrisis con semanas de gestación, certificado de nacido vivo, registro civil, documento de identidad de la madre |
-| 9     |                           | Genera checklist con resultado: documentos presentes (✓) y faltantes (✗)                                                                                      |
-| 10    |                           | Retorna resultado al proceso que lo invocó                                                                                                                    |
+| 7     |                           | Si tipo = Licencia de maternidad: verifica Certificado de Incapacidad, Epicrisis, certificado de nacido vivo, registro civil, documento de identidad                                      |
+| 8     |                           | Si tipo = Licencia de paternidad: verifica Certificado de Incapacidad, Epicrisis con semanas de gestación, certificado de nacido vivo, registro civil, documento de identidad de la madre |
+| 9     |                           | Genera checklist con resultado: documentos presentes (✓) y faltantes (✗) con motivos específicos                                                              |
+| 10    |                           | Retorna resultado estructurado: `{completo: bool, faltantes: [], presentes: [], detalles: {}}`                                                                |
 
 ---
 
-| **Postcondición** |                                                                                                                         |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
-|                   | - Se ha generado checklist de validación automática.<br>- Se identifica si la documentación está completa o incompleta. |
+### **Reglas de Validación Implementadas**
+
+| **Tipo de Incapacidad**      | **Documentos Obligatorios**                              | **Documentos Condicionales**                                                     |
+| ---------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| **Enfermedad General**       | Certificado de Incapacidad                             | Epicrisis (si días > 2)                                                          |
+| **Accidente Laboral**        | Certificado de Incapacidad, Epicrisis                  | -                                                                                |
+| **Accidente de Tránsito**    | Certificado de Incapacidad, Epicrisis, FURIPS          | -                                                                                |
+| **Licencia de Maternidad**   | Certificado de Incapacidad, Epicrisis, Cert. Nacido Vivo, Registro Civil, Doc. Identidad | -                                                   |
+| **Licencia de Paternidad**   | Certificado de Incapacidad, Epicrisis, Cert. Nacido Vivo, Registro Civil, Doc. Identidad madre | Epicrisis debe incluir semanas de gestación |
+
+---
+
+### **Postcondición**
+
+- Se ha generado checklist de validación automática completo
+- Se identifica si la documentación está completa o incompleta
+- Se proporcionan motivos específicos para documentos faltantes
+- Resultado está listo para usar en UC4 (validación) y UC6 (solicitar faltantes)
 
 ---
 
@@ -293,8 +323,17 @@
 
 | **#**  | **Descripción**                                                                                                                                |
 | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| **E1** | **Tipo de incapacidad no definido:** Si el tipo no está especificado, el sistema marca error y solicita definir tipo antes de validar.         |
-| **E2** | **Reglas no configuradas:** Si no existen reglas para un tipo específico, el sistema notifica al administrador y solo valida certificado base. |
+| **E1** | **Tipo de incapacidad no definido:** Eleva `TipoIncapacidadNoDefinido` con código E1, mensaje claro y logging ERROR para bloquear validación. |
+| **E2** | **Reglas no configuradas:** Aplica fallback automático a validación básica (solo certificado), logging WARNING + CRITICAL para administrador. |
+
+---
+
+### **Manejo de Excepciones Robusto**
+
+| **Excepción**                  | **Comportamiento**                                                                                                                                    |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **TipoIncapacidadNoDefinido**  | - Código error: E1<br>- Mensaje: Incluye tipos válidos<br>- Logging: ERROR level<br>- Acción: Bloquea validación                                   |
+| **ReglasNoConfiguradas**       | - Código error: E2<br>- Comportamiento: Fallback funcional<br>- Logging: WARNING + CRITICAL<br>- Acción: Continúa con reglas mínimas              |
 
 ---
 
@@ -303,6 +342,8 @@
 | **Frecuencia esperada** | 50-100 veces por mes |
 | **Importancia**         | Alta                 |
 | **Urgencia**            | Alta                 |
+| **Tests Coverage**      | 19 tests, 100% pass |
+| **Líneas de Código**    | 494 líneas           |
 
 ---
 

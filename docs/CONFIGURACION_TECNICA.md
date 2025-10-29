@@ -312,6 +312,195 @@ db.drop_all()
 db.create_all()
 ```
 
+---
+
+## 🔍 Servicios Implementados
+
+### ValidadorRequisitos (UC5) - Implementado ✅
+
+**Archivo:** `app/services/validacion_requisitos_service.py`  
+**Estado:** Completamente implementado y testeado  
+**Tests:** 19 tests unitarios (100% passing)
+
+#### Funcionalidades Principales
+
+```python
+from app.services.validacion_requisitos_service import ValidadorRequisitos
+
+# Instanciar validador
+validador = ValidadorRequisitos()
+
+# Validar incapacidad completa
+resultado = validador.validar(incapacidad)
+# Resultado: {
+#   'completo': True/False,
+#   'faltantes': [{'tipo': '...', 'nombre': '...', 'motivo': '...'}],
+#   'presentes': [{'tipo': '...', 'nombre': '...', 'estado': '...'}],
+#   'detalles': {'requisitos_totales': [...], 'cantidad_presente': N}
+# }
+
+# Verificar solo si está completo
+completo = validador.es_completo(incapacidad)  # True/False
+
+# Obtener solo documentos faltantes
+faltantes = validador.get_faltantes(incapacidad)
+
+# Obtener solo documentos presentes
+presentes = validador.get_presentes(incapacidad)
+
+# Obtener requisitos para un tipo sin incapacidad
+requisitos = validador.obtener_requisitos_para_tipo('Enfermedad General', dias=5)
+```
+
+#### Reglas de Validación Configuradas
+
+```python
+REQUISITOS_POR_TIPO = {
+    'Enfermedad General': {
+        'obligatorios': ['CERTIFICADO_INCAPACIDAD'],
+        'condicionales': [
+            {
+                'condicion': lambda inc: inc.dias > 2,
+                'documento': 'EPICRISIS',
+                'descripcion': 'Epicrisis requerida para incapacidades > 2 días'
+            }
+        ]
+    },
+    'Accidente Laboral': {
+        'obligatorios': ['CERTIFICADO_INCAPACIDAD', 'EPICRISIS'],
+        'condicionales': []
+    },
+    'Accidente de Tránsito': {
+        'obligatorios': ['CERTIFICADO_INCAPACIDAD', 'EPICRISIS', 'FURIPS'],
+        'condicionales': []
+    },
+    'Licencia de Maternidad': {
+        'obligatorios': [
+            'CERTIFICADO_INCAPACIDAD', 'EPICRISIS', 
+            'CERTIFICADO_NACIDO_VIVO', 'REGISTRO_CIVIL', 
+            'DOCUMENTO_IDENTIDAD'
+        ],
+        'condicionales': []
+    },
+    'Licencia de Paternidad': {
+        'obligatorios': [
+            'CERTIFICADO_INCAPACIDAD', 'EPICRISIS',
+            'CERTIFICADO_NACIDO_VIVO', 'REGISTRO_CIVIL',
+            'DOCUMENTO_IDENTIDAD'
+        ],
+        'condicionales': [
+            {
+                'condicion': lambda inc: True,  # Siempre requerido
+                'documento': 'EPICRISIS',  # Debe incluir semanas de gestación
+                'descripcion': 'Epicrisis debe incluir semanas de gestación'
+            }
+        ]
+    }
+}
+```
+
+#### Manejo de Excepciones
+
+```python
+from app.services.validacion_requisitos_service import (
+    TipoIncapacidadNoDefinido, 
+    ReglasNoConfiguradas
+)
+
+try:
+    resultado = validador.validar(incapacidad)
+except TipoIncapacidadNoDefinido as e:
+    # E1: Tipo no definido
+    print(f"Error {e.codigo_error}: {e}")
+    print(f"ID Incapacidad afectada: {e.incapacidad_id}")
+    
+except ReglasNoConfiguradas as e:
+    # E2: Reglas no configuradas (fallback automático)
+    print(f"Advertencia {e.codigo_error}: {e}")
+    print(f"Tipo problemático: {e.tipo}")
+    # El validador continuará con reglas básicas
+```
+
+#### Logging Automático
+
+```python
+import logging
+logger = logging.getLogger('app.services.validacion_requisitos_service')
+
+# El servicio registra automáticamente:
+# - INFO: Resultados de validación exitosa
+# - WARNING: Fallback por reglas no configuradas (E2)
+# - ERROR: Tipos no definidos (E1)
+# - CRITICAL: Notificaciones al administrador (E2)
+```
+
+#### Integración con UC1 y UC4
+
+```python
+# Ejemplo en UC1 (registro)
+from app.services.validacion_requisitos_service import ValidadorRequisitos
+
+@incapacidades_bp.route('/registrar', methods=['POST'])
+def registrar():
+    # ... crear incapacidad ...
+    
+    # Validar documentación automáticamente
+    validador = ValidadorRequisitos()
+    validacion = validador.validar(incapacidad)
+    
+    if validacion['completo']:
+        flash('✅ Documentación completa', 'success')
+    else:
+        documentos_faltantes = [doc['nombre'] for doc in validacion['faltantes']]
+        flash(f'⚠️ Documentos faltantes: {", ".join(documentos_faltantes)}', 'warning')
+    
+    return redirect(url_for('incapacidades.detalle', id=incapacidad.id))
+
+# Ejemplo en UC4 (validación)
+@incapacidades_bp.route('/validar/<int:id>')
+@login_required
+@auxiliar_required
+def validar_incapacidad(id):
+    incapacidad = Incapacidad.query.get_or_404(id)
+    
+    # Ejecutar validación automática UC5
+    validador = ValidadorRequisitos()
+    validacion = validador.validar(incapacidad)
+    
+    return render_template('validar_incapacidades.html', 
+                         incapacidad=incapacidad,
+                         validacion=validacion)
+```
+
+#### Testing
+
+```python
+# Ejecutar tests del validador
+python -m pytest tests/test_validacion_requisitos.py -v
+
+# Tests incluidos:
+# - test_enfermedad_general_sin_epicrisis()
+# - test_enfermedad_general_con_epicrisis() 
+# - test_accidente_laboral_completo()
+# - test_accidente_transito_completo()
+# - test_licencia_maternidad_completa()
+# - test_licencia_paternidad_completa()
+# - test_excepcion_e1_mejorada()
+# - test_excepcion_e2_fallback_mejorado()
+# - test_logging_excepciones_e1()
+# - test_logging_excepciones_e2()
+# - test_mensaje_administrador_e2()
+# - test_get_faltantes()
+# - test_get_presentes()
+# - test_es_completo_true()
+# - test_es_completo_false()
+# - test_obtener_requisitos_para_tipo()
+
+# Resultado esperado: 19 tests passed (100%)
+```
+
+---
+
 ### Respaldo y Restauración (SQLite)
 
 ```powershell

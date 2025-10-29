@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import os
+import logging
 from app.models import db
 from app.models.incapacidad import Incapacidad
 from app.models.documento import Documento
@@ -131,6 +132,65 @@ def registrar():
             db.session.add(incapacidad)
             db.session.flush()  # Obtener ID sin hacer commit
             
+            # ========================================
+            # UC5: VALIDACIÓN DE REQUISITOS POR TIPO
+            # Integración 2.1 - Validar antes de guardar
+            # ========================================
+            from app.services.validacion_requisitos_service import ValidadorRequisitos
+            import logging
+            
+            logger = logging.getLogger(__name__)
+            logger.info(f"✅ UC5: Iniciando validación de requisitos para incapacidad #{incapacidad.id}")
+            
+            try:
+                validador = ValidadorRequisitos()
+                resultado_uc5 = validador.validar(incapacidad)
+                
+                # Guardar resultado en BD para referencia futura
+                incapacidad.validacion_uc5 = resultado_uc5
+                
+                logger.info(f"✅ UC5: Validación ejecutada - Completo: {resultado_uc5['completo']}")
+                
+                # UC1 + UC5: Si documentación NO está completa, mostrar advertencia pero PERMITIR guardar
+                # (El auxiliar podrá usar UC6 para solicitar documentos faltantes)
+                if not resultado_uc5['completo']:
+                    documentos_faltantes = [doc['nombre'] for doc in resultado_uc5['faltantes']]
+                    warning_msg = f"⚠️ Documentos faltantes según tipo de incapacidad: {', '.join(documentos_faltantes)}. Gestión Humana podrá solicitarlos posteriormente."
+                    
+                    if is_ajax:
+                        warnings.append(warning_msg)
+                    else:
+                        flash(warning_msg, 'warning')
+                    
+                    logger.info(f"📋 UC5: Documentos faltantes identificados: {', '.join(documentos_faltantes)}")
+                else:
+                    success_msg = "✅ UC5: Documentación completa según tipo de incapacidad"
+                    if is_ajax:
+                        warnings.append(success_msg)
+                    else:
+                        flash(success_msg, 'success')
+                    
+                    logger.info("✅ UC5: Validación completa - todos los requisitos cumplidos")
+                    
+            except Exception as e:
+                # Si falla UC5, registrar error pero NO bloquear el registro
+                logger.error(f"❌ UC5: Error en validación de requisitos: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                
+                error_msg = f"⚠️ UC5: Error en validación automática: {str(e)}. La incapacidad se registrará normalmente."
+                if is_ajax:
+                    warnings.append(error_msg)
+                else:
+                    flash(error_msg, 'warning')
+                
+                # Guardar error en validacion_uc5 para debugging
+                incapacidad.validacion_uc5 = {
+                    'error': str(e),
+                    'timestamp': datetime.now().isoformat(),
+                    'completo': False
+                }
+            
             # Procesar archivos (puede lanzar excepciones)
             archivos_guardados, errores_archivos = procesar_archivos(request.files, incapacidad.id)
             
@@ -232,7 +292,7 @@ def registrar():
             flash(f'❌ {error_msg}', 'danger')
             return redirect(url_for('incapacidades.registrar'))
 
-    return render_template('registro_incapacidad.html')
+    return render_template('incapacidades/crear.html')
 
 def procesar_archivos(files, incapacidad_id):
     """
@@ -1112,3 +1172,57 @@ def historial_estados(incapacidad_id):
         incapacidad=incapacidad,
         historial=historial
     )
+
+# =============================================================================
+# UC5: ENDPOINTS API PARA VALIDACIÓN DE DOCUMENTOS
+# =============================================================================
+
+@incapacidades_bp.route('/api/documentos-requeridos/<tipo>')
+@login_required
+def obtener_documentos_requeridos(tipo):
+    """
+    UC5: API endpoint para obtener documentos requeridos por tipo de incapacidad.
+    Utiliza el ValidadorRequisitos para determinar qué documentos son necesarios.
+    
+    Parámetros:
+        tipo: Tipo de incapacidad (str)
+        dias: Días de incapacidad (query param, opcional)
+    
+    Retorna:
+        JSON con documentos obligatorios y condicionales
+    """
+    try:
+        from app.services.validacion_requisitos_service import ValidadorRequisitos
+        
+        # Obtener días si están proporcionados
+        dias = request.args.get('dias', type=int, default=1)
+        
+        # Crear validador
+        validador = ValidadorRequisitos()
+        
+        # Obtener requisitos usando el nuevo método
+        requisitos = validador.obtener_requisitos_por_tipo_y_dias(tipo, dias)
+        
+        return jsonify({
+            'tipo': tipo,
+            'dias': dias,
+            'obligatorios': requisitos['obligatorios'],
+            'condicionales': requisitos['condicionales'],
+            'total': requisitos['total']
+        })
+        
+    except ImportError:
+        # Fallback si no está disponible ValidadorRequisitos
+        return jsonify({
+            'error': 'Servicio de validación no disponible',
+            'obligatorios': ['CERTIFICADO_INCAPACIDAD'],
+            'condicionales': []
+        }), 503
+        
+    except Exception as e:
+        current_app.logger.error(f'Error obteniendo documentos requeridos: {e}')
+        return jsonify({
+            'error': 'Error interno del servidor',
+            'obligatorios': ['CERTIFICADO_INCAPACIDAD'],
+            'condicionales': []
+        }), 500
