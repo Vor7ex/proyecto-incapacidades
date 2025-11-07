@@ -557,6 +557,9 @@ function actualizarMensajeInformativo() {
   const numObligatorios = documentosRequeridos.obligatorios?.length || 0;
   const numCondicionales = documentosRequeridos.condicionales?.length || 0;
   
+  // Mostrar el elemento si hay un tipo seleccionado
+  infoElement.style.display = 'block';
+  
   let mensaje = '';
   
   if (numObligatorios > 0) {
@@ -727,10 +730,23 @@ function mostrarInfoInicial() {
   document.getElementById('info-inicial').style.display = 'block';
   document.getElementById('documentos-requeridos').style.display = 'none';
   
+  // Ocultar/resetear mensaje informativo
+  const infoElement = document.getElementById('info-documentos-opcional');
+  if (infoElement) {
+    infoElement.style.display = 'none';
+  }
+  
   // Limpiar campos dinámicos
   const container = document.getElementById('campos-documentos');
   const camposExistentes = container.querySelectorAll('.documento-field:not(#field-certificado)');
   camposExistentes.forEach(campo => campo.remove());
+  
+  // Resetear badge del certificado a su estado original
+  const badgeElement = document.getElementById('badge-certificado');
+  if (badgeElement) {
+    badgeElement.className = 'badge bg-secondary ms-2';
+    badgeElement.textContent = 'Opcional';
+  }
   
   // Reset estado
   documentosRequeridos = {};
