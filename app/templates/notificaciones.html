@@ -81,6 +81,24 @@
     overflow: hidden;
     position: relative;
     padding-right: 20px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Forzar que TODO el contenido HTML respete el ancho */
+  .notificacion-contenido * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .notificacion-contenido table {
+    width: 100% !important;
+    table-layout: auto !important;
+  }
+
+  .notificacion-contenido img {
+    max-width: 100% !important;
+    height: auto !important;
   }
 
   .notificacion-contenido::after {
@@ -106,6 +124,59 @@
     display: none;
   }
 
+  /* Estilos para notificaciones */
+  .notificacion-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    margin-bottom: 0.75rem;
+  }
+
+  .notificacion-card .card-body {
+    padding: 1rem;
+  }
+
+  .notificacion-card.no-leida {
+    border-left: 4px solid #0d6efd;
+    background-color: #f8f9fa;
+  }
+
+  .notificacion-card:hover {
+    box-shadow: 0 0.125rem 0.5rem rgba(0,0,0,0.15);
+  }
+
+  /* Preview colapsado del contenido - SIN renderizar HTML */
+  .notificacion-contenido {
+    max-height: 3em; /* ~3 líneas de texto */
+    overflow: hidden;
+    position: relative;
+    word-wrap: break-word;
+    line-height: 1.4;
+    font-size: 0.95rem;
+  }
+
+  .notificacion-contenido::after {
+    content: '...';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: white;
+    padding-left: 10px;
+  }
+
+  .notificacion-expandida .notificacion-contenido {
+    max-height: none;
+  }
+
+  .notificacion-expandida .notificacion-contenido::after {
+    content: none;
+  }
+
+  .notificacion-contenido iframe {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    width: 100%;
+  }
+
   /* Responsive fixes */
   @media (max-width: 768px) {
     .btn-group-sm .btn {
@@ -125,6 +196,23 @@
   let paginaActual = 1;
   let filtroEstado = 'todas';
   let filtroOrden = 'recientes';
+
+  // FUNCIÓN CRÍTICA: Convertir HTML a texto plano para prevenir problemas de layout
+  function htmlToText(html) {
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    
+    // Remover elementos que no queremos en el texto plano
+    temp.querySelectorAll('style, script, link, meta').forEach(el => el.remove());
+    
+    // Extraer solo el texto visible
+    let texto = temp.textContent || temp.innerText || '';
+    
+    // Limpiar espacios múltiples y líneas en blanco
+    texto = texto.replace(/\s+/g, ' ').trim();
+    
+    return texto;
+  }
 
   // Cargar notificaciones con filtros y paginación
   function cargarNotificaciones(pagina = 1) {
@@ -199,24 +287,27 @@
       const iconoTipo = obtenerIconoTipo(notif.tipo);
       const colorBadge = obtenerColorBadge(notif.tipo);
       
+      // CRÍTICO: Convertir HTML a texto plano para prevenir que rompa el layout
+      const contenidoTexto = htmlToText(notif.contenido);
+      
       html += `
-        <div class="card mb-3 notificacion-card ${!esLeida ? 'no-leida' : ''}" id="notif-${notif.id}" data-notif-id="${notif.id}">
+        <div class="card notificacion-card ${!esLeida ? 'no-leida' : ''}" id="notif-${notif.id}" data-notif-id="${notif.id}">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start flex-wrap">
-              <div class="flex-grow-1 mb-2">
-                <div class="d-flex align-items-center mb-2 flex-wrap">
-                  <i class="${iconoTipo} me-2 fs-5"></i>
-                  <h5 class="mb-0 me-2 ${!esLeida ? 'fw-bold' : ''}">${notif.asunto}</h5>
-                  ${!esLeida ? '<span class="badge bg-primary">Nueva</span>' : ''}
+              <div class="flex-grow-1">
+                <div class="d-flex align-items-center mb-1 flex-wrap">
+                  <i class="${iconoTipo} me-2"></i>
+                  <h6 class="mb-0 me-2 ${!esLeida ? 'fw-bold' : ''}">${notif.asunto}</h6>
+                  ${!esLeida ? '<span class="badge bg-primary badge-sm">Nueva</span>' : ''}
                 </div>
                 
-                <span class="badge ${colorBadge} tipo-badge mb-2">${formatearTipo(notif.tipo)}</span>
+                <span class="badge ${colorBadge} badge-sm mb-2">${formatearTipo(notif.tipo)}</span>
                 
-                <div class="notificacion-contenido mt-2" id="contenido-${notif.id}">
-                  ${notif.contenido}
+                <div class="notificacion-contenido mt-1" id="contenido-${notif.id}" data-html-completo="${notif.contenido.replace(/"/g, '&quot;')}">
+                  ${contenidoTexto}
                 </div>
                 
-                <div class="mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="mt-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
                   <small class="text-muted">
                     <i class="bi bi-clock"></i> ${notif.tiempo_relativo}
                     ${notif.fecha_lectura ? `<span class="ms-2"><i class="bi bi-check2"></i> Leída ${formatearFecha(notif.fecha_lectura)}</span>` : ''}
@@ -263,14 +354,28 @@
       btn.addEventListener('click', function() {
         const id = this.getAttribute('data-id');
         const contenido = document.getElementById(`contenido-${id}`);
-        contenido.classList.toggle('expandida');
-        const icono = this.querySelector('i');
-        if (contenido.classList.contains('expandida')) {
-          icono.className = 'bi bi-arrows-collapse';
-          this.innerHTML = '<i class="bi bi-arrows-collapse"></i> Ver menos';
-        } else {
-          icono.className = 'bi bi-arrows-expand';
+        const card = document.getElementById(`notif-${id}`);
+        
+        if (card.classList.contains('notificacion-expandida')) {
+          // Colapsar: mostrar solo texto plano
+          card.classList.remove('notificacion-expandida');
+          const htmlCompleto = contenido.getAttribute('data-html-completo');
+          contenido.textContent = htmlToText(htmlCompleto);
           this.innerHTML = '<i class="bi bi-arrows-expand"></i> Ver completo';
+        } else {
+          // Expandir: mostrar HTML completo pero en iframe para aislarlo
+          card.classList.add('notificacion-expandida');
+          const htmlCompleto = contenido.getAttribute('data-html-completo');
+          
+          // Crear iframe para aislar el HTML y prevenir problemas de layout
+          contenido.innerHTML = `
+            <iframe srcdoc="${htmlCompleto.replace(/"/g, '&quot;')}" 
+                    style="width: 100%; min-height: 200px;"
+                    sandbox="allow-same-origin"
+                    onload="this.style.height = (this.contentWindow.document.documentElement.scrollHeight + 20) + 'px'">
+            </iframe>
+          `;
+          this.innerHTML = '<i class="bi bi-arrows-collapse"></i> Ver menos';
         }
       });
     });
