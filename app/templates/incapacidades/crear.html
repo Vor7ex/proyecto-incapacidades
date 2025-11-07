@@ -225,6 +225,37 @@ let documentosRequeridos = {};
 let documentosCargados = {};
 let validacionActual = null;
 
+// Función para obtener descripción dinámica según el contexto
+function obtenerDescripcionDocumento(tipo, tipoIncapacidad) {
+  const config = tiposDocumento[tipo];
+  if (!config) return 'Documento requerido';
+  
+  // Descripción específica para Epicrisis en Licencia de Paternidad
+  if (tipo === 'EPICRISIS' && tipoIncapacidad === 'Licencia de Paternidad') {
+    return 'Resumen médico que debe incluir las semanas de gestación al momento del parto';
+  }
+  
+  // Descripción específica para Documento de Identidad en Licencia de Paternidad
+  if ((tipo === 'DOCUMENTO_IDENTIDAD' || tipo === 'DOCUMENTO_IDENTIDAD_MADRE') && tipoIncapacidad === 'Licencia de Paternidad') {
+    return 'Fotocopia del documento de identidad de la madre del menor';
+  }
+  
+  return config.descripcion;
+}
+
+// Función para obtener nombre dinámico según el contexto
+function obtenerNombreDocumento(tipo, tipoIncapacidad) {
+  const config = tiposDocumento[tipo];
+  if (!config) return 'Documento';
+  
+  // Nombre específico para Documento de Identidad en Licencia de Paternidad
+  if ((tipo === 'DOCUMENTO_IDENTIDAD' || tipo === 'DOCUMENTO_IDENTIDAD_MADRE') && tipoIncapacidad === 'Licencia de Paternidad') {
+    return 'Documento de Identidad de la Madre';
+  }
+  
+  return config.nombre;
+}
+
 // Configuración de tipos de documento
 const tiposDocumento = {
   'CERTIFICADO_INCAPACIDAD': {
@@ -406,37 +437,6 @@ function renderizarChecklistDocumentos() {
     return;
   }
 
-  // Función para obtener descripción dinámica según el contexto
-  function obtenerDescripcionDocumento(tipo, tipoIncapacidad) {
-    const config = tiposDocumento[tipo];
-    if (!config) return 'Documento requerido';
-    
-    // Descripción específica para Epicrisis en Licencia de Paternidad
-    if (tipo === 'EPICRISIS' && tipoIncapacidad === 'Licencia de Paternidad') {
-      return 'Resumen médico que debe incluir las semanas de gestación al momento del parto';
-    }
-    
-    // Descripción específica para Documento de Identidad en Licencia de Paternidad
-    if (tipo === 'DOCUMENTO_IDENTIDAD' && tipoIncapacidad === 'Licencia de Paternidad') {
-      return 'Fotocopia del documento de identidad de la madre del menor';
-    }
-    
-    return config.descripcion;
-  }
-  
-  // Función para obtener nombre dinámico según el contexto
-  function obtenerNombreDocumento(tipo, tipoIncapacidad) {
-    const config = tiposDocumento[tipo];
-    if (!config) return 'Documento';
-    
-    // Nombre específico para Documento de Identidad en Licencia de Paternidad
-    if (tipo === 'DOCUMENTO_IDENTIDAD' && tipoIncapacidad === 'Licencia de Paternidad') {
-      return 'Documento de Identidad de la Madre';
-    }
-    
-    return config.nombre;
-  }
-  
   todosDocumentos.forEach(({ tipo, obligatorio }) => {
     const config = tiposDocumento[tipo];
     if (!config) return;
