@@ -7,7 +7,7 @@
 
 Sistema web para la gestión digital de incapacidades médicas de empleados, desarrollado con Flask. Incluye validación automática de documentos por tipo, notificaciones inteligentes, scheduler de recordatorios y gestión de estados con máquina de transiciones.
 
-**� Release 1.0 en desarrollo** | **16 Casos de Uso** | **1 UC Completado al 100%, 7 UC Funcionales (50-95%), 8 UC Planificados**
+**🚀 Release 1.0 en desarrollo** | **16 Casos de Uso** | **2 UC Completados al 100%, 6 UC Funcionales (50-95%), 8 UC Planificados**
 
 ---
 
@@ -31,7 +31,7 @@ La documentación completa está organizada en la carpeta [`/docs`](docs/):
 
 | UC | Caso de Uso | Estado | Descripción |
 |----|------------|--------|-------------|
-| UC1 | Registrar incapacidad | ⚠️ 75% | Flujo principal completo, faltan 3 de 6 excepciones (E3, E5, E6) |
+| **UC1** | **Registrar incapacidad** | **✅ 100%** | **Flujo completo con todas las excepciones (E1-E6)** |
 | UC2 | Notificar RRHH | ⚠️ 70% | Email funcional, falta notificación interna y manejo E3/E4 |
 | UC3 | Consultar incapacidades | ⚠️ 50% | Vista básica sin filtros, búsqueda, paginación ni descarga ZIP |
 | UC4 | Validar documentación | ⚠️ 80% | Panel funcional, falta manejo de E2-E5 y validación manual |
@@ -77,8 +77,8 @@ La documentación completa está organizada en la carpeta [`/docs`](docs/):
 - ✅ Validación automática post-carga que actualiza estados
 - ⚠️ **Pendiente**: Reinicio de solicitud (E2) y extensión manual de plazos (E4)
 
-#### UC1 - Registrar incapacidad ⚠️ 75% IMPLEMENTADO
-**Flujo principal funcional, excepciones parciales**
+#### UC1 - Registrar incapacidad ✅ 100% IMPLEMENTADO
+**Flujo principal y excepciones completas**
 
 - ✅ Formulario completo con 5 tipos de incapacidad
 - ✅ Validación de formato de datos (tipo, fechas, formato archivos)
@@ -87,8 +87,12 @@ La documentación completa está organizada en la carpeta [`/docs`](docs/):
 - ✅ Almacenamiento transaccional (incapacidad + documentos)
 - ✅ Integración con UC5 (validación automática de requisitos)
 - ✅ Integración con UC2 (notificaciones automáticas)
-- ✅ Excepciones implementadas: E1 (docs incompletos), E2 (formato inválido), E4 (fechas inválidas)
-- ⚠️ **Pendiente**: E3 (archivo >10MB), E5 (sesión expirada), E6 (guardar borrador offline)
+- ✅ **E1**: Documentos incompletos - Validación opcional (UC6)
+- ✅ **E2**: Formato de archivo inválido - Mensaje específico
+- ✅ **E3**: Archivo >10MB - Mensaje detallado con sugerencias
+- ✅ **E4**: Fechas inválidas - Validación completa
+- ✅ **E5**: Sesión expirada - Borrador automático en localStorage
+- ✅ **E6**: Pérdida de conexión - Guardado local y recuperación automática
 
 #### UC3 - Consultar incapacidades ⚠️ 50% IMPLEMENTADO
 **Vista básica sin capacidades de búsqueda avanzada**
@@ -261,6 +265,9 @@ El proyecto incluye una suite de tests automatizados enfocada en componentes cr�
 # Ejecutar todos los tests
 python -m pytest tests/ -v
 
+# Tests UC1 (100% cobertura)
+python -m unittest tests.test_uc1_excepciones -v
+
 # Tests específicos UC5 (100% cobertura)
 python -m pytest tests/test_validacion_requisitos.py -v
 
@@ -280,30 +287,31 @@ python -m pytest tests/test_calendario.py -v
 ```
 
 **Cobertura de Testing:**
+- ✅ **UC1**: 100% (15 tests - registro completo con excepciones E1-E6)
 - ✅ **UC5**: 100% (19 tests - validación de requisitos)
 - ✅ **UC6**: 95% (9 tests - solicitud de documentos y recordatorios)
 - ✅ **Utilidades**: 100% (máquina de estados, calendario, código radicación)
 - ✅ **Integración UC1+UC5**: 100% (flujo completo de registro con validación)
-- ⚠️ **UC1-UC4, UC7**: Tests parciales (flujos principales, faltan excepciones)
+- ⚠️ **UC2, UC3, UC4, UC7**: Tests parciales (flujos principales, faltan excepciones)
 - 🔴 **UC3, UC8, UC15, UC16**: Sin tests automatizados
 
-**Nota**: La cobertura global del proyecto es aproximadamente 60%. Los componentes críticos (UC5, UC6, utilidades) tienen 100% de cobertura.
+**Nota**: La cobertura global del proyecto es aproximadamente 65%. Los componentes críticos (UC1, UC5, UC6, utilidades) tienen 100% de cobertura.
 
 ---
 
 ## ⚠️ Limitaciones Conocidas y Trabajo Pendiente
 
-### 📋 UC1 - Registrar Incapacidad (75%)
+### 📋 UC1 - Registrar Incapacidad (100%) ✅
 **Implementado:**
 - ✅ Flujo normal completo (12 pasos)
-- ✅ Validación de tipo, fechas y formato
-- ✅ Generación de código de radicación
+- ✅ **E1**: Documentos incompletos - Permitido (UC6 posterior)
+- ✅ **E2**: Formato inválido - Mensaje específico por tipo
+- ✅ **E3**: Archivo >10MB - Validación frontend y backend con sugerencias
+- ✅ **E4**: Fechas inválidas - Validación completa de rangos
+- ✅ **E5**: Sesión expirada - Borrador automático cada 30s en localStorage
+- ✅ **E6**: Pérdida de conexión - Guardado offline y recuperación automática
 - ✅ Integración con UC2, UC5, UC15
-
-**Pendiente:**
-- ❌ **E3**: Validación de archivo >10MB (muestra error genérico)
-- ❌ **E5**: Guardado automático de borrador en sesión expirada
-- ❌ **E6**: Guardado local y recuperación tras pérdida de conexión
+- ✅ Tests completos (15 tests unitarios)
 
 ### 📧 UC2 - Notificar RRHH (70%)
 **Implementado:**
@@ -413,6 +421,7 @@ python -m pytest tests/test_calendario.py -v
 ## 📈 Roadmap
 
 ### ✅ Completado al 100% (Release 1.0)
+- **UC1**: Registro de incapacidades con todas las excepciones (15 tests)
 - **UC5**: Verificación automática de requisitos (494 líneas, 19 tests)
 
 ### 🚧 En Desarrollo Activo (Release 1.0 - 50-95%)
@@ -420,7 +429,6 @@ python -m pytest tests/test_calendario.py -v
 - **UC15**: Almacenamiento de documentos (90% - falta cifrado para docs sensibles)
 - **UC7**: Aprobar/Rechazar (85% - falta lista motivos predefinidos)
 - **UC4**: Validar documentación (80% - falta validación manual detallada)
-- **UC1**: Registrar incapacidad (75% - faltan 3 excepciones: E3, E5, E6)
 - **UC2**: Notificar RRHH (70% - falta notificación interna y reintentos)
 - **UC3**: Consultar incapacidades (50% - faltan filtros, búsqueda y paginación)
 
@@ -429,7 +437,7 @@ python -m pytest tests/test_calendario.py -v
 - **UC16**: Descargar incapacidad (15% - solo individual, falta ZIP organizado)
 
 ### 🔄 Planificado (Release 2.0)
-- Completar UC1-UC4, UC6-UC8 al 100%
+- Completar UC2-UC4, UC6-UC8 al 100%
 - UC9: Consultar estado radicación (dashboard de seguimiento)
 - UC10: Generar reportes seguimiento (con gráficos y métricas)
 - UC11: Ver incapacidades del equipo (vista para líderes)

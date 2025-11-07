@@ -166,28 +166,34 @@ def validar_rango_fechas(fecha_inicio, fecha_fin):
     return errores
 
 def validar_archivo(file):
-    """Validar que el archivo cumpla requisitos"""
+    """UC1-E3: Validar que el archivo cumpla requisitos (formato y tamaño)"""
     errores = []
     
     if not file or file.filename == '':
         errores.append('No se ha seleccionado ningun archivo')
         return errores
     
-    # Validar extension
+    # UC1-E2: Validar extension
     extensiones_permitidas = {'pdf', 'png', 'jpg', 'jpeg'}
     extension = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
     
     if extension not in extensiones_permitidas:
-        errores.append(f'Extension .{extension} no permitida. Use: {", ".join(extensiones_permitidas)}')
+        errores.append(f'UC1-E2: Formato inválido. El archivo "{file.filename}" tiene extensión .{extension}. Use: PDF, JPG, PNG')
+        return errores
     
-    # Validar tamaño (obtener tamaño del archivo)
+    # UC1-E3: Validar tamaño máximo (10MB)
     file.seek(0, os.SEEK_END)
     tamaño = file.tell()
     file.seek(0)
     
     tamaño_mb = tamaño / (1024 * 1024)
-    if tamaño_mb > 10:
-        errores.append(f'El archivo pesa {tamaño_mb:.2f}MB. El maximo permitido es 10MB')
+    MAX_SIZE_MB = 10
+    
+    if tamaño_mb > MAX_SIZE_MB:
+        errores.append(
+            f'UC1-E3: Archivo muy grande. "{file.filename}" pesa {tamaño_mb:.1f}MB. '
+            f'Máximo: {MAX_SIZE_MB}MB. Comprima el archivo o use formato PDF en vez de imagen.'
+        )
     
     return errores
 

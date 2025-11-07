@@ -320,6 +320,23 @@ document.addEventListener('DOMContentLoaded', function() {
       onDocumentoChange(e.target);
     }
   });
+  
+  // UC1-E5: Recuperar borrador si existe
+  recuperarBorrador();
+  
+  // UC1-E5/E6: Guardar borrador automático cada 30 segundos
+  setInterval(guardarBorradorAutomatico, 30000);
+  
+  // UC1-E6: Detectar conexión/desconexión
+  window.addEventListener('online', onConexionRestaurada);
+  window.addEventListener('offline', onConexionPerdida);
+  
+  // UC1-E5: Guardar borrador antes de cambiar de página
+  window.addEventListener('beforeunload', function(e) {
+    if (formularioTieneDatos()) {
+      guardarBorradorLocal();
+    }
+  });
 });
 
 // UC5: Función principal cuando cambia el tipo de incapacidad
@@ -913,6 +930,8 @@ function handleSubmit(e) {
     document.getElementById('btnSubmit').disabled = false;
     
     if (data.success) {
+      // UC1-E5/E6: Limpiar borrador al registrar exitosamente
+      localStorage.removeItem(BORRADOR_KEY);
       mostrarModalConfirmacion(data.codigo_radicacion);
     } else {
       mostrarErroresServidor(data.errors || ['Error al procesar la solicitud']);
@@ -980,15 +999,156 @@ function validarArchivo(file) {
     return { valido: false, error: 'No se seleccionó ningún archivo' };
   }
   
+  // UC1-E3: Validación de tamaño
   if (file.size > maxSize) {
-    return { valido: false, error: 'El archivo excede el tamaño máximo permitido (10MB)' };
+    const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+    return { 
+      valido: false, 
+      error: `UC1-E3: Archivo muy grande. "${file.name}" pesa ${sizeMB}MB. Máximo: 10MB. Comprima el archivo o use PDF.`
+    };
   }
   
+  // UC1-E2: Validación de formato
   if (!allowedTypes.includes(file.type)) {
-    return { valido: false, error: 'Formato no permitido. Use PDF, JPG o PNG' };
+    return { 
+      valido: false, 
+      error: `UC1-E2: Formato inválido. Use PDF, JPG o PNG.` 
+    };
   }
   
   return { valido: true };
 }
+
+// ============================================================================
+// UC1-E5/E6: GESTIÓN DE BORRADORES Y PÉRDIDA DE CONEXIÓN
+// ============================================================================
+
+const BORRADOR_KEY = 'incapacidad_borrador';
+const ARCHIVOS_KEY = 'incapacidad_archivos_info';
+
+function formularioTieneDatos() {
+  const tipo = document.getElementById('tipo').value;
+  const fechaInicio = document.getElementById('fecha_inicio').value;
+  const fechaFin = document.getElementById('fecha_fin').value;
+  return tipo || fechaInicio || fechaFin || Object.keys(documentosCargados).length > 0;
+}
+
+function guardarBorradorLocal() {
+  if (!formularioTieneDatos()) return;
+  
+  const borrador = {
+    tipo: document.getElementById('tipo').value,
+    fecha_inicio: document.getElementById('fecha_inicio').value,
+    fecha_fin: document.getElementById('fecha_fin').value,
+    documentos_info: Object.keys(documentosCargados).filter(k => documentosCargados[k]).map(k => ({
+      id: k,
+      nombre: document.getElementById(k)?.files[0]?.name || 'archivo'
+    })),
+    timestamp: new Date().toISOString()
+  };
+  
+  try {
+    localStorage.setItem(BORRADOR_KEY, JSON.stringify(borrador));
+    console.log('UC1-E5/E6: Borrador guardado localmente');
+  } catch (e) {
+    console.error('Error guardando borrador:', e);
+  }
+}
+
+function recuperarBorrador() {
+  try {
+    const borradorStr = localStorage.getItem(BORRADOR_KEY);
+    if (!borradorStr) return;
+    
+    const borrador = JSON.parse(borradorStr);
+    const ahora = new Date();
+    const timestamp = new Date(borrador.timestamp);
+    const horasTranscurridas = (ahora - timestamp) / (1000 * 60 * 60);
+    
+    // Solo recuperar si es menor a 24 horas
+    if (horasTranscurridas > 24) {
+      localStorage.removeItem(BORRADOR_KEY);
+      return;
+    }
+    
+    // Mostrar alerta de recuperación
+    if (confirm(`UC1-E5: Se encontró un borrador guardado hace ${Math.round(horasTranscurridas)} hora(s). ¿Desea recuperarlo?`)) {
+      document.getElementById('tipo').value = borrador.tipo || '';
+      document.getElementById('fecha_inicio').value = borrador.fecha_inicio || '';
+      document.getElementById('fecha_fin').value = borrador.fecha_fin || '';
+      
+      if (borrador.tipo) {
+        onTipoChange();
+      }
+      
+      if (borrador.fecha_inicio && borrador.fecha_fin) {
+        calcularDias();
+      }
+      
+      // Mostrar info de archivos que se perdieron
+      if (borrador.documentos_info && borrador.documentos_info.length > 0) {
+        const nombresArchivos = borrador.documentos_info.map(d => d.nombre).join(', ');
+        alert(`Nota: Los archivos adjuntos (${nombresArchivos}) deben ser cargados nuevamente por seguridad.`);
+      }
+      
+      console.log('UC1-E5: Borrador recuperado');
+    }
+    
+    // Limpiar borrador después de recuperar o rechazar
+    localStorage.removeItem(BORRADOR_KEY);
+  } catch (e) {
+    console.error('Error recuperando borrador:', e);
+    localStorage.removeItem(BORRADOR_KEY);
+  }
+}
+
+function guardarBorradorAutomatico() {
+  if (formularioTieneDatos() && navigator.onLine) {
+    guardarBorradorLocal();
+  }
+}
+
+function onConexionPerdida() {
+  // UC1-E6: Guardar borrador inmediatamente
+  guardarBorradorLocal();
+  
+  // Mostrar alerta
+  const alertDiv = document.createElement('div');
+  alertDiv.id = 'alert-conexion';
+  alertDiv.className = 'alert alert-warning alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+  alertDiv.style.zIndex = '9999';
+  alertDiv.innerHTML = `
+    <i class="bi bi-wifi-off me-2"></i>
+    <strong>UC1-E6:</strong> Sin conexión a Internet. Los datos se han guardado localmente.
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+  document.body.appendChild(alertDiv);
+  
+  console.log('UC1-E6: Conexión perdida, borrador guardado');
+}
+
+function onConexionRestaurada() {
+  // Remover alerta de conexión
+  const alertDiv = document.getElementById('alert-conexion');
+  if (alertDiv) {
+    alertDiv.remove();
+  }
+  
+  // Mostrar alerta de reconexión
+  const alertReconexion = document.createElement('div');
+  alertReconexion.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+  alertReconexion.style.zIndex = '9999';
+  alertReconexion.innerHTML = `
+    <i class="bi bi-wifi me-2"></i>
+    <strong>UC1-E6:</strong> Conexión restaurada. Puede continuar con el registro.
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+  document.body.appendChild(alertReconexion);
+  
+  setTimeout(() => alertReconexion.remove(), 5000);
+  
+  console.log('UC1-E6: Conexión restaurada');
+}
+
 </script>
 {% endblock %}
