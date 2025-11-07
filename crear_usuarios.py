@@ -16,15 +16,19 @@ load_dotenv()
 app = create_app()
 
 with app.app_context():
+    # Limpiar base de datos existente
+    print("🗑️  Limpiando base de datos existente...")
+    db.drop_all()
+    
     # Crear las tablas
-    print("Creando tablas de BD...")
+    print("📦 Creando tablas de BD...")
     db.create_all()
     
     # Obtener email de notificaciones desde .env
     email_notificaciones = os.getenv('COLABORADOR_EMAIL', 'noreply@test.com')
     
     # Crear usuario colaborador
-    print("\nCreando usuario colaborador...")
+    print("\n👤 Creando usuario colaborador...")
     usuario_colaborador = Usuario(
         nombre='Juan Empleado',
         email='empleado@test.com',
@@ -34,7 +38,7 @@ with app.app_context():
     usuario_colaborador.set_password('123456')
     
     # Crear usuario auxiliar
-    print("Creando usuario auxiliar...")
+    print("👤 Creando usuario auxiliar...")
     usuario_auxiliar = Usuario(
         nombre='Maria Garcia',
         email='auxiliar@test.com',
