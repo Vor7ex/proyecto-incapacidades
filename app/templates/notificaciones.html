@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Notificaciones - Sistema de Incapacidades{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2><i class="bi bi-bell"></i> Mis Notificaciones</h2>
+      <button class="btn btn-outline-primary" id="btn-marcar-todas-leidas-pagina">
+        <i class="bi bi-check-all"></i> Marcar todas como leídas
+      </button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Filtrar por estado:</label>
+            <select class="form-select" id="filtro-estado">
+              <option value="todas">Todas las notificaciones</option>
+              <option value="no_leidas">Solo no leídas</option>
+              <option value="leidas">Solo leídas</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Ordenar por:</label>
+            <select class="form-select" id="filtro-orden">
+              <option value="recientes">Más recientes primero</option>
+              <option value="antiguas">Más antiguas primero</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de Notificaciones -->
+    <div id="notificaciones-container">
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-3 text-muted">Cargando notificaciones...</p>
+      </div>
+    </div>
+
+    <!-- Paginación -->
+    <nav aria-label="Paginación de notificaciones" id="paginacion-container" style="display: none;">
+      <ul class="pagination justify-content-center" id="paginacion">
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<style>
+  .notificacion-card {
+    transition: all 0.2s ease;
+    border-left: 4px solid transparent;
+  }
+
+  .notificacion-card.no-leida {
+    background-color: #f8f9fa;
+    border-left-color: #0d6efd;
+  }
+
+  .notificacion-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .tipo-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .notificacion-contenido {
+    line-height: 1.6;
+    color: #495057;
+    max-height: 60px;
+    overflow: hidden;
+    position: relative;
+    padding-right: 20px;
+  }
+
+  .notificacion-contenido::after {
+    content: '...';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: white;
+    padding-left: 10px;
+  }
+
+  .notificacion-card.no-leida .notificacion-contenido::after {
+    background: #f8f9fa;
+  }
+
+  .notificacion-contenido.expandida {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .notificacion-contenido.expandida::after {
+    content: '';
+    display: none;
+  }
+
+  /* Responsive fixes */
+  @media (max-width: 768px) {
+    .btn-group-sm .btn {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+    }
+    
+    .notificacion-card h5 {
+      font-size: 1rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let paginaActual = 1;
+  let filtroEstado = 'todas';
+  let filtroOrden = 'recientes';
+
+  // Cargar notificaciones con filtros y paginación
+  function cargarNotificaciones(pagina = 1) {
+    paginaActual = pagina;
+    
+    // Construir URL con parámetros
+    let url = `/notificaciones/api/mis-notificaciones?pagina=${pagina}&limite=10`;
+    
+    if (filtroEstado === 'no_leidas') {
+      url += '&solo_no_leidas=true';
+    }
+    
+    // Mostrar loader
+    document.getElementById('notificaciones-container').innerHTML = `
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-3 text-muted">Cargando notificaciones...</p>
+      </div>
+    `;
+
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        mostrarNotificaciones(data);
+        mostrarPaginacion(data);
+        
+        // Hacer scroll a la notificación si viene del navbar
+        const hash = window.location.hash;
+        if (hash) {
+          setTimeout(() => {
+            const elemento = document.querySelector(hash);
+            if (elemento) {
+              elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              elemento.classList.add('destacar');
+              setTimeout(() => elemento.classList.remove('destacar'), 2000);
+            }
+          }, 300);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('notificaciones-container').innerHTML = `
+          <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i> Error al cargar las notificaciones. Por favor, intenta de nuevo.
+          </div>
+        `;
+      });
+  }
+
+  // Mostrar notificaciones en el DOM
+  function mostrarNotificaciones(data) {
+    const container = document.getElementById('notificaciones-container');
+    
+    if (data.notificaciones.length === 0) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-body text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <h5 class="mt-3">No hay notificaciones</h5>
+            <p class="text-muted">No tienes notificaciones en este momento.</p>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    let html = '';
+    data.notificaciones.forEach(notif => {
+      const esLeida = notif.es_leida;
+      const iconoTipo = obtenerIconoTipo(notif.tipo);
+      const colorBadge = obtenerColorBadge(notif.tipo);
+      
+      html += `
+        <div class="card mb-3 notificacion-card ${!esLeida ? 'no-leida' : ''}" id="notif-${notif.id}" data-notif-id="${notif.id}">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start flex-wrap">
+              <div class="flex-grow-1 mb-2">
+                <div class="d-flex align-items-center mb-2 flex-wrap">
+                  <i class="${iconoTipo} me-2 fs-5"></i>
+                  <h5 class="mb-0 me-2 ${!esLeida ? 'fw-bold' : ''}">${notif.asunto}</h5>
+                  ${!esLeida ? '<span class="badge bg-primary">Nueva</span>' : ''}
+                </div>
+                
+                <span class="badge ${colorBadge} tipo-badge mb-2">${formatearTipo(notif.tipo)}</span>
+                
+                <div class="notificacion-contenido mt-2" id="contenido-${notif.id}">
+                  ${notif.contenido}
+                </div>
+                
+                <div class="mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                  <small class="text-muted">
+                    <i class="bi bi-clock"></i> ${notif.tiempo_relativo}
+                    ${notif.fecha_lectura ? `<span class="ms-2"><i class="bi bi-check2"></i> Leída ${formatearFecha(notif.fecha_lectura)}</span>` : ''}
+                  </small>
+                  
+                  <div class="btn-group btn-group-sm" role="group">
+                    <button class="btn btn-outline-secondary btn-expandir" data-id="${notif.id}">
+                      <i class="bi bi-arrows-expand"></i> Ver completo
+                    </button>
+                    ${!esLeida ? `
+                      <button class="btn btn-outline-primary btn-marcar-leida" data-id="${notif.id}">
+                        <i class="bi bi-check"></i> Marcar leída
+                      </button>
+                    ` : `
+                      <button class="btn btn-outline-warning btn-marcar-no-leida" data-id="${notif.id}">
+                        <i class="bi bi-arrow-counterclockwise"></i> Marcar no leída
+                      </button>
+                    `}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+
+    // Agregar eventos a los botones
+    document.querySelectorAll('.btn-marcar-leida').forEach(btn => {
+      btn.addEventListener('click', function() {
+        marcarComoLeida(this.getAttribute('data-id'));
+      });
+    });
+
+    document.querySelectorAll('.btn-marcar-no-leida').forEach(btn => {
+      btn.addEventListener('click', function() {
+        marcarComoNoLeida(this.getAttribute('data-id'));
+      });
+    });
+
+    document.querySelectorAll('.btn-expandir').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = this.getAttribute('data-id');
+        const contenido = document.getElementById(`contenido-${id}`);
+        contenido.classList.toggle('expandida');
+        const icono = this.querySelector('i');
+        if (contenido.classList.contains('expandida')) {
+          icono.className = 'bi bi-arrows-collapse';
+          this.innerHTML = '<i class="bi bi-arrows-collapse"></i> Ver menos';
+        } else {
+          icono.className = 'bi bi-arrows-expand';
+          this.innerHTML = '<i class="bi bi-arrows-expand"></i> Ver completo';
+        }
+      });
+    });
+  }
+
+  // Mostrar paginación
+  function mostrarPaginacion(data) {
+    const container = document.getElementById('paginacion-container');
+    const paginacion = document.getElementById('paginacion');
+
+    if (data.total_paginas <= 1) {
+      container.style.display = 'none';
+      return;
+    }
+
+    container.style.display = 'block';
+    let html = '';
+
+    // Botón anterior
+    html += `
+      <li class="page-item ${paginaActual === 1 ? 'disabled' : ''}">
+        <a class="page-link" href="#" data-pagina="${paginaActual - 1}">Anterior</a>
+      </li>
+    `;
+
+    // Números de página
+    for (let i = 1; i <= data.total_paginas; i++) {
+      if (i === 1 || i === data.total_paginas || (i >= paginaActual - 2 && i <= paginaActual + 2)) {
+        html += `
+          <li class="page-item ${i === paginaActual ? 'active' : ''}">
+            <a class="page-link" href="#" data-pagina="${i}">${i}</a>
+          </li>
+        `;
+      } else if (i === paginaActual - 3 || i === paginaActual + 3) {
+        html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+      }
+    }
+
+    // Botón siguiente
+    html += `
+      <li class="page-item ${paginaActual === data.total_paginas ? 'disabled' : ''}">
+        <a class="page-link" href="#" data-pagina="${paginaActual + 1}">Siguiente</a>
+      </li>
+    `;
+
+    paginacion.innerHTML = html;
+
+    // Agregar eventos
+    paginacion.querySelectorAll('a.page-link').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const pagina = parseInt(this.getAttribute('data-pagina'));
+        if (pagina >= 1 && pagina <= data.total_paginas) {
+          cargarNotificaciones(pagina);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    });
+  }
+
+  // Marcar como leída
+  function marcarComoLeida(notifId) {
+    fetch(`/notificaciones/api/marcar-leida/${notifId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        cargarNotificaciones(paginaActual);
+        if (window.actualizarContadorNotificaciones) {
+          window.actualizarContadorNotificaciones();
+        }
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+  // Marcar como NO leída
+  function marcarComoNoLeida(notifId) {
+    fetch(`/notificaciones/api/marcar-no-leida/${notifId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        cargarNotificaciones(paginaActual);
+        if (window.actualizarContadorNotificaciones) {
+          window.actualizarContadorNotificaciones();
+        }
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+  // Marcar todas como leídas (SIN confirmación)
+  document.getElementById('btn-marcar-todas-leidas-pagina').addEventListener('click', function() {
+    fetch('/notificaciones/api/marcar-todas-leidas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        cargarNotificaciones(paginaActual);
+        if (window.actualizarContadorNotificaciones) {
+          window.actualizarContadorNotificaciones();
+        }
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  });
+
+  // Filtros automáticos (sin botón "Aplicar")
+  document.getElementById('filtro-estado').addEventListener('change', function() {
+    filtroEstado = this.value;
+    cargarNotificaciones(1);
+  });
+
+  document.getElementById('filtro-orden').addEventListener('change', function() {
+    filtroOrden = this.value;
+    cargarNotificaciones(1);
+  });
+
+  // Funciones auxiliares
+  function obtenerIconoTipo(tipo) {
+    const iconos = {
+      'REGISTRO_INCAPACIDAD': 'bi bi-file-earmark-plus',
+      'DOCUMENTOS_FALTANTES': 'bi bi-exclamation-triangle',
+      'RECORDATORIO_DOCUMENTOS_DIA2': 'bi bi-clock-history',
+      'SEGUNDA_NOTIFICACION_DOCUMENTOS': 'bi bi-exclamation-circle',
+      'REQUERIMIENTO_CITACION': 'bi bi-calendar-event',
+      'DOCUMENTACION_COMPLETADA': 'bi bi-check-circle',
+      'APROBACION': 'bi bi-check-circle-fill',
+      'RECHAZO': 'bi bi-x-circle-fill',
+      'CAMBIO_ESTADO': 'bi bi-arrow-repeat'
+    };
+    return iconos[tipo] || 'bi bi-info-circle';
+  }
+
+  function obtenerColorBadge(tipo) {
+    const colores = {
+      'REGISTRO_INCAPACIDAD': 'bg-primary',
+      'DOCUMENTOS_FALTANTES': 'bg-warning',
+      'RECORDATORIO_DOCUMENTOS_DIA2': 'bg-info',
+      'SEGUNDA_NOTIFICACION_DOCUMENTOS': 'bg-danger',
+      'REQUERIMIENTO_CITACION': 'bg-secondary',
+      'DOCUMENTACION_COMPLETADA': 'bg-success',
+      'APROBACION': 'bg-success',
+      'RECHAZO': 'bg-danger',
+      'CAMBIO_ESTADO': 'bg-info'
+    };
+    return colores[tipo] || 'bg-secondary';
+  }
+
+  function formatearTipo(tipo) {
+    return tipo.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  function formatearFecha(isoFecha) {
+    const fecha = new Date(isoFecha);
+    return fecha.toLocaleDateString('es-ES', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  // Cargar al inicio
+  cargarNotificaciones(1);
+</script>
+
+<style>
+  .destacar {
+    animation: destacar 2s ease;
+  }
+
+  @keyframes destacar {
+    0%, 100% { background-color: transparent; }
+    50% { background-color: #fff3cd; }
+  }
+</style>
+{% endblock %}

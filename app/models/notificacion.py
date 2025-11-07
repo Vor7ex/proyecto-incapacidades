@@ -20,6 +20,7 @@ class Notificacion(db.Model):
     asunto = db.Column(db.String(150), nullable=False)
     contenido = db.Column(db.Text, nullable=False)
     fecha_envio = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    fecha_lectura = db.Column(db.DateTime, nullable=True)
     estado = db.Column(
         db.String(20),
         nullable=False,
@@ -46,6 +47,11 @@ class Notificacion(db.Model):
 
     def marcar_entregada(self) -> None:
         self.estado = EstadoNotificacionEnum.ENTREGADA.value
+
+    def marcar_leida(self) -> None:
+        """Marca la notificación como leída y registra la fecha de lectura."""
+        self.estado = EstadoNotificacionEnum.LEIDA.value
+        self.fecha_lectura = datetime.utcnow()
 
     def registrar_error(self, descripcion: Optional[str] = None) -> None:
         self.estado = EstadoNotificacionEnum.ERROR.value

@@ -53,6 +53,7 @@ class EstadoNotificacionEnum(StrEnum):
     PENDIENTE = "PENDIENTE"
     ENVIADA = "ENVIADA"
     ENTREGADA = "ENTREGADA"
+    LEIDA = "LEIDA"
     ERROR = "ERROR"
 
 

@@ -7,7 +7,7 @@
 
 Sistema web para la gestión digital de incapacidades médicas de empleados, desarrollado con Flask. Incluye validación automática de documentos por tipo, notificaciones inteligentes, scheduler de recordatorios y gestión de estados con máquina de transiciones.
 
-**🚀 Release 1.0 en desarrollo** | **16 Casos de Uso** | **2 UC Completados al 100%, 6 UC Funcionales (50-95%), 8 UC Planificados**
+**🚀 Release 1.0 en desarrollo** | **16 Casos de Uso** | **3 UC Completados al 100%, 5 UC Funcionales (50-95%), 8 UC Planificados**
 
 ---
 
@@ -32,7 +32,7 @@ La documentación completa está organizada en la carpeta [`/docs`](docs/):
 | UC | Caso de Uso | Estado | Descripción |
 |----|------------|--------|-------------|
 | **UC1** | **Registrar incapacidad** | **✅ 100%** | **Flujo completo con todas las excepciones (E1-E6)** |
-| UC2 | Notificar RRHH | ⚠️ 70% | Email funcional, falta notificación interna y manejo E3/E4 |
+| **UC2** | **Notificar RRHH** | **✅ 100%** | **Email automático + notificaciones internas + reintentos (E1-E4)** |
 | UC3 | Consultar incapacidades | ⚠️ 50% | Vista básica sin filtros, búsqueda, paginación ni descarga ZIP |
 | UC4 | Validar documentación | ⚠️ 80% | Panel funcional, falta manejo de E2-E5 y validación manual |
 | **UC5** | **Verificar requisitos por tipo** | **✅ 100%** | **Validación automática completa con todas las excepciones** |
@@ -76,6 +76,20 @@ La documentación completa está organizada en la carpeta [`/docs`](docs/):
 - ✅ Panel dedicado para carga de documentos solicitados
 - ✅ Validación automática post-carga que actualiza estados
 - ⚠️ **Pendiente**: Reinicio de solicitud (E2) y extensión manual de plazos (E4)
+
+#### UC2 - Notificar RRHH ✅ 100% IMPLEMENTADO
+**Sistema integral de notificaciones por email y notificaciones internas**
+
+- ✅ Envío automático de emails a colaborador y Gestión Humana (pasos 4-5)
+- ✅ Creación de notificaciones internas en BD (pasos 6-7)
+- ✅ Sistema de reintentos automático (E3): 3 intentos con intervalos de 5 minutos
+- ✅ Validación de formato de email (E2): fallback a notificaciones internas
+- ✅ Notificación a administrador si no hay usuarios RRHH activos (E4)
+- ✅ Registro detallado de logs (paso 8): timestamp, destinatarios, éxito/error
+- ✅ Marcado de notificaciones como enviadas/entregadas (paso 9)
+- ✅ Template de email para administrador (sin usuarios RRHH)
+- ✅ Fallback de email_notificaciones a email de login (E1 implícito)
+- ✅ 16 tests unitarios (100% passing)
 
 #### UC1 - Registrar incapacidad ✅ 100% IMPLEMENTADO
 **Flujo principal y excepciones completas**
@@ -268,6 +282,9 @@ python -m pytest tests/ -v
 # Tests UC1 (100% cobertura)
 python -m unittest tests.test_uc1_excepciones -v
 
+# Tests UC2 (100% cobertura)
+python -m unittest tests.test_uc2_notificaciones -v
+
 # Tests específicos UC5 (100% cobertura)
 python -m pytest tests/test_validacion_requisitos.py -v
 
@@ -287,15 +304,16 @@ python -m pytest tests/test_calendario.py -v
 ```
 
 **Cobertura de Testing:**
-- ✅ **UC1**: 100% (15 tests - registro completo con excepciones E1-E6)
+- ✅ **UC1**: 100% (19 tests - registro completo con excepciones E1-E6)
+- ✅ **UC2**: 100% (16 tests - notificaciones email e internas con E1-E4)
 - ✅ **UC5**: 100% (19 tests - validación de requisitos)
 - ✅ **UC6**: 95% (9 tests - solicitud de documentos y recordatorios)
 - ✅ **Utilidades**: 100% (máquina de estados, calendario, código radicación)
 - ✅ **Integración UC1+UC5**: 100% (flujo completo de registro con validación)
-- ⚠️ **UC2, UC3, UC4, UC7**: Tests parciales (flujos principales, faltan excepciones)
+- ⚠️ **UC3, UC4, UC7**: Tests parciales (flujos principales, faltan excepciones)
 - 🔴 **UC3, UC8, UC15, UC16**: Sin tests automatizados
 
-**Nota**: La cobertura global del proyecto es aproximadamente 65%. Los componentes críticos (UC1, UC5, UC6, utilidades) tienen 100% de cobertura.
+**Nota**: La cobertura global del proyecto es aproximadamente 70%. Los componentes críticos (UC1, UC2, UC5, UC6, utilidades) tienen 100% de cobertura.
 
 ---
 
@@ -313,17 +331,19 @@ python -m pytest tests/test_calendario.py -v
 - ✅ Integración con UC2, UC5, UC15
 - ✅ Tests completos (15 tests unitarios)
 
-### 📧 UC2 - Notificar RRHH (70%)
+### 📧 UC2 - Notificar RRHH (100%) ✅
 **Implementado:**
-- ✅ Envío de email automático
-- ✅ Generación de contenido con datos de incapacidad
-
-**Pendiente:**
-- ❌ **Notificación interna** en el sistema (pasos 6-7)
-- ❌ **E3**: Sistema de reintentos (3 veces con intervalos de 5 min)
-- ❌ **E4**: Notificación a administrador si no hay usuarios RRHH
-- ❌ **Registro de log** de notificaciones enviadas (paso 8)
-- ❌ **Marcado de entregadas** (paso 9)
+- ✅ Flujo normal completo (9 pasos)
+- ✅ Envío de emails a colaborador y Gestión Humana
+- ✅ Creación de notificaciones internas en BD (pasos 6-7)
+- ✅ Registro detallado de logs (paso 8)
+- ✅ Marcado de notificaciones como entregadas (paso 9)
+- ✅ **E1**: Líder no asignado - Notifica solo a RRHH (fallback automático)
+- ✅ **E2**: Email inválido - Solo envía notificación interna
+- ✅ **E3**: Error en servidor de correo - Reintentos automáticos (3x, 5min)
+- ✅ **E4**: Sin usuarios RRHH - Notifica a administrador
+- ✅ Integración completa con UC1 (registro)
+- ✅ Tests completos (16 tests unitarios)
 
 ### 🔍 UC3 - Consultar Incapacidades (50%)
 **Implementado:**
@@ -421,7 +441,8 @@ python -m pytest tests/test_calendario.py -v
 ## 📈 Roadmap
 
 ### ✅ Completado al 100% (Release 1.0)
-- **UC1**: Registro de incapacidades con todas las excepciones (15 tests)
+- **UC1**: Registro de incapacidades con todas las excepciones (19 tests)
+- **UC2**: Notificaciones email e internas con reintentos y excepciones (16 tests)
 - **UC5**: Verificación automática de requisitos (494 líneas, 19 tests)
 
 ### 🚧 En Desarrollo Activo (Release 1.0 - 50-95%)
@@ -429,7 +450,6 @@ python -m pytest tests/test_calendario.py -v
 - **UC15**: Almacenamiento de documentos (90% - falta cifrado para docs sensibles)
 - **UC7**: Aprobar/Rechazar (85% - falta lista motivos predefinidos)
 - **UC4**: Validar documentación (80% - falta validación manual detallada)
-- **UC2**: Notificar RRHH (70% - falta notificación interna y reintentos)
 - **UC3**: Consultar incapacidades (50% - faltan filtros, búsqueda y paginación)
 
 ### ⏸️ Implementación Parcial (Release 1.0 - <50%)
@@ -437,7 +457,7 @@ python -m pytest tests/test_calendario.py -v
 - **UC16**: Descargar incapacidad (15% - solo individual, falta ZIP organizado)
 
 ### 🔄 Planificado (Release 2.0)
-- Completar UC2-UC4, UC6-UC8 al 100%
+- Completar UC3-UC4, UC6-UC8 al 100%
 - UC9: Consultar estado radicación (dashboard de seguimiento)
 - UC10: Generar reportes seguimiento (con gráficos y métricas)
 - UC11: Ver incapacidades del equipo (vista para líderes)

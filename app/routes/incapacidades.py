@@ -142,6 +142,9 @@ def registrar():
             logger = logging.getLogger(__name__)
             logger.info(f"✅ UC5: Iniciando validación de requisitos para incapacidad #{incapacidad.id}")
             
+            # Inicializar lista de warnings para requests AJAX
+            warnings = []
+            
             try:
                 validador = ValidadorRequisitos()
                 resultado_uc5 = validador.validar(incapacidad)
@@ -199,10 +202,9 @@ def registrar():
             # if archivos_guardados == 0:
             #     raise ValueError('No se cargaron documentos.')
             
-            # Si hay errores en archivos, informar pero continuar
-            warnings = []
+            # Si hay errores en archivos, agregar a warnings existentes
             if errores_archivos:
-                warnings = errores_archivos
+                warnings.extend(errores_archivos)
                 for error in errores_archivos:
                     flash(error, 'warning')
             

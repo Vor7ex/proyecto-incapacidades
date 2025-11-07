@@ -21,6 +21,142 @@ logger = logging.getLogger(__name__)
 
 mail = Mail()
 
+# ============================================================================
+# UC2: Funciones Auxiliares
+# ============================================================================
+
+def get_usuarios_gestion_humana():
+    """
+    UC2-E4: Obtiene lista de usuarios activos del área de Gestión Humana
+    
+    Returns:
+        list: Lista de objetos Usuario con rol 'auxiliar' o 'gestion_humana'
+    """
+    from app.models.usuario import Usuario
+    from app.models import db
+    
+    try:
+        usuarios = Usuario.query.filter(
+            Usuario.rol.in_(['auxiliar', 'gestion_humana'])
+        ).all()
+        
+        logger.info(f"👥 UC2-E4: Encontrados {len(usuarios)} usuarios de Gestión Humana activos")
+        return usuarios
+        
+    except Exception as e:
+        logger.error(f"❌ UC2-E4: Error al obtener usuarios de Gestión Humana: {str(e)}")
+        return []
+
+
+def crear_notificacion_interna(tipo, destinatario_id, asunto, contenido, solicitud_documento_id=None):
+    """
+    UC2: Crea notificación interna en la base de datos (pasos 6-7)
+    
+    Args:
+        tipo: TipoNotificacionEnum o string
+        destinatario_id: ID del usuario destinatario
+        asunto: Asunto de la notificación
+        contenido: Contenido HTML o texto de la notificación
+        solicitud_documento_id: ID de solicitud de documento (opcional)
+        
+    Returns:
+        Notificacion: Instancia creada o None si hay error
+    """
+    from app.models.notificacion import Notificacion
+    from app.models.enums import TipoNotificacionEnum, EstadoNotificacionEnum
+    from app.models import db
+    
+    try:
+        # Validar tipo
+        if isinstance(tipo, TipoNotificacionEnum):
+            tipo_str = tipo.value
+        else:
+            tipo_str = str(tipo)
+        
+        # Crear notificación
+        notificacion = Notificacion(
+            tipo=tipo_str,
+            destinatario_id=destinatario_id,
+            asunto=asunto,
+            contenido=contenido,
+            solicitud_documento_id=solicitud_documento_id,
+            estado=EstadoNotificacionEnum.PENDIENTE.value
+        )
+        
+        db.session.add(notificacion)
+        db.session.flush()  # Obtener ID sin commit
+        
+        logger.info(
+            f"📬 UC2: Notificación interna creada #{notificacion.id} "
+            f"(tipo={tipo_str}, dest={destinatario_id})"
+        )
+        
+        return notificacion
+        
+    except Exception as e:
+        logger.error(f"❌ UC2: Error al crear notificación interna: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return None
+
+
+def marcar_notificacion_enviada(notificacion_id):
+    """
+    UC2 (paso 9): Marca una notificación como enviada
+    
+    Args:
+        notificacion_id: ID de la notificación
+        
+    Returns:
+        bool: True si se actualizó correctamente
+    """
+    from app.models.notificacion import Notificacion
+    from app.models import db
+    
+    try:
+        notificacion = Notificacion.query.get(notificacion_id)
+        if notificacion:
+            notificacion.marcar_enviada()
+            db.session.commit()
+            logger.info(f"✅ UC2: Notificación #{notificacion_id} marcada como enviada")
+            return True
+        else:
+            logger.warning(f"⚠️ UC2: Notificación #{notificacion_id} no encontrada")
+            return False
+    except Exception as e:
+        logger.error(f"❌ UC2: Error al marcar notificación #{notificacion_id} como enviada: {str(e)}")
+        db.session.rollback()
+        return False
+
+
+def marcar_notificacion_entregada(notificacion_id):
+    """
+    UC2 (paso 9): Marca una notificación como entregada
+    
+    Args:
+        notificacion_id: ID de la notificación
+        
+    Returns:
+        bool: True si se actualizó correctamente
+    """
+    from app.models.notificacion import Notificacion
+    from app.models import db
+    
+    try:
+        notificacion = Notificacion.query.get(notificacion_id)
+        if notificacion:
+            notificacion.marcar_entregada()
+            db.session.commit()
+            logger.info(f"✅ UC2: Notificación #{notificacion_id} marcada como entregada")
+            return True
+        else:
+            logger.warning(f"⚠️ UC2: Notificación #{notificacion_id} no encontrada")
+            return False
+    except Exception as e:
+        logger.error(f"❌ UC2: Error al marcar notificación #{notificacion_id} como entregada: {str(e)}")
+        db.session.rollback()
+        return False
+
 def get_email_notificaciones(usuario):
     """
     Obtiene el email de notificaciones de un usuario.
@@ -56,40 +192,82 @@ def get_reintento_delay():
 MAX_REINTENTOS = get_max_reintentos()
 REINTENTO_DELAY = get_reintento_delay()
 
-def send_async_email(app, msg, reintentos=MAX_REINTENTOS):
+def send_async_email(app, msg, reintentos=MAX_REINTENTOS, notificacion_id=None):
     """
-    Envía email de forma asíncrona con sistema de reintentos
+    UC2-E3: Envía email de forma asíncrona con sistema de reintentos (3 veces, 5 min)
+    UC2 (paso 8): Registra log completo de notificaciones enviadas
+    UC2 (paso 9): Marca notificaciones como entregadas
     
     Args:
         app: Instancia de Flask
         msg: Mensaje a enviar
-        reintentos: Número máximo de reintentos
+        reintentos: Número máximo de reintentos (default: 3)
+        notificacion_id: ID de notificación interna asociada (opcional)
+        
+    Returns:
+        bool: True si el envío fue exitoso
     """
     with app.app_context():
         intento = 1
         while intento <= reintentos:
             try:
                 mail.send(msg)
-                logger.info(f"✅ Email enviado exitosamente: {msg.subject} → {', '.join(msg.recipients)}")
+                
+                # UC2 (paso 8): Log detallado de envío exitoso
+                logger.info(
+                    f"✅ UC2 (paso 8): Email enviado exitosamente "
+                    f"| Subject: {msg.subject} "
+                    f"| Recipients: {', '.join(msg.recipients)} "
+                    f"| Timestamp: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')} "
+                    f"| Intentos: {intento}/{reintentos}"
+                )
+                
+                # UC2 (paso 9): Marcar notificación como entregada
+                if notificacion_id:
+                    marcar_notificacion_entregada(notificacion_id)
+                
                 return True
+                
             except Exception as e:
                 if intento < reintentos:
+                    # UC2-E3: Reintento con delay de 5 minutos (300s)
                     logger.warning(
-                        f"⚠️ Error en intento {intento}/{reintentos} al enviar email: {str(e)}. "
-                        f"Reintentando en {REINTENTO_DELAY}s..."
+                        f"⚠️ UC2-E3: Error en intento {intento}/{reintentos} "
+                        f"| Subject: {msg.subject} "
+                        f"| Error: {str(e)} "
+                        f"| Reintentando en {REINTENTO_DELAY}s..."
                     )
                     time.sleep(REINTENTO_DELAY)
                     intento += 1
                 else:
+                    # UC2-E3: Error definitivo después de 3 reintentos
                     logger.error(
-                        f"❌ Error definitivo al enviar email tras {reintentos} intentos: {str(e)}. "
-                        f"Subject: {msg.subject}, Recipients: {', '.join(msg.recipients)}"
+                        f"❌ UC2-E3: Error definitivo tras {reintentos} intentos "
+                        f"| Subject: {msg.subject} "
+                        f"| Recipients: {', '.join(msg.recipients)} "
+                        f"| Error: {str(e)} "
+                        f"| Timestamp: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}"
                     )
+                    
+                    # Registrar error en notificación interna si existe
+                    if notificacion_id:
+                        from app.models.notificacion import Notificacion
+                        from app.models import db
+                        try:
+                            notif = Notificacion.query.get(notificacion_id)
+                            if notif:
+                                notif.registrar_error(f"Error tras {reintentos} reintentos: {str(e)}")
+                                db.session.commit()
+                        except:
+                            pass
+                    
                     return False
 
-def send_email(subject, recipients, html_body, text_body=None, reintentos=MAX_REINTENTOS):
+def send_email(subject, recipients, html_body, text_body=None, reintentos=MAX_REINTENTOS, 
+               crear_notificacion=False, tipo_notificacion=None, destinatario_id=None):
     """
-    Envía un email con logging y manejo de errores
+    UC2: Envía un email con logging, manejo de errores y notificación interna opcional
+    UC2-E2: Si el correo es inválido, solo envía notificación interna
     
     Args:
         subject: Asunto del email
@@ -97,16 +275,50 @@ def send_email(subject, recipients, html_body, text_body=None, reintentos=MAX_RE
         html_body: Cuerpo del email en HTML
         text_body: Cuerpo del email en texto plano (opcional)
         reintentos: Número de reintentos en caso de fallo
+        crear_notificacion: Si True, crea notificación interna en BD
+        tipo_notificacion: TipoNotificacionEnum para notificación interna
+        destinatario_id: ID de usuario para notificación interna
     
     Returns:
-        bool: True si el email se programó exitosamente
+        dict: {'email_ok': bool, 'notificacion_id': str|None}
     """
     from flask import current_app
+    import re
+    
+    resultado = {'email_ok': False, 'notificacion_id': None}
+    
+    # UC2 (paso 6-7): Crear notificación interna PRIMERO si se solicita
+    if crear_notificacion and destinatario_id and tipo_notificacion:
+        notificacion = crear_notificacion_interna(
+            tipo=tipo_notificacion,
+            destinatario_id=destinatario_id,
+            asunto=subject,
+            contenido=html_body
+        )
+        if notificacion:
+            notificacion_id = notificacion.id
+            resultado['notificacion_id'] = notificacion_id
+            # Marcar como enviada inmediatamente
+            notificacion.marcar_enviada()
+            from app.models import db
+            db.session.commit()
+    
+    # UC2-E2: Validar formato de emails
+    email_regex = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    emails_invalidos = [r for r in recipients if r and not email_regex.match(r)]
+    
+    if emails_invalidos:
+        logger.error(
+            f"❌ UC2-E2: Email(s) con formato inválido detectado(s): {', '.join(emails_invalidos)}. "
+            f"Solo se enviará notificación interna."
+        )
+        # Ya se creó la notificación interna arriba
+        return resultado
     
     # Validar destinatarios
     if not recipients or not any(recipients):
-        logger.error(f"❌ No se puede enviar email sin destinatarios. Subject: {subject}")
-        return False
+        logger.error(f"❌ UC2: No se puede enviar email sin destinatarios. Subject: {subject}")
+        return resultado
     
     # Verificar si el envío de emails está habilitado
     if not current_app.config.get('MAIL_ENABLED', True):
@@ -115,28 +327,30 @@ def send_email(subject, recipients, html_body, text_body=None, reintentos=MAX_RE
         logger.info(f"   To: {', '.join(recipients)}")
         logger.info(f"   Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         logger.info(f"   💡 Cambia MAIL_ENABLED=True en .env para enviar emails reales")
-        return True  # Retornar True porque la simulación fue exitosa
+        resultado['email_ok'] = True
+    else:
+        try:
+            # Crear mensaje
+            msg = Message(
+                subject=subject,
+                recipients=recipients,
+                html=html_body,
+                body=text_body or html_body
+            )
+            
+            # Enviar en segundo plano para no bloquear
+            Thread(
+                target=send_async_email,
+                args=(current_app._get_current_object(), msg, reintentos, resultado.get('notificacion_id'))
+            ).start()
+            
+            logger.info(f"📤 UC2: Email programado para envío: {subject}")
+            resultado['email_ok'] = True
+            
+        except Exception as e:
+            logger.error(f"❌ UC2: Error al programar envío de email: {str(e)}")
     
-    try:
-        msg = Message(
-            subject=subject,
-            recipients=recipients,
-            html=html_body,
-            body=text_body or html_body
-        )
-        
-        # Enviar en segundo plano para no bloquear
-        Thread(
-            target=send_async_email,
-            args=(current_app._get_current_object(), msg, reintentos)
-        ).start()
-        
-        logger.info(f"📤 Email programado para envío: {subject}")
-        return True
-        
-    except Exception as e:
-        logger.error(f"❌ Error al programar envío de email: {str(e)}")
-        return False
+    return resultado
 
 
 def send_multiple_emails(emails_data, delay=1.0):
@@ -227,76 +441,153 @@ def send_multiple_emails(emails_data, delay=1.0):
 
 def notificar_nueva_incapacidad(incapacidad):
     """
-    UC2: Notifica al registrar una nueva incapacidad
+    UC2: Notifica al registrar una nueva incapacidad (flujo completo con excepciones)
+    - Paso 4-5: Envía emails a colaborador y Gestión Humana
+    - Pasos 6-7: Crea notificaciones internas en el sistema
+    - Paso 8: Registra logs detallados
+    - Paso 9: Marca notificaciones como entregadas
+    - E1: Si no hay líder, notifica solo a Gestión Humana
+    - E2: Si email inválido, solo envía notificación interna
+    - E3: Reintentos automáticos (3 veces, 5 min)
+    - E4: Si no hay usuarios RRHH, notifica al administrador
+    
     Destinatarios: Colaborador (confirmación) + Gestión Humana
     
     Args:
         incapacidad: Instancia de Incapacidad
         
     Returns:
-        bool: True si las notificaciones se programaron exitosamente
+        dict: {'email_ok': bool, 'notificaciones_internas': int}
     """
     from flask import current_app, url_for
+    from app.models.enums import TipoNotificacionEnum
+    from app.models import db
     
     logger.info(f"🔔 UC2: Iniciando notificaciones para incapacidad #{incapacidad.id} ({incapacidad.codigo_radicacion})")
+    
+    resultado = {'email_ok': True, 'notificaciones_internas': 0}
     
     try:
         # Validar datos necesarios
         if not incapacidad.usuario or not incapacidad.usuario.email:
-            logger.error(f"❌ No se puede notificar incapacidad #{incapacidad.id}: usuario sin email")
-            return False
+            logger.error(f"❌ UC2: No se puede notificar incapacidad #{incapacidad.id}: usuario sin email")
+            return {'email_ok': False, 'notificaciones_internas': 0}
         
         # Obtener email de notificaciones (fallback a email de login si no existe)
         email_colaborador = incapacidad.usuario.email_notificaciones or incapacidad.usuario.email
         
+        # UC2-E4: Verificar si hay usuarios de Gestión Humana activos
+        usuarios_rrhh = get_usuarios_gestion_humana()
+        
+        if not usuarios_rrhh:
+            # E4: No hay usuarios de Gestión Humana, notificar a administrador
+            logger.warning(
+                f"⚠️ UC2-E4: No hay usuarios de Gestión Humana activos. "
+                f"Notificando a administrador ({Config.ADMIN_EMAIL})"
+            )
+            
+            # Enviar notificación urgente al administrador
+            admin_email_resultado = send_email(
+                subject=f'🚨 URGENTE: Nueva incapacidad sin RRHH asignado - {incapacidad.codigo_radicacion}',
+                recipients=[Config.ADMIN_EMAIL],
+                html_body=render_template(
+                    'emails/notificacion_admin_sin_rrhh.html',
+                    incapacidad=incapacidad,
+                    colaborador=incapacidad.usuario
+                ),
+                reintentos=3
+            )
+            
+            if not admin_email_resultado['email_ok']:
+                logger.error(f"❌ UC2-E4: Error crítico - No se pudo notificar al administrador")
+            
+            # Usar email genérico de RRHH como fallback
+            email_gestion = Config.GESTION_HUMANA_EMAIL
+        else:
+            # Usar primer usuario de RRHH disponible
+            email_gestion = usuarios_rrhh[0].email_notificaciones or usuarios_rrhh[0].email
+            logger.info(f"👤 UC2: Usuario RRHH seleccionado: {email_gestion}")
+        
         # Verificar email de Gestión Humana
-        email_gestion = Config.GESTION_HUMANA_EMAIL
         if not email_gestion or email_gestion == 'gestionhumana@empresa.com':
             logger.warning(
-                f"⚠️ GESTION_HUMANA_EMAIL no configurado correctamente. "
+                f"⚠️ UC2: GESTION_HUMANA_EMAIL no configurado correctamente. "
                 f"Usando valor por defecto: {email_gestion}"
             )
         
-        # Preparar emails con información detallada
-        emails = [
-            {
-                'subject': f'✅ Incapacidad {incapacidad.codigo_radicacion} registrada exitosamente',
-                'recipients': [email_colaborador],
-                'html_body': render_template(
-                    'emails/confirmacion_registro.html',
-                    incapacidad=incapacidad,
-                    colaborador=incapacidad.usuario
-                )
-            },
-            {
-                'subject': f'🔔 Nueva incapacidad {incapacidad.codigo_radicacion} - {incapacidad.usuario.nombre}',
-                'recipients': [email_gestion],
-                'html_body': render_template(
-                    'emails/notificacion_gestion_humana.html',
-                    incapacidad=incapacidad,
-                    colaborador=incapacidad.usuario,
-                    tipo_notificacion='nueva'
-                )
-            }
-        ]
+        # === EMAIL 1: Confirmación al colaborador ===
+        logger.info(f"📤 UC2 (paso 4): Enviando confirmación a colaborador {email_colaborador}")
         
-        # Enviar batch de emails
-        send_multiple_emails(emails, delay=1.0)
-        
-        logger.info(
-            f"✅ UC2: 2 notificaciones programadas para incapacidad #{incapacidad.id} "
-            f"({incapacidad.codigo_radicacion})"
+        email1_resultado = send_email(
+            subject=f'✅ Incapacidad {incapacidad.codigo_radicacion} registrada exitosamente',
+            recipients=[email_colaborador],
+            html_body=render_template(
+                'emails/confirmacion_registro.html',
+                incapacidad=incapacidad,
+                colaborador=incapacidad.usuario
+            ),
+            reintentos=3,
+            crear_notificacion=True,
+            tipo_notificacion=TipoNotificacionEnum.REGISTRO_INCAPACIDAD,
+            destinatario_id=incapacidad.usuario.id
         )
         
-        return True
+        if email1_resultado['notificacion_id']:
+            resultado['notificaciones_internas'] += 1
+            logger.info(f"✅ UC2 (pasos 6-7): Notificación interna creada para colaborador")
+        
+        # === EMAIL 2: Notificación a Gestión Humana ===
+        logger.info(f"📤 UC2 (paso 5): Enviando notificación a RRHH {email_gestion}")
+        
+        # Buscar ID del usuario de RRHH si existe
+        destinatario_rrhh_id = None
+        if usuarios_rrhh:
+            for usr in usuarios_rrhh:
+                if (usr.email_notificaciones == email_gestion or usr.email == email_gestion):
+                    destinatario_rrhh_id = usr.id
+                    break
+        
+        email2_resultado = send_email(
+            subject=f'🔔 Nueva incapacidad {incapacidad.codigo_radicacion} - {incapacidad.usuario.nombre}',
+            recipients=[email_gestion],
+            html_body=render_template(
+                'emails/notificacion_gestion_humana.html',
+                incapacidad=incapacidad,
+                colaborador=incapacidad.usuario,
+                tipo_notificacion='nueva'
+            ),
+            reintentos=3,
+            crear_notificacion=True if destinatario_rrhh_id else False,
+            tipo_notificacion=TipoNotificacionEnum.REGISTRO_INCAPACIDAD,
+            destinatario_id=destinatario_rrhh_id
+        )
+        
+        if email2_resultado['notificacion_id']:
+            resultado['notificaciones_internas'] += 1
+            logger.info(f"✅ UC2 (pasos 6-7): Notificación interna creada para RRHH")
+        
+        # Commit de notificaciones internas
+        db.session.commit()
+        
+        # Evaluar resultado final
+        resultado['email_ok'] = email1_resultado['email_ok'] and email2_resultado['email_ok']
+        
+        logger.info(
+            f"✅ UC2: Proceso completo para incapacidad #{incapacidad.id} ({incapacidad.codigo_radicacion}) "
+            f"| Emails programados: {2 if resultado['email_ok'] else 'con errores'} "
+            f"| Notificaciones internas: {resultado['notificaciones_internas']}"
+        )
+        
+        return resultado
         
     except Exception as e:
         logger.error(
-            f"❌ Error crítico al programar notificaciones para incapacidad #{incapacidad.id}: {str(e)}"
+            f"❌ UC2: Error crítico al procesar notificaciones para incapacidad #{incapacidad.id}: {str(e)}"
         )
         import traceback
         logger.error(traceback.format_exc())
-        return False
+        db.session.rollback()
+        return {'email_ok': False, 'notificaciones_internas': 0}
 
 
 def notificar_validacion_completada(incapacidad):

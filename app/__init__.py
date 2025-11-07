@@ -36,10 +36,12 @@ def create_app():
     from app.routes.auth import auth_bp
     from app.routes.incapacidades import incapacidades_bp
     from app.routes.documentos import documentos_bp
+    from app.routes.notificaciones import notificaciones_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(incapacidades_bp)
     app.register_blueprint(documentos_bp)
+    app.register_blueprint(notificaciones_bp)
 
     # Crear tablas (sin usuarios automáticos)
     with app.app_context():

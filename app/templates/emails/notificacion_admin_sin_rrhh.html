@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerta: Sin usuarios RRHH</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; padding: 30px 20px; text-align: center; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+        .header .icon { font-size: 48px; margin-bottom: 10px; }
+        .content { padding: 30px 20px; }
+        .alert-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px; }
+        .alert-box strong { color: #856404; }
+        .info-section { background: #f8f9fa; padding: 15px; margin: 15px 0; border-radius: 4px; border-left: 4px solid #007bff; }
+        .info-row { display: flex; padding: 8px 0; border-bottom: 1px solid #e9ecef; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { font-weight: 600; min-width: 150px; color: #495057; }
+        .info-value { flex: 1; color: #212529; }
+        .btn { display: inline-block; padding: 12px 30px; background: #007bff; color: white !important; text-decoration: none; border-radius: 5px; font-weight: 600; margin-top: 20px; text-align: center; }
+        .btn:hover { background: #0056b3; }
+        .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #6c757d; border-top: 1px solid #dee2e6; }
+        .urgent { color: #dc3545; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">🚨</div>
+            <h1>ALERTA CRÍTICA DEL SISTEMA</h1>
+            <p style="margin: 10px 0 0 0; font-size: 16px;">Incapacidad registrada sin usuarios RRHH activos</p>
+        </div>
+        
+        <div class="content">
+            <p>Estimado Administrador del Sistema,</p>
+            
+            <div class="alert-box">
+                <strong>⚠️ ACCIÓN REQUERIDA:</strong> Se ha registrado una nueva incapacidad en el sistema pero <span class="urgent">no existen usuarios activos del área de Gestión Humana</span> para procesarla.
+            </div>
+            
+            <p>Se requiere su intervención inmediata para asignar o activar usuarios de Gestión Humana que puedan dar seguimiento a esta incapacidad.</p>
+            
+            <div class="info-section">
+                <h3 style="margin-top: 0; color: #007bff;">📋 Detalles de la Incapacidad</h3>
+                
+                <div class="info-row">
+                    <span class="info-label">Código de Radicación:</span>
+                    <span class="info-value"><strong>{{ incapacidad.codigo_radicacion }}</strong></span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Colaborador:</span>
+                    <span class="info-value">{{ colaborador.nombre }} ({{ colaborador.email }})</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Tipo de Incapacidad:</span>
+                    <span class="info-value">{{ incapacidad.tipo }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Fecha de Inicio:</span>
+                    <span class="info-value">{{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Fecha de Fin:</span>
+                    <span class="info-value">{{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Días de Incapacidad:</span>
+                    <span class="info-value">{{ incapacidad.dias }} días</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Estado Actual:</span>
+                    <span class="info-value"><span style="background: #ffc107; color: #000; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 600;">{{ incapacidad.estado.replace('_', ' ').title() }}</span></span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Fecha de Registro:</span>
+                    <span class="info-value">{{ incapacidad.fecha_registro.strftime('%d/%m/%Y %H:%M') }}</span>
+                </div>
+            </div>
+            
+            <div style="background: #fff3cd; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                <h4 style="margin-top: 0; color: #856404;">📌 Acciones Recomendadas:</h4>
+                <ol style="margin: 10px 0; padding-left: 20px;">
+                    <li>Crear o activar usuarios con rol de "Auxiliar de Gestión Humana"</li>
+                    <li>Verificar la configuración de <code>GESTION_HUMANA_EMAIL</code> en el sistema</li>
+                    <li>Asignar la incapacidad a un auxiliar para su validación</li>
+                    <li>Revisar el estado de otras incapacidades pendientes</li>
+                </ol>
+            </div>
+            
+            <div style="text-align: center;">
+                <a href="http://localhost:5000/admin/usuarios" class="btn">Gestionar Usuarios del Sistema</a>
+            </div>
+            
+            <p style="margin-top: 30px; color: #6c757d; font-size: 14px;">
+                Esta es una notificación automática generada por el sistema de gestión de incapacidades (UC2-E4). 
+                La incapacidad quedó registrada correctamente pero requiere asignación de personal de RRHH.
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Sistema de Gestión de Incapacidades</strong></p>
+            <p>Este es un correo automático. Por favor no responder a esta dirección.</p>
+            <p style="margin-top: 10px;">© 2024 Empresa. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+</html>
