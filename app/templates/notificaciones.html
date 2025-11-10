@@ -365,13 +365,23 @@
         } else {
           // Expandir: mostrar HTML completo pero en iframe para aislarlo
           card.classList.add('notificacion-expandida');
-          const htmlCompleto = contenido.getAttribute('data-html-completo');
+          let htmlCompleto = contenido.getAttribute('data-html-completo');
+          
+          // Agregar <base target="_parent"> para que los enlaces se abran en la ventana padre
+          const baseTag = '<base target="_parent">';
+          if (!htmlCompleto.includes('<head>')) {
+            // Si no hay etiqueta head, agregar el base al inicio
+            htmlCompleto = baseTag + htmlCompleto;
+          } else {
+            // Si hay etiqueta head, insertar dentro de ella
+            htmlCompleto = htmlCompleto.replace('<head>', '<head>' + baseTag);
+          }
           
           // Crear iframe para aislar el HTML y prevenir problemas de layout
           contenido.innerHTML = `
             <iframe srcdoc="${htmlCompleto.replace(/"/g, '&quot;')}" 
                     style="width: 100%; min-height: 200px;"
-                    sandbox="allow-same-origin"
+                    sandbox="allow-same-origin allow-top-navigation"
                     onload="this.style.height = (this.contentWindow.document.documentElement.scrollHeight + 20) + 'px'">
             </iframe>
           `;
