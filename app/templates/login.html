@@ -1,34 +1,682 @@
 {% extends "base.html" %}
 
-{% block title %}Login - Sistema de Incapacidades{% endblock %}
+{% block title %}Iniciar Sesión - Sistema de Incapacidades{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mt-5">
-  <div class="col-md-6">
-    <div class="card shadow">
-      <div class="card-body">
-        <h2 class="card-title text-center mb-4">Iniciar Sesión</h2>
-        <form method="POST">
-          <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" class="form-control" id="email" name="email" required>
+<div class="login-container">
+  <div class="login-wrapper">
+    <!-- Lado izquierdo - Información -->
+    <div class="login-info-side">
+      <div class="login-brand">
+        <i class="bi bi-heart-pulse-fill brand-icon-large"></i>
+        <h1 class="brand-title">Sistema de Incapacidades</h1>
+        <p class="brand-subtitle">Gestión Digital de Incapacidades Médicas</p>
+      </div>
+      
+      <div class="login-features">
+        <div class="feature-item">
+          <i class="bi bi-shield-check"></i>
+          <div>
+            <h5>Seguro y Confiable</h5>
+            <p>Tus datos protegidos con los más altos estándares</p>
           </div>
-          <div class="mb-3">
-            <label for="password" class="form-label">Contraseña</label>
-            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <div class="feature-item">
+          <i class="bi bi-clock-history"></i>
+          <div>
+            <h5>Disponible 24/7</h5>
+            <p>Accede cuando lo necesites desde cualquier lugar</p>
           </div>
-          <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+        </div>
+        <div class="feature-item">
+          <i class="bi bi-lightning-charge"></i>
+          <div>
+            <h5>Rápido y Eficiente</h5>
+            <p>Gestiona tus incapacidades en minutos</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="login-footer-info">
+        <p><i class="bi bi-info-circle"></i> Versión 1.0 - Release 2025</p>
+      </div>
+    </div>
+
+    <!-- Lado derecho - Formulario de Login -->
+    <div class="login-form-side">
+      <div class="login-card">
+        <div class="login-header">
+          <h2>Bienvenido</h2>
+          <p>Ingresa tus credenciales para continuar</p>
+        </div>
+
+        <form method="POST" class="login-form" id="loginForm">
+          <div class="form-group-modern">
+            <label for="email" class="form-label-modern">
+              <i class="bi bi-envelope"></i> Correo Electrónico
+            </label>
+            <input 
+              type="email" 
+              class="form-control-modern" 
+              id="email" 
+              name="email" 
+              placeholder="tu.email@ejemplo.com"
+              required
+              autocomplete="email"
+            >
+          </div>
+
+          <div class="form-group-modern">
+            <label for="password" class="form-label-modern">
+              <i class="bi bi-lock"></i> Contraseña
+            </label>
+            <div class="password-input-wrapper">
+              <input 
+                type="password" 
+                class="form-control-modern" 
+                id="password" 
+                name="password" 
+                placeholder="••••••••"
+                required
+                autocomplete="current-password"
+              >
+              <button type="button" class="password-toggle" id="togglePassword">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-options">
+            <div class="form-check-modern">
+              <input type="checkbox" class="form-check-input" id="remember">
+              <label class="form-check-label" for="remember">
+                Recordarme
+              </label>
+            </div>
+            <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
+          </div>
+
+          <button type="submit" class="btn-login">
+            <span class="btn-text">Iniciar Sesión</span>
+            <i class="bi bi-arrow-right-circle"></i>
+          </button>
         </form>
 
-        <div class="mt-4">
-          <h6>Usuarios de prueba:</h6>
-          <ul class="small">
-            <li><strong>Colaborador:</strong> empleado@test.com / 123456</li>
-            <li><strong>Auxiliar RRHH:</strong> auxiliar@test.com / 123456</li>
-          </ul>
+        <!-- Nota desplegable de usuarios de prueba -->
+        <div class="test-users-toggle">
+          <button type="button" class="btn-toggle-users" id="toggleTestUsers">
+            <i class="bi bi-info-circle"></i>
+            Usuarios de Prueba
+          </button>
+          
+          <div class="test-users-dropdown" id="testUsersDropdown">
+            <div class="test-users-header">
+              <i class="bi bi-person-badge"></i>
+              <span>Credenciales de Prueba</span>
+            </div>
+            <div class="test-user-item" onclick="fillCredentials('empleado@test.com', '123456')">
+              <div class="test-user-icon colaborador">
+                <i class="bi bi-person"></i>
+              </div>
+              <div class="test-user-info">
+                <strong>Colaborador</strong>
+                <span>empleado@test.com</span>
+                <small>Contraseña: 123456</small>
+              </div>
+              <i class="bi bi-arrow-right-short"></i>
+            </div>
+            <div class="test-user-item" onclick="fillCredentials('auxiliar@test.com', '123456')">
+              <div class="test-user-icon auxiliar">
+                <i class="bi bi-person-gear"></i>
+              </div>
+              <div class="test-user-info">
+                <strong>Auxiliar RRHH</strong>
+                <span>auxiliar@test.com</span>
+                <small>Contraseña: 123456</small>
+              </div>
+              <i class="bi bi-arrow-right-short"></i>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<style>
+/* ==================================================
+   LOGIN PAGE - DISEÑO MODERNO
+   ================================================== */
+
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: whitesmoke;
+  padding: 0;
+  margin: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+}
+
+.login-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 1200px;
+  width: 100%;
+  background: white;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.6s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Lado Izquierdo - Info */
+.login-info-side {
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+  padding: 3rem;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.login-brand {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.brand-icon-large {
+  font-size: 4rem;
+  animation: heartbeat 2s ease-in-out infinite;
+  display: block;
+  margin-bottom: 1.5rem;
+}
+
+.brand-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.brand-subtitle {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  font-weight: 300;
+}
+
+.login-features {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(10px);
+}
+
+.feature-item i {
+  font-size: 2rem;
+  opacity: 0.9;
+}
+
+.feature-item h5 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.feature-item p {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin: 0;
+}
+
+.login-footer-info {
+  text-align: center;
+  opacity: 0.7;
+  font-size: 0.85rem;
+  margin-top: 2rem;
+}
+
+/* Lado Derecho - Formulario */
+.login-form-side {
+  padding: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 450px;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.login-header h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.login-header p {
+  color: #666;
+  font-size: 1rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group-modern {
+  position: relative;
+}
+
+.form-label-modern {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.form-label-modern i {
+  margin-right: 0.5rem;
+  color: #0d6efd;
+}
+
+.form-control-modern {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.form-control-modern:focus {
+  outline: none;
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+}
+
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.password-toggle:hover {
+  color: #0d6efd;
+}
+
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: -0.5rem;
+}
+
+.form-check-modern {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-check-modern .form-check-input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.form-check-modern .form-check-label {
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.forgot-password {
+  font-size: 0.9rem;
+  color: #0d6efd;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.forgot-password:hover {
+  color: #0a58ca;
+  text-decoration: underline;
+}
+
+.btn-login {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(13, 110, 253, 0.4);
+}
+
+.btn-login:active {
+  transform: translateY(0);
+}
+
+.btn-login i {
+  font-size: 1.3rem;
+  transition: transform 0.3s ease;
+}
+
+.btn-login:hover i {
+  transform: translateX(5px);
+}
+
+/* Usuarios de Prueba - Toggle */
+.test-users-toggle {
+  margin-top: 2rem;
+  text-align: center;
+  position: relative;
+}
+
+.btn-toggle-users {
+  background: transparent;
+  border: 2px dashed #ccc;
+  color: #666;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-toggle-users:hover {
+  border-color: #0d6efd;
+  color: #0d6efd;
+  background: rgba(13, 110, 253, 0.05);
+}
+
+.test-users-dropdown {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  padding: 1rem;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 1rem;
+  animation: slideUpDropdown 0.3s ease;
+}
+
+.test-users-dropdown.show {
+  display: block;
+}
+
+@keyframes slideUpDropdown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.test-users-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.test-users-header i {
+  color: #0d6efd;
+  font-size: 1.2rem;
+}
+
+.test-user-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 0.5rem;
+}
+
+.test-user-item:hover {
+  background: linear-gradient(135deg, #e7f3ff 0%, #d0ebff 100%);
+  transform: translateX(5px);
+}
+
+.test-user-icon {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  color: white;
+}
+
+.test-user-icon.colaborador {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.test-user-icon.auxiliar {
+  background: linear-gradient(135deg, #6610f2 0%, #6f42c1 100%);
+}
+
+.test-user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.test-user-info strong {
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.test-user-info span {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.test-user-info small {
+  color: #999;
+  font-size: 0.75rem;
+}
+
+.test-user-item > i {
+  color: #0d6efd;
+  font-size: 1.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.test-user-item:hover > i {
+  opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .login-wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .login-info-side {
+    display: none;
+  }
+
+  .login-form-side {
+    padding: 2rem 1.5rem;
+  }
+
+  .test-users-dropdown {
+    position: fixed;
+    bottom: auto;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+  }
+}
+
+@media (max-width: 576px) {
+  .login-card {
+    max-width: 100%;
+  }
+
+  .login-header h2 {
+    font-size: 1.75rem;
+  }
+
+  .btn-login {
+    font-size: 1rem;
+  }
+}
+</style>
+
+<script>
+// Toggle password visibility
+document.getElementById('togglePassword')?.addEventListener('click', function() {
+  const passwordInput = document.getElementById('password');
+  const icon = this.querySelector('i');
+  
+  if (passwordInput.type === 'password') {
+    passwordInput.type = 'text';
+    icon.classList.remove('bi-eye');
+    icon.classList.add('bi-eye-slash');
+  } else {
+    passwordInput.type = 'password';
+    icon.classList.remove('bi-eye-slash');
+    icon.classList.add('bi-eye');
+  }
+});
+
+// Toggle test users dropdown
+document.getElementById('toggleTestUsers')?.addEventListener('click', function() {
+  const dropdown = document.getElementById('testUsersDropdown');
+  dropdown.classList.toggle('show');
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+  const toggle = document.getElementById('toggleTestUsers');
+  const dropdown = document.getElementById('testUsersDropdown');
+  
+  if (toggle && dropdown && !toggle.contains(event.target) && !dropdown.contains(event.target)) {
+    dropdown.classList.remove('show');
+  }
+});
+
+// Fill credentials function
+function fillCredentials(email, password) {
+  document.getElementById('email').value = email;
+  document.getElementById('password').value = password;
+  document.getElementById('testUsersDropdown').classList.remove('show');
+  
+  // Add animation to fields
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  
+  emailInput.style.animation = 'none';
+  passwordInput.style.animation = 'none';
+  
+  setTimeout(() => {
+    emailInput.style.animation = 'fillAnimation 0.5s ease';
+    passwordInput.style.animation = 'fillAnimation 0.5s ease 0.1s';
+  }, 10);
+}
+
+// Add fill animation
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes fillAnimation {
+    0% { background: transparent; }
+    50% { background: rgba(13, 110, 253, 0.1); }
+    100% { background: white; }
+  }
+`;
+document.head.appendChild(style);
+</script>
 {% endblock %}
