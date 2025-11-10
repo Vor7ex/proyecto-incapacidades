@@ -3,148 +3,865 @@
 {% block title %}Solicitar Documentos - {{ incapacidad.codigo_radicacion }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="solicitar-container">
     <div class="row">
         <div class="col-md-10 offset-md-1">
-            <!-- Breadcrumb -->
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url_for('incapacidades.dashboard_auxiliar') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Solicitar Documentos</li>
-                </ol>
-            </nav>
-
-            <!-- Card principal -->
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">
-                        <i class="bi bi-file-earmark-text"></i>
-                        Solicitar Documentos Faltantes
-                    </h4>
-                    <small>Incapacidad: <strong>{{ incapacidad.codigo_radicacion }}</strong></small>
-                </div>
-
-                <div class="card-body">
-                    <!-- Información de la incapacidad -->
-                    <div class="alert alert-info">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p class="mb-1"><strong>Colaborador:</strong> {{ incapacidad.usuario.nombre }}</p>
-                                <p class="mb-1"><strong>Tipo:</strong> {{ incapacidad.tipo }}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <p class="mb-1"><strong>Periodo:</strong> {{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }} - {{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}</p>
-                                <p class="mb-1"><strong>Días:</strong> {{ incapacidad.dias }}</p>
-                            </div>
+            <!-- Header con navegación -->
+            <div class="page-header mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <a href="{{ url_for('incapacidades.dashboard_auxiliar') }}" class="btn-back">
+                            <i class="bi bi-arrow-left-circle"></i>
+                        </a>
+                        <div>
+                            <h2 class="mb-1">
+                                <i class="bi bi-file-earmark-plus"></i>
+                                Solicitar Documentos
+                            </h2>
+                            <p class="text-muted mb-0">Gestión UC6 - Solicitud de documentos faltantes</p>
                         </div>
                     </div>
-
-                    <!-- Formulario -->
-                    <form method="POST" action="{{ url_for('incapacidades.procesar_solicitud_documentos', incapacidad_id=incapacidad.id) }}" id="formSolicitarDocs">
-
-                        <h5 class="mb-3">Seleccione los documentos a solicitar:</h5>
-
-                        <!-- Tabla de documentos -->
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th style="width: 5%;">Solicitar</th>
-                                        <th style="width: 25%;">Documento</th>
-                                        <th style="width: 10%;">Tipo</th>
-                                        <th style="width: 10%;">Estado</th>
-                                        <th style="width: 50%;">Observaciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for doc in documentos_disponibles %}
-                                    <tr class="{% if doc.falta %}table-warning{% endif %}">
-                                        <td class="text-center">
-                                            {% if doc.falta %}
-                                            <input type="checkbox" 
-                                                   class="form-check-input doc-checkbox" 
-                                                   name="documentos[]" 
-                                                   value="{{ doc.tipo }}"
-                                                   id="check_{{ doc.tipo }}"
-                                                   checked>
-                                            {% else %}
-                                            <i class="bi bi-check-circle-fill text-success" title="Ya está cargado"></i>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <label for="check_{{ doc.tipo }}" class="mb-0">
-                                                {{ doc.tipo.replace('_', ' ').title() }}
-                                            </label>
-                                        </td>
-                                        <td>
-                                            {% if doc.requerido %}
-                                            <span class="badge bg-danger">Requerido</span>
-                                            {% else %}
-                                            <span class="badge bg-secondary">Opcional</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if doc.cargado %}
-                                            <span class="badge bg-success">
-                                                <i class="bi bi-check-lg"></i> Cargado
-                                            </span>
-                                            {% else %}
-                                            <span class="badge bg-warning text-dark">
-                                                <i class="bi bi-exclamation-triangle"></i> Falta
-                                            </span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if doc.falta %}
-                                            <textarea 
-                                                class="form-control form-control-sm" 
-                                                name="observacion_{{ doc.tipo }}"
-                                                rows="2"
-                                                placeholder="Ej: El documento está ilegible, faltan datos, etc."></textarea>
-                                            {% else %}
-                                            <span class="text-muted fst-italic">No aplica (ya cargado)</span>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Mensaje informativo -->
-                        <div class="alert alert-warning mt-3" id="alertNoSeleccionados" style="display: none;">
-                            <i class="bi bi-exclamation-triangle"></i>
-                            Debe seleccionar al menos un documento para continuar.
-                        </div>
-
-                        <!-- Botones -->
-                        <div class="d-flex justify-content-between mt-4">
-                            <a href="{{ url_for('incapacidades.dashboard_auxiliar') }}" class="btn btn-secondary">
-                                <i class="bi bi-arrow-left"></i> Cancelar
-                            </a>
-                            <button type="submit" class="btn btn-primary" id="btnEnviar">
-                                <i class="bi bi-send"></i> Enviar Solicitud
-                            </button>
-                        </div>
-                    </form>
+                    <div class="codigo-badge">
+                        <i class="bi bi-upc-scan"></i>
+                        <span>{{ incapacidad.codigo_radicacion }}</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Información adicional -->
-            <div class="card mt-3">
-                <div class="card-body">
-                    <h6 class="card-title"><i class="bi bi-info-circle"></i> Información</h6>
-                    <ul class="mb-0">
-                        <li>El colaborador recibirá una notificación por correo electrónico.</li>
-                        <li>Tendrá <strong>3 días hábiles</strong> para entregar los documentos solicitados.</li>
-                        <li>Los documentos con <span class="badge bg-warning text-dark">Falta</span> ya están marcados por defecto.</li>
-                        <li>Puede agregar observaciones específicas para cada documento.</li>
+            <!-- Información de la Incapacidad -->
+            <div class="info-summary-card">
+                <div class="info-summary-header">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span>Información de la Incapacidad</span>
+                </div>
+                <div class="info-summary-grid">
+                    <div class="info-summary-item">
+                        <i class="bi bi-person-circle"></i>
+                        <div>
+                            <label>Colaborador</label>
+                            <p>{{ incapacidad.usuario.nombre }}</p>
+                        </div>
+                    </div>
+                    <div class="info-summary-item">
+                        <i class="bi bi-file-medical"></i>
+                        <div>
+                            <label>Tipo</label>
+                            <p>{{ incapacidad.tipo }}</p>
+                        </div>
+                    </div>
+                    <div class="info-summary-item">
+                        <i class="bi bi-calendar-range"></i>
+                        <div>
+                            <label>Período</label>
+                            <p>{{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }} - {{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                    </div>
+                    <div class="info-summary-item">
+                        <i class="bi bi-hourglass-split"></i>
+                        <div>
+                            <label>Días</label>
+                            <p>
+                                <span class="badge-modern badge-modern-purple">
+                                    {{ incapacidad.dias }} días
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario Principal -->
+            <form method="POST" action="{{ url_for('incapacidades.procesar_solicitud_documentos', incapacidad_id=incapacidad.id) }}" id="formSolicitarDocs">
+                <div class="documents-request-card">
+                    <div class="section-title mb-4">
+                        <div class="section-title-icon">
+                            <i class="bi bi-list-check"></i>
+                        </div>
+                        <div>
+                            <h4>Seleccione los Documentos a Solicitar</h4>
+                            <p>Marque los documentos faltantes y agregue observaciones específicas</p>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Documentos -->
+                    <div class="documents-list">
+                        {% for doc in documentos_disponibles %}
+                        <div class="document-request-item {% if doc.falta %}item-faltante{% endif %} {% if not doc.falta %}item-cargado{% endif %}">
+                            <div class="document-checkbox-wrapper">
+                                {% if doc.falta %}
+                                <input type="checkbox" 
+                                       class="custom-checkbox-large doc-checkbox" 
+                                       name="documentos[]" 
+                                       value="{{ doc.tipo }}"
+                                       id="check_{{ doc.tipo }}"
+                                       checked>
+                                <label for="check_{{ doc.tipo }}" class="checkbox-label-large"></label>
+                                {% else %}
+                                <div class="status-icon status-icon-success">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="document-request-info">
+                                <div class="document-request-header">
+                                    <h6>{{ doc.tipo.replace('_', ' ').title() }}</h6>
+                                    <div class="document-badges">
+                                        {% if doc.requerido %}
+                                        <span class="badge-modern badge-modern-danger">
+                                            <i class="bi bi-exclamation-circle"></i>
+                                            Requerido
+                                        </span>
+                                        {% else %}
+                                        <span class="badge-modern badge-modern-secondary">
+                                            <i class="bi bi-info-circle"></i>
+                                            Opcional
+                                        </span>
+                                        {% endif %}
+
+                                        {% if doc.cargado %}
+                                        <span class="badge-modern badge-modern-success">
+                                            <i class="bi bi-check-lg"></i>
+                                            Cargado
+                                        </span>
+                                        {% else %}
+                                        <span class="badge-modern badge-modern-warning">
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                            Faltante
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                {% if doc.falta %}
+                                <div class="document-observation">
+                                    <label for="obs_{{ doc.tipo }}">
+                                        <i class="bi bi-chat-left-text"></i>
+                                        Observaciones (opcional)
+                                    </label>
+                                    <textarea 
+                                        class="observation-textarea" 
+                                        name="observacion_{{ doc.tipo }}"
+                                        id="obs_{{ doc.tipo }}"
+                                        rows="2"
+                                        placeholder="Ej: El documento está ilegible, faltan datos específicos, formato incorrecto, etc."></textarea>
+                                </div>
+                                {% else %}
+                                <div class="document-status-message">
+                                    <i class="bi bi-check-circle"></i>
+                                    <span>Documento ya cargado en el sistema</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Alerta de validación -->
+                    <div class="validation-alert" id="alertNoSeleccionados" style="display: none;">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <div>
+                            <strong>Selección requerida</strong>
+                            <p>Debe seleccionar al menos un documento para enviar la solicitud.</p>
+                        </div>
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="action-buttons-row mb-4">
+                        <a href="{{ url_for('incapacidades.dashboard_auxiliar') }}" class="btn-action-large btn-action-secondary">
+                            <i class="bi bi-x-circle"></i>
+                            <span>Cancelar</span>
+                        </a>
+                        <button type="submit" class="btn-action-large btn-action-primary" id="btnEnviar">
+                            <i class="bi bi-send-fill"></i>
+                            <span>Enviar Solicitud</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Información Adicional -->
+            <div class="info-box-card mb-5">
+                <div class="info-box-header">
+                    <i class="bi bi-lightbulb-fill"></i>
+                    <span>Información Importante</span>
+                </div>
+                <div class="info-box-content">
+                    <ul>
+                        <li>
+                            <i class="bi bi-envelope"></i>
+                            El colaborador recibirá una <strong>notificación por correo electrónico</strong> con los detalles de la solicitud.
+                        </li>
+                        <li>
+                            <i class="bi bi-calendar-event"></i>
+                            El plazo de entrega es de <strong>3 días hábiles</strong> a partir del envío de la solicitud.
+                        </li>
+                        <li>
+                            <i class="bi bi-check2-square"></i>
+                            Los documentos marcados como <span class="badge-modern badge-modern-warning">Faltante</span> están preseleccionados.
+                        </li>
+                        <li>
+                            <i class="bi bi-chat-square-text"></i>
+                            Las <strong>observaciones específicas</strong> ayudan al colaborador a entender qué corregir.
+                        </li>
+                        <li>
+                            <i class="bi bi-bell"></i>
+                            Se enviarán <strong>recordatorios automáticos</strong> si no se cargan los documentos en el plazo establecido.
+                        </li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<style>
+/* ==================================================
+   SOLICITAR DOCUMENTOS - ESTILOS MODERNOS
+   ================================================== */
+
+.solicitar-container {
+    animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header de Página */
+.page-header {
+    animation: slideInLeft 0.4s ease;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.page-header h2 {
+    color: #1f2937;
+    font-weight: 700;
+    font-size: 28px;
+}
+
+.page-header i {
+    color: #10b981;
+}
+
+.btn-back {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: white;
+    border: 2px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #6b7280;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-back:hover {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border-color: #10b981;
+    transform: translateX(-5px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* Badge de Código */
+.codigo-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 2px solid #93c5fd;
+    border-radius: 14px;
+    font-weight: 700;
+    color: #1e40af;
+    font-family: 'Courier New', monospace;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    animation: fadeInScale 0.5s ease backwards;
+    animation-delay: 0.1s;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.codigo-badge i {
+    font-size: 20px;
+}
+
+/* Tarjeta de Resumen de Información */
+.info-summary-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    animation: fadeInScale 0.5s ease backwards;
+    animation-delay: 0.2s;
+}
+
+.info-summary-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #f3f4f6;
+    font-weight: 700;
+    color: #1f2937;
+    font-size: 16px;
+}
+
+.info-summary-header i {
+    font-size: 24px;
+    color: #3b82f6;
+}
+
+.info-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.info-summary-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.info-summary-item:hover {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.info-summary-item > i {
+    font-size: 28px;
+    color: #3b82f6;
+    flex-shrink: 0;
+}
+
+.info-summary-item label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.info-summary-item p {
+    color: #1f2937;
+    font-weight: 600;
+    margin-bottom: 0;
+    font-size: 14px;
+}
+
+/* Tarjeta de Solicitud de Documentos */
+.documents-request-card {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    animation: fadeInUp 0.5s ease backwards;
+    animation-delay: 0.3s;
+}
+
+.section-title {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.section-title-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: #065f46;
+    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.15);
+    flex-shrink: 0;
+}
+
+.section-title h4 {
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 4px;
+    font-size: 20px;
+}
+
+.section-title p {
+    color: #6b7280;
+    margin-bottom: 0;
+    font-size: 14px;
+}
+
+/* Lista de Documentos */
+.documents-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.document-request-item {
+    display: flex;
+    gap: 20px;
+    padding: 24px;
+    border-radius: 16px;
+    border: 2px solid #e5e7eb;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.document-request-item.item-faltante {
+    border-color: #fbbf24;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.document-request-item.item-cargado {
+    border-color: #86efac;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+.document-request-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Checkbox Grande Personalizado */
+.document-checkbox-wrapper {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 4px;
+}
+
+.custom-checkbox-large {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.checkbox-label-large {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    border: 3px solid #d1d5db;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.checkbox-label-large::after {
+    content: '\F26B';
+    font-family: 'bootstrap-icons';
+    font-size: 18px;
+    color: white;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.custom-checkbox-large:checked + .checkbox-label-large {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-color: #10b981;
+}
+
+.custom-checkbox-large:checked + .checkbox-label-large::after {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.checkbox-label-large:hover {
+    border-color: #10b981;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.status-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.status-icon-success {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+/* Información del Documento */
+.document-request-info {
+    flex: 1;
+}
+
+.document-request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.document-request-header h6 {
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+    font-size: 16px;
+}
+
+.document-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Observaciones */
+.document-observation {
+    margin-top: 16px;
+}
+
+.document-observation label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.document-observation label i {
+    color: #6b7280;
+}
+
+.observation-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    transition: all 0.3s ease;
+}
+
+.observation-textarea:focus {
+    outline: none;
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.observation-textarea::placeholder {
+    color: #9ca3af;
+}
+
+.document-status-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: white;
+    border-radius: 10px;
+    color: #059669;
+    font-weight: 500;
+    font-size: 14px;
+    margin-top: 12px;
+}
+
+.document-status-message i {
+    font-size: 18px;
+}
+
+/* Alerta de Validación */
+.validation-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border: 2px solid #fca5a5;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+.validation-alert i {
+    font-size: 28px;
+    color: #dc2626;
+    flex-shrink: 0;
+}
+
+.validation-alert strong {
+    display: block;
+    color: #1f2937;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.validation-alert p {
+    color: #374151;
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Botones de Acción */
+.action-buttons-row {
+    display: flex;
+    gap: 16px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.btn-action-large {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px 32px;
+    border-radius: 14px;
+    border: none;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-action-large::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.5s, height 0.5s;
+}
+
+.btn-action-large:hover::before {
+    width: 400px;
+    height: 400px;
+}
+
+.btn-action-large i {
+    font-size: 20px;
+    transition: transform 0.3s ease;
+}
+
+.btn-action-large:hover i {
+    transform: scale(1.2);
+}
+
+.btn-action-large:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.btn-action-large:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.btn-action-primary {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.btn-action-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.btn-action-secondary {
+    background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+    color: #1f2937;
+}
+
+.btn-action-secondary:hover {
+    background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+}
+
+/* Tarjeta de Información */
+.info-box-card {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 2px solid #7dd3fc;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.15);
+    animation: fadeInUp 0.5s ease backwards;
+    animation-delay: 0.4s;
+}
+
+.info-box-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    font-weight: 700;
+    color: #0c4a6e;
+    font-size: 16px;
+}
+
+.info-box-header i {
+    font-size: 24px;
+    color: #0284c7;
+}
+
+.info-box-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.info-box-content li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    color: #374151;
+    font-size: 14px;
+    line-height: 1.6;
+    border-bottom: 1px solid rgba(125, 211, 252, 0.3);
+}
+
+.info-box-content li:last-child {
+    border-bottom: none;
+}
+
+.info-box-content li i {
+    font-size: 18px;
+    color: #0284c7;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* Badges Modernos */
+.badge-modern {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.badge-modern-danger {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+}
+
+.badge-modern-secondary {
+    background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+    color: #1f2937;
+}
+
+.badge-modern-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+}
+
+.badge-modern-warning {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+}
+
+.badge-modern-purple {
+    background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+    color: #5b21b6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-header > div {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .codigo-badge {
+        align-self: flex-start;
+    }
+    
+    .info-summary-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .document-request-item {
+        flex-direction: column;
+    }
+    
+    .document-checkbox-wrapper {
+        justify-content: flex-start;
+    }
+    
+    .action-buttons-row {
+        flex-direction: column-reverse;
+    }
+    
+    .btn-action-large {
+        width: 100%;
+    }
+}
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -158,7 +875,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (seleccionados.length === 0) {
             btnEnviar.disabled = true;
-            alertNoSeleccionados.style.display = 'block';
+            alertNoSeleccionados.style.display = 'flex';
         } else {
             btnEnviar.disabled = false;
             alertNoSeleccionados.style.display = 'none';
@@ -176,12 +893,33 @@ document.addEventListener('DOMContentLoaded', function() {
     // Validar antes de enviar
     form.addEventListener('submit', function(e) {
         const seleccionados = Array.from(checkboxes).filter(cb => cb.checked);
+        
         if (seleccionados.length === 0) {
             e.preventDefault();
-            alertNoSeleccionados.style.display = 'block';
-            window.scrollTo(0, 0);
+            alertNoSeleccionados.style.display = 'flex';
+            alertNoSeleccionados.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        
+        // Confirmación antes de enviar
+        const confirmacion = confirm(
+            `¿Está seguro de enviar esta solicitud?\n\n` +
+            `Se solicitarán ${seleccionados.length} documento(s) al colaborador.\n` +
+            `El colaborador recibirá una notificación por correo electrónico.`
+        );
+        
+        if (!confirmacion) {
+            e.preventDefault();
         }
     });
+    
+    // Inicializar tooltips si están disponibles
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
 });
 </script>
 {% endblock %}

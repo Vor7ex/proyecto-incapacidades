@@ -3,161 +3,998 @@
 {% block title %}Detalle de Incapacidad #{{ incapacidad.id }}{% endblock %}
 
 {% block content %}
-<div class="row">
-  <div class="col-12">
-    <div class="mb-3">
-      {% if current_user.rol == 'colaborador' %}
-        <a href="{{ url_for('incapacidades.mis_incapacidades') }}" class="btn btn-secondary">
-          &larr; Volver
-        </a>
-      {% else %}
-        <a href="{{ url_for('incapacidades.dashboard_auxiliar') }}" class="btn btn-secondary">
-          &larr; Volver
-        </a>
-      {% endif %}
-    </div>
-
-    <div class="card shadow">
-      <div class="card-header bg-primary text-white">
-        <h3 class="mb-0">
-          Incapacidad: {{ incapacidad.codigo_radicacion or '#' + incapacidad.id|string }}
-        </h3>
-      </div>
-      <div class="card-body">
-        <!-- Código de Radicación (destacado) -->
-        {% if incapacidad.codigo_radicacion %}
-        <div class="alert alert-info mb-4">
-          <div class="row align-items-center">
-            <div class="col-md-3">
-              <strong>📋 Código de Radicación:</strong>
-            </div>
-            <div class="col-md-9">
-              <span style="font-size: 24px; color: #0d6efd; font-weight: bold; font-family: monospace;">
-                {{ incapacidad.codigo_radicacion }}
-              </span>
-              <button class="btn btn-sm btn-outline-primary ms-3" onclick="copiarCodigo('{{ incapacidad.codigo_radicacion }}')">
-                📋 Copiar
-              </button>
-            </div>
-          </div>
-        </div>
-        {% endif %}
-        
-        <!-- Información del Colaborador -->
-        <div class="row mb-4">
-          <div class="col-md-6">
-            <h5>Información del Colaborador</h5>
-            <p><strong>Nombre:</strong> {{ incapacidad.usuario.nombre }}</p>
-            <p><strong>Email:</strong> {{ incapacidad.usuario.email }}</p>
-          </div>
-          <div class="col-md-6">
-            <h5>Estado Actual</h5>
-            <p>
-              <span class="badge badge-estado estado-{{ incapacidad.estado.lower().replace(' ', '-').replace('_', '-') }}" style="font-size: 1.1rem;">
-                {{ incapacidad.estado.replace('_', ' ') }}
-              </span>
-            </p>
-            {% if incapacidad.motivo_rechazo %}
-              <div class="alert alert-danger">
-                <strong>Motivo de Rechazo:</strong><br>
-                {{ incapacidad.motivo_rechazo }}
-              </div>
+<div class="detalle-container">
+  <div class="row">
+    <div class="col-12">
+      <!-- Header con botón volver -->
+      <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+          <div class="d-flex align-items-center gap-3">
+            {% if current_user.rol == 'colaborador' %}
+              <a href="{{ url_for('incapacidades.mis_incapacidades') }}" class="btn-back">
+                <i class="bi bi-arrow-left-circle"></i>
+              </a>
+            {% else %}
+              <a href="{{ url_for('incapacidades.dashboard_auxiliar') }}" class="btn-back">
+                <i class="bi bi-arrow-left-circle"></i>
+              </a>
             {% endif %}
+            <div>
+              <h2 class="mb-1">
+                <i class="bi bi-file-medical-fill"></i>
+                Detalle de Incapacidad
+              </h2>
+              <p class="text-muted mb-0">
+                {% if incapacidad.codigo_radicacion %}
+                  {{ incapacidad.codigo_radicacion }}
+                {% else %}
+                  #{{ incapacidad.id }}
+                {% endif %}
+              </p>
+            </div>
+          </div>
+          <div class="status-badge-large estado-{{ incapacidad.estado.lower().replace(' ', '-').replace('_', '-') }}">
+            <i class="bi bi-circle-fill"></i>
+            <span>{{ incapacidad.estado.replace('_', ' ').title() }}</span>
           </div>
         </div>
+      </div>
 
-        <hr>
-
-        <!-- Detalles de la Incapacidad -->
-        <h5>Detalles de la Incapacidad</h5>
-        <div class="row">
-          <div class="col-md-4">
-            <p><strong>Tipo:</strong> {{ incapacidad.tipo }}</p>
-          </div>
-          <div class="col-md-4">
-            <p><strong>Fecha de Inicio:</strong> {{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }}</p>
-          </div>
-          <div class="col-md-4">
-            <p><strong>Fecha de Fin:</strong> {{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}</p>
-          </div>
+      <!-- Código de Radicación Destacado -->
+      {% if incapacidad.codigo_radicacion %}
+      <div class="codigo-radicacion-card">
+        <div class="codigo-icon">
+          <i class="bi bi-upc-scan"></i>
         </div>
-        <div class="row">
-          <div class="col-md-4">
-            <p><strong>Días Totales:</strong> <span class="badge bg-secondary">{{ incapacidad.dias }} días</span></p>
-          </div>
-          <div class="col-md-4">
-            <p><strong>Fecha de Registro:</strong> {{ incapacidad.fecha_registro.strftime('%d/%m/%Y %H:%M') }}</p>
-          </div>
-          <div class="col-md-4">
-            <p><strong>Última Actualización:</strong> {{ incapacidad.fecha_actualizacion.strftime('%d/%m/%Y %H:%M') }}</p>
-          </div>
+        <div class="codigo-content">
+          <label>Código de Radicación</label>
+          <div class="codigo-value">{{ incapacidad.codigo_radicacion }}</div>
         </div>
-
-        <hr>
-
-        <!-- Documentos Adjuntos -->
-        <h5>Documentos Adjuntos</h5>
-        {% if incapacidad.documentos %}
-          <div class="row">
-            {% for doc in incapacidad.documentos %}
-              <div class="col-md-6 mb-3">
-                <div class="documento-item">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                      <p class="mb-1">
-                        <strong>
-                          {% if doc.tipo_documento == 'certificado' %}
-                            Certificado de Incapacidad
-                          {% else %}
-                            Epicrisis
-                          {% endif %}
-                        </strong>
-                      </p>
-                      <p class="mb-0 text-muted small">{{ doc.nombre_archivo }}</p>
-                      <p class="mb-0 text-muted small">Cargado: {{ doc.fecha_carga.strftime('%d/%m/%Y %H:%M') }}</p>
-                    </div>
-                    <div>
-                      <a href="{{ url_for('documentos.descargar', documento_id=doc.id) }}" class="btn btn-sm btn-primary">
-                        Descargar
-                      </a>
-                    </div>
-                  </div>
-                </div>
+        <button class="btn-copy-codigo" onclick="copiarCodigo('{{ incapacidad.codigo_radicacion }}')">
+          <i class="bi bi-clipboard"></i>
+          <span>Copiar</span>
+        </button>
+      </div>
+      {% endif %}
+      <!-- Información Principal -->
+      <div class="row g-4 mb-4">
+        <!-- Información del Colaborador -->
+        <div class="col-md-6">
+          <div class="info-card">
+            <div class="info-card-header">
+              <i class="bi bi-person-circle"></i>
+              <span>Información del Colaborador</span>
+            </div>
+            <div class="info-card-body">
+              <div class="info-item">
+                <label>Nombre completo</label>
+                <p>{{ incapacidad.usuario.nombre }}</p>
               </div>
-            {% endfor %}
+              <div class="info-item mb-0">
+                <label>Correo electrónico</label>
+                <p>{{ incapacidad.usuario.email }}</p>
+              </div>
+            </div>
           </div>
-        {% else %}
-          <div class="alert alert-warning">
-            No hay documentos adjuntos
-          </div>
-        {% endif %}
+        </div>
 
-        <!-- Botones de Acción para Auxiliar -->
-        {% if current_user.rol == 'auxiliar' and incapacidad.estado in ['Pendiente', 'En revision'] %}
-          <hr>
-          <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-            <a href="{{ url_for('incapacidades.validar', id=incapacidad.id) }}" class="btn btn-info text-white">
-              Validar Documentación
-            </a>
+        <!-- Motivo de Rechazo (si aplica) -->
+        {% if incapacidad.motivo_rechazo %}
+        <div class="col-md-6">
+          <div class="alert-card alert-card-danger">
+            <div class="alert-card-icon">
+              <i class="bi bi-x-circle-fill"></i>
+            </div>
+            <div class="alert-card-content">
+              <h6>Motivo de Rechazo</h6>
+              <p>{{ incapacidad.motivo_rechazo }}</p>
+            </div>
           </div>
+        </div>
         {% endif %}
+      </div>
+
+      <!-- Detalles de la Incapacidad -->
+      <div class="details-card">
+        <div class="details-header">
+          <div class="details-header-icon">
+            <i class="bi bi-clipboard-data"></i>
+          </div>
+          <h4>Detalles de la Incapacidad</h4>
+        </div>
+        <div class="details-grid">
+          <div class="detail-item">
+            <div class="detail-icon">
+              <i class="bi bi-tag-fill"></i>
+            </div>
+            <div class="detail-content">
+              <label>Tipo de incapacidad</label>
+              <p>
+                <span class="badge-modern badge-modern-secondary">
+                  {{ incapacidad.tipo }}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <div class="detail-icon">
+              <i class="bi bi-calendar-event"></i>
+            </div>
+            <div class="detail-content">
+              <label>Fecha de inicio</label>
+              <p>{{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }}</p>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <div class="detail-icon">
+              <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="detail-content">
+              <label>Fecha de fin</label>
+              <p>{{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}</p>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <div class="detail-icon">
+              <i class="bi bi-hourglass-split"></i>
+            </div>
+            <div class="detail-content">
+              <label>Duración total</label>
+              <p>
+                <span class="badge-modern badge-modern-purple">
+                  <i class="bi bi-calendar-range"></i>
+                  {{ incapacidad.dias }} días
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <div class="detail-icon">
+              <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="detail-content">
+              <label>Fecha de registro</label>
+              <p>{{ incapacidad.fecha_registro.strftime('%d/%m/%Y %H:%M') }}</p>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <div class="detail-icon">
+              <i class="bi bi-arrow-clockwise"></i>
+            </div>
+            <div class="detail-content">
+              <label>Última actualización</label>
+              <p>{{ incapacidad.fecha_actualizacion.strftime('%d/%m/%Y %H:%M') }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documentos Adjuntos -->
+      <div class="documents-section">
+        <div class="section-title">
+          <div class="section-title-icon">
+            <i class="bi bi-files"></i>
+          </div>
+          <div>
+            <h4>Documentos Adjuntos</h4>
+            <p>Archivos relacionados con esta incapacidad</p>
+          </div>
+        </div>
+
+        {% if incapacidad.documentos %}
+        <div class="row g-3">
+          {% for doc in incapacidad.documentos %}
+          <div class="col-md-6">
+            <div class="document-card">
+              <div class="document-icon">
+                {% if doc.tipo_documento == 'certificado' %}
+                  <i class="bi bi-file-earmark-medical"></i>
+                {% else %}
+                  <i class="bi bi-file-earmark-text"></i>
+                {% endif %}
+              </div>
+              <div class="document-info">
+                <h6>
+                  {% if doc.tipo_documento == 'certificado' %}
+                    Certificado de Incapacidad
+                  {% else %}
+                    Epicrisis
+                  {% endif %}
+                </h6>
+                <p class="document-filename">{{ doc.nombre_archivo }}</p>
+                <p class="document-date">
+                  <i class="bi bi-clock"></i>
+                  Cargado: {{ doc.fecha_carga.strftime('%d/%m/%Y %H:%M') }}
+                </p>
+              </div>
+              <a href="{{ url_for('documentos.descargar', documento_id=doc.id) }}" 
+                 class="btn-document-action" 
+                 target="_blank"
+                 data-bs-toggle="tooltip"
+                 title="Descargar documento">
+                <i class="bi bi-download"></i>
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state empty-state-warning">
+          <div class="empty-state-icon">
+            <i class="bi bi-inbox"></i>
+          </div>
+          <h5>Sin documentos adjuntos</h5>
+          <p>No se han cargado documentos para esta incapacidad</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Botones de Acción para Auxiliar -->
+      {% if current_user.rol == 'auxiliar' and incapacidad.estado in ['Pendiente', 'En revision'] %}
+      <div class="action-section">
+        <div class="action-buttons-grid">
+          <a href="{{ url_for('incapacidades.validar', id=incapacidad.id) }}" 
+             class="btn-action-large btn-action-primary">
+            <i class="bi bi-clipboard-check"></i>
+            <span>Validar Documentación</span>
+          </a>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Botón Ver Historial (para todos los usuarios) -->
+      <div class="action-section">
+        <div class="action-buttons-grid">
+          <a href="{{ url_for('incapacidades.historial_estados', incapacidad_id=incapacidad.id) }}" 
+             class="btn-action-large btn-action-secondary">
+            <i class="bi bi-clock-history"></i>
+            <span>Ver Historial de Estados</span>
+          </a>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<script>
-function copiarCodigo(codigo) {
-  // Crear elemento temporal para copiar
-  const tempInput = document.createElement('input');
-  tempInput.value = codigo;
-  document.body.appendChild(tempInput);
-  tempInput.select();
-  document.execCommand('copy');
-  document.body.removeChild(tempInput);
+<style>
+/* ==================================================
+   DETALLE INCAPACIDAD - ESTILOS MODERNOS
+   ================================================== */
+
+.detalle-container {
+  animation: fadeInUp 0.5s ease;
+  padding-bottom: 3rem;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header de Página */
+.page-header {
+  animation: slideInLeft 0.4s ease;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.page-header h2 {
+  color: #1f2937;
+  font-weight: 700;
+  font-size: 28px;
+}
+
+.page-header i {
+  color: #3b82f6;
+}
+
+.btn-back {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #6b7280;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.btn-back:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border-color: #3b82f6;
+  transform: translateX(-5px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Badge de Estado Grande */
+.status-badge-large {
+  padding: 14px 24px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  animation: fadeInScale 0.5s ease backwards;
+  animation-delay: 0.2s;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.status-badge-large i {
+  font-size: 10px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Estados */
+.estado-pendiente {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+}
+
+.estado-en-revision {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+}
+
+.estado-aprobada {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+}
+
+.estado-rechazada {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+}
+
+/* Tarjeta de Código de Radicación */
+.codigo-radicacion-card {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 2px solid #93c5fd;
+  border-radius: 20px;
+  padding: 28px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
+  animation: fadeInScale 0.5s ease backwards;
+  animation-delay: 0.1s;
+}
+
+.codigo-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  flex-shrink: 0;
+}
+
+.codigo-content {
+  flex: 1;
+}
+
+.codigo-content label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e40af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.codigo-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1e3a8a;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+}
+
+.btn-copy-codigo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: white;
+  border: 2px solid #3b82f6;
+  border-radius: 12px;
+  color: #3b82f6;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.btn-copy-codigo:hover {
+  background: #3b82f6;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+}
+
+.btn-copy-codigo i {
+  font-size: 18px;
+}
+
+/* Tarjetas de Información */
+.info-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  animation: fadeInScale 0.5s ease backwards;
+  animation-delay: 0.3s;
+}
+
+.info-card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.info-card-header {
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.info-card-header i {
+  font-size: 20px;
+  color: #3b82f6;
+}
+
+.info-card-body {
+  padding: 20px;
+}
+
+.info-item {
+  margin-bottom: 16px;
+}
+
+.info-item label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.info-item p {
+  color: #1f2937;
+  font-weight: 500;
+  margin-bottom: 0;
+  font-size: 15px;
+}
+
+/* Tarjeta de Alerta */
+.alert-card {
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  gap: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  border: 2px solid;
+  animation: fadeInScale 0.5s ease backwards;
+  animation-delay: 0.3s;
+}
+
+.alert-card-danger {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: #fca5a5;
+}
+
+.alert-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.alert-card-danger .alert-card-icon {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.alert-card-content h6 {
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+.alert-card-content p {
+  color: #374151;
+  margin-bottom: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Tarjeta de Detalles */
+.details-card {
+  background: white;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  animation: fadeInUp 0.5s ease backwards;
+  animation-delay: 0.4s;
+}
+
+.details-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.details-header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #1e40af;
+  box-shadow: 0 4px 8px rgba(30, 64, 175, 0.15);
+}
+
+.details-header h4 {
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  font-size: 20px;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  border-radius: 14px;
+  transition: all 0.3s ease;
+  border: 1px solid #e5e7eb;
+}
+
+.detail-item:hover {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-color: #93c5fd;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.detail-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #3b82f6;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.detail-content label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.detail-content p {
+  color: #1f2937;
+  font-weight: 600;
+  margin-bottom: 0;
+  font-size: 15px;
+}
+
+/* Sección de Documentos */
+.documents-section {
+  background: white;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  animation: fadeInUp 0.5s ease backwards;
+  animation-delay: 0.5s;
+}
+
+.section-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.section-title-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #1e40af;
+  box-shadow: 0 4px 8px rgba(30, 64, 175, 0.15);
+  flex-shrink: 0;
+}
+
+.section-title h4 {
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 4px;
+  font-size: 20px;
+}
+
+.section-title p {
+  color: #6b7280;
+  margin-bottom: 0;
+  font-size: 14px;
+}
+
+/* Tarjetas de Documentos */
+.document-card {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.3s ease;
+}
+
+.document-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15);
+  transform: translateY(-4px);
+}
+
+.document-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.document-info {
+  flex: 1;
+}
+
+.document-info h6 {
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 6px;
+  font-size: 15px;
+}
+
+.document-filename {
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.document-date {
+  color: #9ca3af;
+  font-size: 12px;
+  margin-bottom: 0;
+}
+
+.document-date i {
+  margin-right: 4px;
+}
+
+.btn-document-action {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.btn-document-action:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+/* Estado Vacío */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-state-warning .empty-state-icon {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 24px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  color: #d97706;
+  box-shadow: 0 8px 24px rgba(217, 119, 6, 0.2);
+}
+
+.empty-state h5 {
+  color: #1f2937;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  color: #6b7280;
+  margin-bottom: 0;
+}
+
+/* Sección de Acciones */
+.action-section {
+  background: white;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  animation: fadeInUp 0.5s ease backwards;
+  animation-delay: 0.6s;
+}
+
+.action-buttons-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.btn-action-large {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 18px 32px;
+  border-radius: 14px;
+  border: none;
+  font-weight: 700;
+  font-size: 16px;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-action-large::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.5s, height 0.5s;
+}
+
+.btn-action-large:hover::before {
+  width: 400px;
+  height: 400px;
+}
+
+.btn-action-large i {
+  font-size: 22px;
+  transition: transform 0.3s ease;
+}
+
+.btn-action-large:hover i {
+  transform: scale(1.2);
+}
+
+.btn-action-large:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.btn-action-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+}
+
+.btn-action-primary:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.btn-action-secondary {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+}
+
+.btn-action-secondary:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+}
+
+/* Badges Modernos */
+.badge-modern {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge-modern-secondary {
+  background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+  color: #1f2937;
+}
+
+.badge-modern-purple {
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  color: #5b21b6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page-header > div {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
   
-  // Feedback visual
-  alert('Código copiado: ' + codigo);
+  .status-badge-large {
+    align-self: flex-start;
+  }
+  
+  .codigo-radicacion-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .codigo-value {
+    font-size: 20px;
+  }
+  
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Inicializar tooltips
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+});
+
+function copiarCodigo(codigo) {
+  // Usar API moderna de portapapeles
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(codigo).then(function() {
+      // Feedback visual moderno
+      const btn = event.target.closest('.btn-copy-codigo');
+      const originalHTML = btn.innerHTML;
+      
+      btn.innerHTML = '<i class="bi bi-check-lg"></i><span>¡Copiado!</span>';
+      btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+      btn.style.color = 'white';
+      btn.style.borderColor = '#10b981';
+      
+      setTimeout(function() {
+        btn.innerHTML = originalHTML;
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+      }, 2000);
+    }).catch(function(err) {
+      console.error('Error al copiar:', err);
+      alert('Código: ' + codigo);
+    });
+  } else {
+    // Fallback para navegadores antiguos
+    const tempInput = document.createElement('input');
+    tempInput.value = codigo;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempInput);
+    alert('Código copiado: ' + codigo);
+  }
 }
 </script>
 {% endblock %}

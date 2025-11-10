@@ -3,97 +3,150 @@
 {% block title %}Dashboard - Gestion de Incapacidades{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <h2 class="mb-4">Dashboard de Auxiliar RRHH</h2>
-        
-        <!-- Estadisticas -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card text-white bg-warning shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Pendientes</h5>
-                        <h2 class="display-4">{{ pendientes|length }}</h2>
-                        <p class="mb-0">Requieren validacion</p>
+<div class="dashboard-auxiliar-container">
+    <div class="row">
+        <div class="col-12">
+            <div class="dashboard-header mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="header-icon">
+                        <i class="bi bi-speedometer2"></i>
+                    </div>
+                    <div>
+                        <h2 class="mb-1">Dashboard de Auxiliar RRHH</h2>
+                        <p class="text-muted mb-0">Gestión y seguimiento de incapacidades</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-white bg-info shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">En Revision</h5>
-                        <h2 class="display-4">{{ en_revision|length }}</h2>
-                        <p class="mb-0">Listas para aprobar</p>
+            
+            <!-- Estadisticas -->
+            <div class="row mb-4 g-4">
+                <div class="col-md-3">
+                    <div class="stat-card stat-card-warning">
+                        <div class="stat-card-icon">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <div class="stat-card-content">
+                            <h5 class="stat-card-title">Pendientes</h5>
+                            <h2 class="stat-card-number" data-target="{{ pendientes|length }}">0</h2>
+                            <p class="stat-card-description">Requieren validación</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card stat-card-info">
+                        <div class="stat-card-icon">
+                            <i class="bi bi-search"></i>
+                        </div>
+                        <div class="stat-card-content">
+                            <h5 class="stat-card-title">En Revisión</h5>
+                            <h2 class="stat-card-number" data-target="{{ en_revision|length }}">0</h2>
+                            <p class="stat-card-description">Listas para aprobar</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card stat-card-success">
+                        <div class="stat-card-icon">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <div class="stat-card-content">
+                            <h5 class="stat-card-title">Aprobadas</h5>
+                            <h2 class="stat-card-number" data-target="{{ aprobadas|length if aprobadas else 0 }}">0</h2>
+                            <p class="stat-card-description">Total aprobadas</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card stat-card-danger">
+                        <div class="stat-card-icon">
+                            <i class="bi bi-x-circle-fill"></i>
+                        </div>
+                        <div class="stat-card-content">
+                            <h5 class="stat-card-title">Rechazadas</h5>
+                            <h2 class="stat-card-number" data-target="{{ rechazadas|length if rechazadas else 0 }}">0</h2>
+                            <p class="stat-card-description">Total rechazadas</p>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-white bg-success shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Aprobadas</h5>
-                        <h2 class="display-4">{{ aprobadas|length if aprobadas else 0 }}</h2>
-                        <p class="mb-0">Total</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-white bg-danger shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Rechazadas</h5>
-                        <h2 class="display-4">{{ rechazadas|length if rechazadas else 0 }}</h2>
-                        <p class="mb-0">Total</p>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Incapacidades Pendientes -->
-        <div class="card shadow mb-4">
-            <div class="card-header bg-warning text-dark">
-                <h4 class="mb-0">
-                    <i class="bi bi-clock-history"></i>
-                    Incapacidades Pendientes de Validación
-                </h4>
+        <div class="section-card mb-4">
+            <div class="section-card-header section-header-warning">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="section-header-icon">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0">Incapacidades Pendientes de Validación</h4>
+                        <small class="text-muted">Requieren revisión inicial de documentos</small>
+                    </div>
+                </div>
+                {% if pendientes %}
+                <span class="badge-count">{{ pendientes|length }}</span>
+                {% endif %}
             </div>
-            <div class="card-body">
+            <div class="section-card-body">
                 {% if pendientes %}
                 <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-light">
+                    <table class="table modern-table">
+                        <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Colaborador</th>
-                                <th>Tipo</th>
-                                <th>Fecha Inicio</th>
-                                <th>Dias</th>
-                                <th>Fecha Registro</th>
-                                <th>Acciones</th>
+                                <th><i class="bi bi-hash"></i> ID</th>
+                                <th><i class="bi bi-person"></i> Colaborador</th>
+                                <th><i class="bi bi-tags"></i> Tipo</th>
+                                <th><i class="bi bi-calendar-event"></i> Fecha Inicio</th>
+                                <th><i class="bi bi-hourglass-split"></i> Días</th>
+                                <th><i class="bi bi-clock"></i> Fecha Registro</th>
+                                <th class="text-center"><i class="bi bi-gear"></i> Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for inc in pendientes %}
-                            <tr>
-                                <td><strong>#{{ inc.id }}</strong></td>
-                                <td>{{ inc.usuario.nombre }}</td>
+                            <tr class="table-row-hover">
+                                <td><strong class="text-primary">#{{ inc.id }}</strong></td>
                                 <td>
-                                    <span class="badge bg-secondary">
+                                    <div class="user-info">
+                                        <i class="bi bi-person-circle text-secondary"></i>
+                                        <span>{{ inc.usuario.nombre }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge-modern badge-modern-secondary">
+                                        <i class="bi bi-file-medical"></i>
                                         {{ inc.tipo }}
                                     </span>
                                 </td>
                                 <td>{{ inc.fecha_inicio.strftime('%d/%m/%Y') }}</td>
                                 <td>
-                                    <span class="badge bg-info">{{ inc.dias }} dias</span>
+                                    <span class="badge-modern badge-modern-purple">
+                                        <i class="bi bi-calendar-check"></i>
+                                        {{ inc.dias }} días
+                                    </span>
                                 </td>
-                                <td>{{ inc.fecha_registro.strftime('%d/%m/%Y %H:%M') }}</td>
                                 <td>
-                                    <a href="{{ url_for('incapacidades.validar', id=inc.id) }}" 
-                                       class="btn btn-sm btn-primary">
-                                        <i class="bi bi-check-circle"></i> Validar
-                                    </a>
-                                    <a href="{{ url_for('incapacidades.detalle', id=inc.id) }}" 
-                                       class="btn btn-sm btn-info text-white">
-                                        <i class="bi bi-eye"></i> Ver
-                                    </a>
+                                    <small class="text-muted">
+                                        <i class="bi bi-clock-history"></i>
+                                        {{ inc.fecha_registro.strftime('%d/%m/%Y %H:%M') }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="{{ url_for('incapacidades.validar', id=inc.id) }}" 
+                                           class="btn-action btn-action-primary"
+                                           data-bs-toggle="tooltip" 
+                                           title="Validar incapacidad">
+                                            <i class="bi bi-check-circle"></i>
+                                            <span>Validar</span>
+                                        </a>
+                                        <a href="{{ url_for('incapacidades.detalle', id=inc.id) }}" 
+                                           class="btn-action btn-action-info"
+                                           data-bs-toggle="tooltip" 
+                                           title="Ver detalles">
+                                            <i class="bi bi-eye"></i>
+                                            <span>Ver</span>
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -101,65 +154,94 @@
                     </table>
                 </div>
                 {% else %}
-                <div class="alert alert-success">
-                    <i class="bi bi-check-circle-fill"></i>
-                    <strong>¡Excelente!</strong> No hay incapacidades pendientes de validacion.
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <h5>¡Todo al día!</h5>
+                    <p>No hay incapacidades pendientes de validación en este momento.</p>
                 </div>
                 {% endif %}
             </div>
         </div>
 
         <!-- Incapacidades En Revision -->
-        <div class="card shadow">
-            <div class="card-header bg-info text-white">
-                <h4 class="mb-0">
-                    <i class="bi bi-search"></i>
-                    Incapacidades Listas para Aprobar/Rechazar
-                </h4>
+        <div class="section-card">
+            <div class="section-card-header section-header-info">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="section-header-icon">
+                        <i class="bi bi-search"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0">Incapacidades Listas para Aprobar/Rechazar</h4>
+                        <small class="text-muted">Documentación completa, pendiente de decisión final</small>
+                    </div>
+                </div>
+                {% if en_revision %}
+                <span class="badge-count">{{ en_revision|length }}</span>
+                {% endif %}
             </div>
-            <div class="card-body">
+            <div class="section-card-body">
                 {% if en_revision %}
                 <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-light">
+                    <table class="table modern-table">
+                        <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Colaborador</th>
-                                <th>Tipo</th>
-                                <th>Fecha Inicio</th>
-                                <th>Dias</th>
-                                <th>Documentos</th>
-                                <th>Acciones</th>
+                                <th><i class="bi bi-hash"></i> ID</th>
+                                <th><i class="bi bi-person"></i> Colaborador</th>
+                                <th><i class="bi bi-tags"></i> Tipo</th>
+                                <th><i class="bi bi-calendar-event"></i> Fecha Inicio</th>
+                                <th><i class="bi bi-hourglass-split"></i> Días</th>
+                                <th><i class="bi bi-paperclip"></i> Documentos</th>
+                                <th class="text-center"><i class="bi bi-gear"></i> Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for inc in en_revision %}
-                            <tr>
-                                <td><strong>#{{ inc.id }}</strong></td>
-                                <td>{{ inc.usuario.nombre }}</td>
+                            <tr class="table-row-hover">
+                                <td><strong class="text-primary">#{{ inc.id }}</strong></td>
                                 <td>
-                                    <span class="badge bg-secondary">
+                                    <div class="user-info">
+                                        <i class="bi bi-person-circle text-secondary"></i>
+                                        <span>{{ inc.usuario.nombre }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge-modern badge-modern-secondary">
+                                        <i class="bi bi-file-medical"></i>
                                         {{ inc.tipo }}
                                     </span>
                                 </td>
                                 <td>{{ inc.fecha_inicio.strftime('%d/%m/%Y') }}</td>
                                 <td>
-                                    <span class="badge bg-info">{{ inc.dias }} dias</span>
+                                    <span class="badge-modern badge-modern-purple">
+                                        <i class="bi bi-calendar-check"></i>
+                                        {{ inc.dias }} días
+                                    </span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-primary">
+                                    <span class="badge-modern badge-modern-primary">
+                                        <i class="bi bi-files"></i>
                                         {{ inc.documentos|length }} archivos
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="{{ url_for('incapacidades.aprobar_rechazar', id=inc.id) }}" 
-                                       class="btn btn-sm btn-success">
-                                        <i class="bi bi-check-lg"></i> Aprobar/Rechazar
-                                    </a>
-                                    <a href="{{ url_for('incapacidades.detalle', id=inc.id) }}" 
-                                       class="btn btn-sm btn-info text-white">
-                                        <i class="bi bi-eye"></i> Ver
-                                    </a>
+                                    <div class="action-buttons">
+                                        <a href="{{ url_for('incapacidades.aprobar_rechazar', id=inc.id) }}" 
+                                           class="btn-action btn-action-success"
+                                           data-bs-toggle="tooltip" 
+                                           title="Aprobar o rechazar">
+                                            <i class="bi bi-check-lg"></i>
+                                            <span>Decidir</span>
+                                        </a>
+                                        <a href="{{ url_for('incapacidades.detalle', id=inc.id) }}" 
+                                           class="btn-action btn-action-info"
+                                           data-bs-toggle="tooltip" 
+                                           title="Ver detalles">
+                                            <i class="bi bi-eye"></i>
+                                            <span>Ver</span>
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -167,13 +249,563 @@
                     </table>
                 </div>
                 {% else %}
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle-fill"></i>
-                    No hay incapacidades en revision actualmente.
+                <div class="empty-state">
+                    <div class="empty-state-icon empty-state-icon-info">
+                        <i class="bi bi-inbox"></i>
+                    </div>
+                    <h5>Sin incapacidades en revisión</h5>
+                    <p>No hay incapacidades pendientes de aprobación o rechazo.</p>
                 </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
+</div>
+
+<style>
+/* ==================================================
+   DASHBOARD AUXILIAR - ESTILOS MODERNOS
+   ================================================== */
+
+.dashboard-auxiliar-container {
+    animation: fadeInUp 0.6s ease;
+    padding-bottom: 3rem;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header del Dashboard */
+.dashboard-header {
+    animation: slideInLeft 0.5s ease;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.header-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.dashboard-header h2 {
+    color: #2d3748;
+    font-weight: 700;
+    font-size: 28px;
+}
+
+/* Tarjetas de Estadísticas Mejoradas */
+.stat-card {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    animation: fadeInScale 0.5s ease backwards;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+.stat-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    color: white;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover .stat-card-icon {
+    transform: rotate(360deg) scale(1.1);
+}
+
+.stat-card-warning .stat-card-icon {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.stat-card-info .stat-card-icon {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+}
+
+.stat-card-success .stat-card-icon {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.stat-card-danger .stat-card-icon {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.stat-card-content {
+    position: relative;
+    z-index: 2;
+}
+
+.stat-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.stat-card-number {
+    font-size: 42px;
+    font-weight: 800;
+    margin-bottom: 4px;
+    background: linear-gradient(135deg, #1f2937 0%, #4b5563 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-card-description {
+    font-size: 13px;
+    color: #9ca3af;
+    margin-bottom: 0;
+}
+
+/* Secciones Mejoradas */
+.section-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.6s ease backwards;
+    animation-delay: 0.5s;
+}
+
+.section-card:hover {
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.section-card-header {
+    padding: 24px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.section-card-header::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, currentColor, transparent);
+    opacity: 0.3;
+}
+
+.section-header-warning {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    color: #92400e;
+}
+
+.section-header-info {
+    background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+    color: #164e63;
+}
+
+.section-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.section-card-header h4 {
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.section-card-header small {
+    font-size: 13px;
+    opacity: 0.8;
+}
+
+.badge-count {
+    background: white;
+    color: #1f2937;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    animation: bounce 0.6s ease;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.section-card-body {
+    padding: 28px;
+}
+
+/* Tabla Moderna */
+.modern-table {
+    margin-bottom: 0;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.modern-table thead {
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+}
+
+.modern-table thead th {
+    border: none;
+    padding: 16px;
+    font-weight: 700;
+    font-size: 13px;
+    color: #4b5563;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.modern-table thead th i {
+    margin-right: 6px;
+    color: #6b7280;
+}
+
+.modern-table tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: all 0.3s ease;
+}
+
+.table-row-hover:hover {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.modern-table tbody td {
+    padding: 18px 16px;
+    vertical-align: middle;
+    color: #374151;
+}
+
+/* Badges Modernos */
+.badge-modern {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s ease;
+}
+
+.badge-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+.badge-modern-secondary {
+    background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+    color: #1f2937;
+}
+
+.badge-modern-purple {
+    background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+    color: #5b21b6;
+}
+
+.badge-modern-primary {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+}
+
+/* Información de Usuario */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+}
+
+.user-info i {
+    font-size: 20px;
+}
+
+/* Botones de Acción Mejorados */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-action::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.5s, height 0.5s;
+}
+
+.btn-action:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn-action i {
+    font-size: 16px;
+    transition: transform 0.3s ease;
+}
+
+.btn-action:hover i {
+    transform: scale(1.2);
+}
+
+.btn-action:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.btn-action-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.btn-action-primary:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.btn-action-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.btn-action-success:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.btn-action-info {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: white;
+}
+
+.btn-action-info:hover {
+    background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+}
+
+/* Estado Vacío Mejorado */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    animation: fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.empty-state-icon {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 24px;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    color: #059669;
+    box-shadow: 0 8px 24px rgba(5, 150, 105, 0.2);
+    animation: scaleIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+
+.empty-state-icon-info {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #2563eb;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.2);
+}
+
+.empty-state h5 {
+    color: #1f2937;
+    font-weight: 700;
+    margin-bottom: 8px;
+    font-size: 20px;
+}
+
+.empty-state p {
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stat-card {
+        margin-bottom: 16px;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .btn-action {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .section-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    
+    .badge-count {
+        align-self: flex-start;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animar números con efecto contador
+    const animateNumbers = () => {
+        const numbers = document.querySelectorAll('.stat-card-number');
+        
+        numbers.forEach(number => {
+            const target = parseInt(number.getAttribute('data-target'));
+            const duration = 1500;
+            const increment = target / (duration / 16);
+            let current = 0;
+            
+            const updateNumber = () => {
+                current += increment;
+                if (current < target) {
+                    number.textContent = Math.floor(current);
+                    requestAnimationFrame(updateNumber);
+                } else {
+                    number.textContent = target;
+                }
+            };
+            
+            updateNumber();
+        });
+    };
+    
+    // Iniciar animación de números
+    setTimeout(animateNumbers, 300);
+    
+    // Inicializar tooltips de Bootstrap
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+
 {% endblock %}

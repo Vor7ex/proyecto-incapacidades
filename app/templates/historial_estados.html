@@ -3,186 +3,838 @@
 {% block title %}Historial de Estados - {{ incapacidad.codigo_radicacion }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-10 offset-md-1">
-            <!-- Breadcrumb -->
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    {% if current_user.rol == 'colaborador' %}
-                    <li class="breadcrumb-item"><a href="{{ url_for('incapacidades.mis_incapacidades') }}">Mis Incapacidades</a></li>
-                    {% else %}
-                    <li class="breadcrumb-item"><a href="{{ url_for('incapacidades.dashboard_auxiliar') }}">Dashboard</a></li>
-                    {% endif %}
-                    <li class="breadcrumb-item active">Historial de Estados</li>
-                </ol>
-            </nav>
-
-            <!-- Card principal -->
-            <div class="card shadow-sm">
-                <div class="card-header bg-info text-white">
-                    <h4 class="mb-0">
-                        <i class="bi bi-clock-history"></i>
-                        Historial de Estados - Auditoría
-                    </h4>
-                    <small>Incapacidad: <strong>{{ incapacidad.codigo_radicacion }}</strong></small>
-                </div>
-
-                <div class="card-body">
-                    <!-- Información de la incapacidad -->
-                    <div class="alert alert-light">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <p class="mb-1"><strong>Colaborador:</strong> {{ incapacidad.usuario.nombre }}</p>
-                                <p class="mb-1"><strong>Tipo:</strong> {{ incapacidad.tipo }}</p>
-                            </div>
-                            <div class="col-md-4">
-                                <p class="mb-1"><strong>Periodo:</strong> {{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }} - {{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}</p>
-                                <p class="mb-1"><strong>Días:</strong> {{ incapacidad.dias }}</p>
-                            </div>
-                            <div class="col-md-4">
-                                <p class="mb-1"><strong>Estado actual:</strong></p>
-                                <span class="badge bg-primary fs-6">{{ incapacidad.estado }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <hr>
-
-                    <!-- Timeline de cambios -->
-                    <h5 class="mb-4"><i class="bi bi-list-ul"></i> Historial de Cambios</h5>
-
-                    {% if historial %}
-                    <div class="timeline">
-                        {% for cambio in historial %}
-                        <div class="timeline-item mb-4 pb-4 {% if not loop.last %}border-bottom{% endif %}">
-                            <div class="row">
-                                <!-- Fecha y hora -->
-                                <div class="col-md-2 text-center">
-                                    <div class="timeline-badge bg-primary text-white rounded-circle d-inline-block p-3 mb-2">
-                                        <i class="bi bi-calendar-event"></i>
-                                    </div>
-                                    <div>
-                                        <small class="text-muted d-block">
-                                            {{ cambio.fecha_cambio.strftime('%d/%m/%Y') }}
-                                        </small>
-                                        <small class="text-muted d-block fw-bold">
-                                            {{ cambio.fecha_cambio.strftime('%H:%M:%S') }}
-                                        </small>
-                                    </div>
-                                </div>
-
-                                <!-- Detalles del cambio -->
-                                <div class="col-md-10">
-                                    <div class="card">
-                                        <div class="card-body">
-                                            <!-- Usuario que hizo el cambio -->
-                                            <div class="mb-2">
-                                                <i class="bi bi-person-fill text-primary"></i>
-                                                <strong>Usuario:</strong> 
-                                                {{ cambio.usuario.nombre if cambio.usuario else 'Sistema' }}
-                                                <small class="text-muted">({{ cambio.usuario.rol if cambio.usuario else 'automático' }})</small>
-                                            </div>
-
-                                            <!-- Cambio de estado -->
-                                            <div class="mb-2">
-                                                <i class="bi bi-arrow-left-right text-warning"></i>
-                                                <strong>Cambio:</strong>
-                                                <div class="d-inline-block ms-2">
-                                                    <span class="badge bg-secondary">{{ cambio.estado_anterior or 'N/A' }}</span>
-                                                    <i class="bi bi-arrow-right mx-2"></i>
-                                                    <span class="badge bg-success">{{ cambio.estado_nuevo }}</span>
-                                                </div>
-                                            </div>
-
-                                            <!-- Observaciones -->
-                                            {% if cambio.observaciones %}
-                                            <div class="mb-2">
-                                                <i class="bi bi-chat-left-text text-info"></i>
-                                                <strong>Observaciones:</strong>
-                                                <div class="alert alert-light small mt-1 mb-0">
-                                                    {{ cambio.observaciones }}
-                                                </div>
-                                            </div>
-                                            {% endif %}
-
-                                            <!-- Documento de soporte -->
-                                            {% if cambio.documento_soporte %}
-                                            <div class="mb-0">
-                                                <i class="bi bi-file-earmark-text text-success"></i>
-                                                <strong>Documento soporte:</strong>
-                                                <a href="#" class="btn btn-sm btn-outline-primary ms-2">
-                                                    <i class="bi bi-download"></i>
-                                                    Ver documento
-                                                </a>
-                                            </div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-
-                    {% else %}
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i>
-                        No hay cambios de estado registrados para esta incapacidad.
-                    </div>
-                    {% endif %}
-                </div>
-
-                <div class="card-footer text-muted">
-                    <small>
-                        <i class="bi bi-shield-check"></i>
-                        Este historial se guarda automáticamente para fines de auditoría y trazabilidad.
-                    </small>
-                </div>
-            </div>
-
-            <!-- Botón volver -->
-            <div class="mt-3 text-center">
-                {% if current_user.rol == 'colaborador' %}
-                <a href="{{ url_for('incapacidades.mis_incapacidades') }}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> Volver a Mis Incapacidades
-                </a>
-                {% else %}
-                <a href="{{ url_for('incapacidades.dashboard_auxiliar') }}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> Volver al Dashboard
-                </a>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
 <style>
-.timeline {
-    position: relative;
+/* ===========================
+   CONTENEDOR PRINCIPAL
+   =========================== */
+.historial-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  animation: fadeInUp 0.6s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===========================
+   BREADCRUMB MODERNO
+   =========================== */
+.breadcrumb-modern {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  animation: slideInLeft 0.5s ease;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.breadcrumb-modern ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.breadcrumb-modern li {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.breadcrumb-modern li a {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.breadcrumb-modern li a:hover {
+  color: #2563eb;
+  transform: translateX(2px);
+}
+
+.breadcrumb-modern li:not(:last-child)::after {
+  content: '›';
+  margin-left: 0.5rem;
+  color: #94a3b8;
+  font-size: 18px;
+}
+
+.breadcrumb-modern li.active {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+/* ===========================
+   CARD PRINCIPAL
+   =========================== */
+.main-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  overflow: hidden;
+  margin-bottom: 2rem;
+  animation: fadeInScale 0.5s ease 0.2s both;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Header del card */
+.card-header-modern {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: #ffffff;
+  padding: 1.5rem 2rem;
+  border: none;
+}
+
+.card-header-modern h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 24px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.card-header-modern h4 i {
+  font-size: 28px;
+}
+
+.card-header-modern small {
+  display: block;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.card-header-modern small strong {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Body del card */
+.card-body-modern {
+  padding: 2rem;
+}
+
+/* ===========================
+   INFO CARD (Resumen de incapacidad)
+   =========================== */
+.info-card {
+  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+  border: 2px solid #c084fc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #6b21a8;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 15px;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.badge-estado-actual {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.4;
+  max-width: 100%;
+}
+
+/* ===========================
+   SECCIÓN DE HISTORIAL
+   =========================== */
+.historial-section {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 2rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 3px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.section-title i {
+  font-size: 24px;
+  color: #8b5cf6;
+}
+
+/* ===========================
+   TIMELINE MODERNA
+   =========================== */
+.timeline-modern {
+  position: relative;
+  padding-left: 0;
+  list-style: none;
+}
+
+.timeline-modern::before {
+  content: '';
+  position: absolute;
+  left: 32px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #e9d5ff 0%, #c084fc 50%, #e9d5ff 100%);
+  border-radius: 4px;
 }
 
 .timeline-item {
-    position: relative;
+  position: relative;
+  padding-left: 100px;
+  padding-bottom: 3rem;
+  animation: fadeInLeft 0.5s ease backwards;
 }
 
+.timeline-item:nth-child(1) { animation-delay: 0.1s; }
+.timeline-item:nth-child(2) { animation-delay: 0.2s; }
+.timeline-item:nth-child(3) { animation-delay: 0.3s; }
+.timeline-item:nth-child(4) { animation-delay: 0.4s; }
+.timeline-item:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+/* Badge de timeline */
 .timeline-badge {
-    width: 50px;
-    height: 50px;
-    line-height: 26px;
-    font-size: 1.2em;
+  position: absolute;
+  left: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+  z-index: 2;
+  border: 4px solid #ffffff;
 }
 
-@media (min-width: 768px) {
-    .timeline::before {
-        content: '';
-        position: absolute;
-        left: 70px;
-        top: 25px;
-        bottom: 0;
-        width: 2px;
-        background: #dee2e6;
-    }
+/* Fecha y hora */
+.timeline-date {
+  position: absolute;
+  left: 100px;
+  top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  border: 2px solid #c084fc;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.15);
+  min-width: 140px;
+}
+
+.timeline-date-day {
+  font-size: 12px;
+  font-weight: 600;
+  color: #7c3aed;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.timeline-date-time {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  font-family: 'Courier New', monospace;
+}
+
+/* Card de cambio */
+.cambio-card {
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-top: 5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.cambio-card:hover {
+  border-color: #c084fc;
+  box-shadow: 0 8px 20px rgba(139, 92, 246, 0.15);
+  transform: translateX(8px);
+}
+
+/* Usuario */
+.cambio-usuario {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.usuario-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #6b21a8;
+  flex-shrink: 0;
+}
+
+.usuario-info {
+  flex: 1;
+}
+
+.usuario-nombre {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 15px;
+  margin: 0;
+}
+
+.usuario-rol {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Cambio de estado */
+.cambio-estados {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.cambio-label {
+  font-weight: 600;
+  color: #475569;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cambio-label i {
+  font-size: 18px;
+  color: #8b5cf6;
+}
+
+.estado-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.estado-badge.anterior {
+  background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+  color: #374151;
+  border: 1px solid #9ca3af;
+}
+
+.estado-badge.nuevo {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+  border: 1px solid #10b981;
+}
+
+.estado-arrow {
+  font-size: 20px;
+  color: #94a3b8;
+}
+
+/* Observaciones */
+.cambio-observaciones {
+  margin-bottom: 1rem;
+}
+
+.observaciones-label {
+  font-weight: 600;
+  color: #475569;
+  font-size: 14px;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.observaciones-label i {
+  font-size: 16px;
+  color: #06b6d4;
+}
+
+.observaciones-box {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-left: 4px solid #06b6d4;
+  padding: 1rem;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #0c4a6e;
+  line-height: 1.6;
+}
+
+/* Documento soporte */
+.cambio-documento {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.documento-label {
+  font-weight: 600;
+  color: #475569;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.documento-label i {
+  font-size: 16px;
+  color: #10b981;
+}
+
+.btn-documento {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.btn-documento:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
+  color: #ffffff;
+}
+
+.btn-documento i {
+  font-size: 16px;
+}
+
+/* ===========================
+   ESTADO VACÍO
+   =========================== */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 2px dashed #38bdf8;
+  border-radius: 16px;
+}
+
+.empty-state-icon {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 1.5rem;
+  background: linear-gradient(135deg, #bae6fd 0%, #7dd3fc 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  color: #0284c7;
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.2);
+}
+
+.empty-state h5 {
+  color: #1e293b;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  font-size: 18px;
+}
+
+.empty-state p {
+  color: #64748b;
+  margin-bottom: 0;
+  font-size: 14px;
+}
+
+/* ===========================
+   FOOTER DEL CARD
+   =========================== */
+.card-footer-modern {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 1.25rem 2rem;
+  border-top: 2px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.card-footer-modern i {
+  font-size: 18px;
+  color: #10b981;
+}
+
+/* ===========================
+   BOTÓN VOLVER
+   =========================== */
+.btn-volver-container {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.btn-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 2rem;
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-volver:hover {
+  background: linear-gradient(135deg, #475569 0%, #334155 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  color: #ffffff;
+}
+
+.btn-volver i {
+  font-size: 18px;
+}
+
+/* ===========================
+   RESPONSIVE
+   =========================== */
+@media (max-width: 768px) {
+  .historial-container {
+    padding: 1rem 0.5rem;
+  }
+  
+  .card-header-modern {
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .card-header-modern h4 {
+    font-size: 20px;
+  }
+  
+  .card-body-modern {
+    padding: 1.5rem;
+  }
+  
+  .info-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .timeline-modern::before {
+    left: 24px;
+  }
+  
+  .timeline-item {
+    padding-left: 80px;
+  }
+  
+  .timeline-badge {
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+  }
+  
+  .timeline-date {
+    left: 80px;
+    top: 6px;
+    min-width: 120px;
+    padding: 0.6rem 0.85rem;
+  }
+  
+  .timeline-date-day {
+    font-size: 11px;
+  }
+  
+  .timeline-date-time {
+    font-size: 14px;
+  }
+  
+  .cambio-card {
+    margin-top: 4.5rem;
+  }
+  
+  .cambio-estados {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
 }
 </style>
+
+<div class="historial-container">
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb-modern" aria-label="breadcrumb">
+    <ol>
+      {% if current_user.rol == 'colaborador' %}
+      <li><a href="{{ url_for('incapacidades.mis_incapacidades') }}">Mis Incapacidades</a></li>
+      {% else %}
+      <li><a href="{{ url_for('incapacidades.dashboard_auxiliar') }}">Dashboard</a></li>
+      {% endif %}
+      <li class="active">Historial de Estados</li>
+    </ol>
+  </nav>
+
+  <!-- Card principal -->
+  <div class="main-card">
+    <div class="card-header-modern">
+      <h4>
+        <i class="bi bi-clock-history"></i>
+        Historial de Estados - Auditoría
+      </h4>
+      <small>Incapacidad: <strong>{{ incapacidad.codigo_radicacion }}</strong></small>
+    </div>
+
+    <div class="card-body-modern">
+      <!-- Información de la incapacidad -->
+      <div class="info-card">
+        <div class="info-row">
+          <div class="info-item">
+            <span class="info-label">Colaborador</span>
+            <span class="info-value">{{ incapacidad.usuario.nombre }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Tipo</span>
+            <span class="info-value">{{ incapacidad.tipo }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Periodo</span>
+            <span class="info-value">{{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }} - {{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Días</span>
+            <span class="info-value">{{ incapacidad.dias }} días</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Estado actual</span>
+            <span class="badge-estado-actual">{{ incapacidad.estado }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección de historial -->
+      <div class="historial-section">
+        <h5 class="section-title">
+          <i class="bi bi-list-ul"></i>
+          Historial de Cambios
+        </h5>
+
+        {% if historial %}
+        <ul class="timeline-modern">
+          {% for cambio in historial %}
+          <li class="timeline-item">
+            <!-- Badge -->
+            <div class="timeline-badge">
+              <i class="bi bi-calendar-event"></i>
+            </div>
+
+            <!-- Card de cambio -->
+            <div class="cambio-card">
+              <!-- Fecha y hora dentro del card -->
+              <div class="cambio-fecha">
+                <i class="bi bi-clock-fill"></i>
+                <div class="fecha-info">
+                  <span class="fecha-dia">{{ cambio.fecha_cambio.strftime('%d/%m/%Y') }}</span>
+                  <span class="fecha-hora">{{ cambio.fecha_cambio.strftime('%H:%M:%S') }}</span>
+                </div>
+              </div>
+
+              <!-- Usuario que hizo el cambio -->
+              <div class="cambio-usuario">
+                <div class="usuario-icon">
+                  <i class="bi bi-person-fill"></i>
+                </div>
+                <div class="usuario-info">
+                  <p class="usuario-nombre">{{ cambio.usuario.nombre if cambio.usuario else 'Sistema Automático' }}</p>
+                  <span class="usuario-rol">{{ cambio.usuario.rol if cambio.usuario else 'automático' }}</span>
+                </div>
+              </div>
+
+              <!-- Cambio de estado -->
+              <div class="cambio-estados">
+                <span class="cambio-label">
+                  <i class="bi bi-arrow-left-right"></i>
+                  Cambio:
+                </span>
+                <span class="estado-badge anterior">
+                  {{ cambio.estado_anterior or 'N/A' }}
+                </span>
+                <i class="bi bi-arrow-right estado-arrow"></i>
+                <span class="estado-badge nuevo">
+                  {{ cambio.estado_nuevo }}
+                </span>
+              </div>
+
+              <!-- Observaciones -->
+              {% if cambio.observaciones %}
+              <div class="cambio-observaciones">
+                <div class="observaciones-label">
+                  <i class="bi bi-chat-left-text"></i>
+                  Observaciones:
+                </div>
+                <div class="observaciones-box">
+                  {{ cambio.observaciones }}
+                </div>
+              </div>
+              {% endif %}
+
+              <!-- Documento soporte -->
+              {% if cambio.documento_soporte %}
+              <div class="cambio-documento">
+                <span class="documento-label">
+                  <i class="bi bi-file-earmark-text"></i>
+                  Documento soporte:
+                </span>
+                <a href="#" class="btn-documento">
+                  <i class="bi bi-download"></i>
+                  Ver documento
+                </a>
+              </div>
+              {% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            <i class="bi bi-info-circle"></i>
+          </div>
+          <h5>Sin historial de cambios</h5>
+          <p>No hay cambios de estado registrados para esta incapacidad</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card-footer-modern">
+      <i class="bi bi-shield-check"></i>
+      <span>Este historial se guarda automáticamente para fines de auditoría y trazabilidad.</span>
+    </div>
+  </div>
+
+  <!-- Botón volver -->
+  <div class="btn-volver-container">
+    {% if current_user.rol == 'colaborador' %}
+    <a href="{{ url_for('incapacidades.mis_incapacidades') }}" class="btn-volver">
+      <i class="bi bi-arrow-left"></i>
+      Volver a Mis Incapacidades
+    </a>
+    {% else %}
+    <a href="{{ url_for('incapacidades.dashboard_auxiliar') }}" class="btn-volver">
+      <i class="bi bi-arrow-left"></i>
+      Volver al Dashboard
+    </a>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

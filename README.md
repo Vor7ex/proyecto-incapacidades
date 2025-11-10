@@ -31,14 +31,14 @@ La documentación completa está organizada en la carpeta [`/docs`](docs/):
 
 | UC | Caso de Uso | Estado | Descripción |
 |----|------------|--------|-------------|
-| **UC1** | **Registrar incapacidad** | **✅ 100%** | **Flujo completo con todas las excepciones (E1-E6)** |
+| **UC1** | **Registrar incapacidad** | **✅ 100%** | **Flujo completo con todas las excepciones (E1-E6) + UI moderna** |
 | **UC2** | **Notificar RRHH** | **✅ 100%** | **Email automático + notificaciones internas + reintentos (E1-E4)** |
-| UC3 | Consultar incapacidades | ⚠️ 50% | Vista básica sin filtros, búsqueda, paginación ni descarga ZIP |
+| UC3 | Consultar incapacidades | ⚠️ 70% | Vista moderna con cards, estadísticas y acciones contextuales |
 | UC4 | Validar documentación | ⚠️ 80% | Panel funcional, falta manejo de E2-E5 y validación manual |
 | **UC5** | **Verificar requisitos por tipo** | **✅ 100%** | **Validación automática completa con todas las excepciones** |
-| **UC6** | **Solicitar documentos faltantes** | **✅ 95%** | **Funcional con recordatorios, falta E2 (reinicio) y E4 (extensión)** |
+| **UC6** | **Solicitar documentos faltantes** | **✅ 95%** | **Funcional con recordatorios + UI moderna, falta E2 y E4** |
 | UC7 | Aprobar/Rechazar | ⚠️ 85% | Aprobación/rechazo funcional, faltan motivos predefinidos y E3 |
-| UC8 | Actualizar estado | ⚠️ 30% | Solo cambios automáticos, sin interfaz ni validación de transiciones |
+| UC8 | Actualizar estado | ⚠️ 70% | Cambios automáticos + historial con timeline moderna |
 | UC9 | Consultar estado radicación | 🔴 0% | Release 2.0 - No implementado |
 | UC10 | Generar reporte seguimiento | 🔴 0% | Release 2.0 - No implementado |
 | UC11 | Ver incapacidades del equipo | 🔴 0% | Release 2.0 - No implementado |
@@ -108,20 +108,26 @@ La documentación completa está organizada en la carpeta [`/docs`](docs/):
 - ✅ **E5**: Sesión expirada - Borrador automático en localStorage
 - ✅ **E6**: Pérdida de conexión - Guardado local y recuperación automática
 
-#### UC3 - Consultar incapacidades ⚠️ 50% IMPLEMENTADO
-**Vista básica sin capacidades de búsqueda avanzada**
+#### UC3 - Consultar incapacidades ⚠️ 70% IMPLEMENTADO
+**Vista moderna con cards y acciones contextuales**
 
 - ✅ Listado de incapacidades del colaborador ordenado por fecha
+- ✅ **UI modernizada** con cards, gradientes y animaciones
+- ✅ **Estadísticas rápidas** visuales (Total, Pendientes, Aprobadas, Rechazadas)
 - ✅ Visualización de: código, tipo, fechas, días, estado
 - ✅ Acceso a detalle de cada incapacidad
-- ✅ Indicadores visuales según estado (badges con colores)
-- ✅ Botones contextuales para cargar documentos (UC6)
+- ✅ **Indicadores visuales** según estado con badges modernos y colores
+- ✅ **Botones contextuales** por estado:
+  - "Cargar Documentos" para DOCUMENTACION_INCOMPLETA (UC6)
+  - "Ver Detalles" para todas las incapacidades
+  - Estados visuales distintos (Pendiente, En Revisión, Aprobada, Rechazada)
+- ✅ **Empty state** ilustrado cuando no hay incapacidades
+- ✅ **Diseño responsive** con grid adaptativo
 - ⚠️ **Pendiente**: 
   - Filtros por fecha, tipo y estado (paso 3 del flujo)
   - Paginación de resultados (paso 2 menciona "paginada")
   - Descarga individual de documentos (paso 5)
   - Descarga completa en ZIP (paso 5)
-  - Vista de historial detallado de estados (paso 4 menciona "línea de tiempo")
   - Manejo de excepciones E1, E2, E3
 
 #### UC15 - Almacenar documentos ⚠️ 90% IMPLEMENTADO
@@ -181,10 +187,49 @@ proyecto-incapacidades/
 | **Backend** | Flask | 3.0.0 | Framework web principal |
 | **ORM** | SQLAlchemy | 2.0+ | Mapeo objeto-relacional |
 | **Base de Datos** | SQLite/PostgreSQL | - | Almacenamiento persistente |
-| **Frontend** | Bootstrap | 5.3.0 | Framework CSS/JS |
+| **Frontend** | Bootstrap | 5.3.0 | Framework CSS/JS responsive |
+| **UI/UX** | Custom CSS + Gradients | - | Diseño moderno con animaciones |
 | **Scheduler** | APScheduler | 3.10+ | Tareas automatizadas |
 | **Email** | Flask-Mail | - | Sistema de notificaciones |
 | **Testing** | Unittest | Python std | Tests automatizados |
+
+### 🎨 Sistema de Diseño Moderno
+
+El proyecto implementa un **sistema de diseño consistente y moderno** en todos los templates:
+
+**Características del UI:**
+- ✅ **Gradientes modernos** en todos los componentes principales
+- ✅ **Animaciones fluidas**: fadeInUp, slideInLeft, fadeInScale, pulse, shake
+- ✅ **Paleta de colores coherente**:
+  - Azul (#3b82f6 → #2563eb) - Acciones principales
+  - Naranja (#f59e0b → #d97706) - Advertencias y alertas
+  - Verde (#10b981 → #059669) - Confirmaciones y éxito
+  - Rojo (#ef4444 → #dc2626) - Errores y rechazos
+  - Púrpura (#8b5cf6 → #7c3aed) - Historial y auditoría
+- ✅ **Responsive design** con breakpoints optimizados
+- ✅ **Transiciones suaves** (0.3s ease) en todos los elementos interactivos
+- ✅ **Sombras y efectos hover** para mejor feedback visual
+- ✅ **Espaciado consistente** con padding-bottom en contenedores principales
+
+**Templates modernizados:**
+- ✅ `crear.html` - Formulario de registro con UI dinámica (~2400 líneas)
+- ✅ `mis_incapacidades.html` - Listado con cards modernos
+- ✅ `dashboard_auxiliar.html` - Dashboard con estadísticas visuales
+- ✅ `detalle_incapacidad.html` - Vista detallada con iconos y badges
+- ✅ `notificaciones.html` - Sistema de notificaciones con filtros (~1070 líneas)
+- ✅ `cargar_documentos_solicitados.html` - Panel de carga con timeline (~1080 líneas)
+- ✅ `historial_estados.html` - Timeline vertical con auditoría completa
+- ✅ `base.html` - Dropdown de notificaciones modernizado (400px, sin scroll horizontal)
+
+**Componentes reutilizables:**
+- Breadcrumbs modernos con gradientes
+- Cards con hover effects y animaciones
+- Badges con gradientes por estado
+- Botones con efectos de onda
+- Formularios con validación visual
+- Timeline vertical para historial
+- Empty states ilustrados
+- Loaders y spinners animados
 
 ---
 
@@ -197,12 +242,14 @@ proyecto-incapacidades/
 - ⚠️ **Pendiente**: Logout automático por inactividad
 
 ### 📝 Gestión de Incapacidades
-- **Registro funcional** con validación de datos básicos (75% completo)
+- **Registro completo (UC1)** con UI dinámica modernizada (~2400 líneas)
 - **Tipos soportados**: Enfermedad General, Accidente Laboral, Accidente de Tránsito, Licencias de Maternidad/Paternidad
 - **Cálculo automático** de días de incapacidad con validación
 - **Código de radicación** único por incapacidad (formato: INC-YYYYMMDD-XXXX)
-- **UI dinámica** que adapta documentos requeridos según tipo seleccionado
-- ⚠️ **Pendiente**: Validación de tamaño de archivo, guardado de borradores, manejo de sesión expirada
+- **UI adaptativa** que muestra documentos requeridos según tipo seleccionado
+- **Sistema de borradores** automático con localStorage (cada 30s)
+- **Recuperación offline** ante pérdida de conexión
+- **Validación completa** de formatos, tamaños y fechas
 
 ### 📄 Gestión Inteligente de Documentos
 - **Validación automática UC5** según tipo y condiciones (100% completo)
@@ -212,16 +259,30 @@ proyecto-incapacidades/
 - **Permisos por rol** para control de acceso
 - ⚠️ **Pendiente**: Vista previa de documentos, cifrado de docs sensibles, respaldos automáticos
 
-### 🔔 Sistema de Notificaciones UC6
-- **Emails automáticos** con templates HTML profesionales (95% completo)
+### 🔔 Sistema de Notificaciones
+- **Notificaciones UC2** por email con templates HTML (100% completo)
+- **Sistema UC6** de solicitud de documentos automatizado (95% completo)
 - **Scheduler inteligente** con recordatorios escalados (Día 3, Día 6)
 - **Estados dinámicos** que se actualizan automáticamente
-- **Panel de carga** para documentos solicitados
-- ⚠️ **Pendiente**: Reinicio de solicitudes (E2), extensión manual de plazos (E4), notificaciones internas
+- **Panel moderno** para carga de documentos solicitados
+- **Dropdown de notificaciones** en navbar (400px, sin scroll horizontal)
+- **Página de notificaciones** con filtros por estado y orden (~1070 líneas)
+- **Notificaciones internas** en base de datos con contador en tiempo real
+- ⚠️ **Pendiente**: Reinicio de solicitudes (E2), extensión manual de plazos (E4)
 
 ### 📊 Dashboards por Rol
-- **Empleados**: Listado de mis incapacidades con estado y acciones contextuales
-- **Auxiliares**: Panel de validación con incapacidades pendientes
+- **Empleados**: Listado modernizado de incapacidades con:
+  - Cards con gradientes y animaciones
+  - Estadísticas visuales rápidas (Total, Pendientes, Aprobadas, Rechazadas)
+  - Botones contextuales según estado
+  - Vista de detalle completa con historial
+  - Empty states ilustrados
+- **Auxiliares**: Dashboard con estadísticas y panel de validación:
+  - Contadores animados de incapacidades por estado
+  - Listado de pendientes con acciones rápidas
+  - Vista de detalle con información completa
+  - Acceso al historial de estados con timeline moderna
+- **Sistema de diseño consistente** en todos los módulos
 - ⚠️ **Pendiente**: Filtros avanzados, búsqueda, paginación, reportes gráficos, vista para líderes
 
 ---
@@ -345,18 +406,22 @@ python -m pytest tests/test_calendario.py -v
 - ✅ Integración completa con UC1 (registro)
 - ✅ Tests completos (16 tests unitarios)
 
-### 🔍 UC3 - Consultar Incapacidades (50%)
+### 🔍 UC3 - Consultar Incapacidades (70%)
 **Implementado:**
 - ✅ Listado básico con código, tipo, fechas, días, estado
-- ✅ Acceso a detalle de incapacidad
-- ✅ Indicadores visuales por estado
+- ✅ **UI modernizada** con sistema de diseño consistente
+- ✅ **Estadísticas visuales** en cards (Total, Pendientes, Aprobadas, Rechazadas)
+- ✅ Cards de incapacidad con gradientes y animaciones
+- ✅ Acceso a detalle de incapacidad con botón "Ver Detalles"
+- ✅ **Indicadores visuales** por estado con badges modernos
+- ✅ **Botones contextuales** según estado (ej: "Cargar Documentos" si está incompleta)
+- ✅ Empty state ilustrado cuando no hay incapacidades
+- ✅ Diseño responsive con grid adaptativo
 
 **Pendiente:**
 - ❌ **Paso 3**: Filtros por fecha, tipo y estado
 - ❌ **Paso 2**: Paginación de resultados
-- ❌ **Paso 4**: Línea de tiempo detallada de estados
 - ❌ **Paso 5**: Descarga individual y en ZIP de documentos
-- ❌ **Paso 6**: Información detallada de rechazo
 - ❌ **E1-E3**: Todas las excepciones
 
 ### ✅ UC4 - Validar Documentación (80%)
@@ -379,7 +444,12 @@ python -m pytest tests/test_calendario.py -v
 - ✅ Todo el flujo normal (11 pasos)
 - ✅ Scheduler automático
 - ✅ Recordatorios escalados
-- ✅ Templates de email
+- ✅ Templates de email profesionales
+- ✅ **UI modernizada** para panel de carga (~1080 líneas)
+- ✅ **Timeline visual** con estados por documento
+- ✅ **Indicadores de urgencia** con colores (danger, warning, info)
+- ✅ **Validación en tiempo real** de archivos
+- ✅ **Feedback visual** con animaciones y previews
 - ✅ E1 y E3 implementadas
 
 **Pendiente:**
@@ -398,17 +468,23 @@ python -m pytest tests/test_calendario.py -v
 - ❌ **E1**: Notificación adicional a coordinación y área jurídica en caso de falsificación
 - ❌ **E3**: Aprobación con observaciones especiales para transcripción
 
-### 🔄 UC8 - Actualizar Estado (30%)
+### 🔄 UC8 - Actualizar Estado (70%)
 **Implementado:**
 - ✅ Cambios automáticos de estado (desde UC4, UC6, UC7)
-- ✅ Registro básico en historial
+- ✅ Registro completo en historial de estados
+- ✅ **Vista de historial modernizada** con timeline vertical
+- ✅ **UI profesional** con gradientes púrpuras y animaciones
+- ✅ Acceso al historial desde detalle de incapacidad
+- ✅ Información completa: usuario, fecha/hora, estados anterior/nuevo, observaciones
+- ✅ Timeline con badges circulares y línea conectora con gradiente
+- ✅ Cards de cambio con hover effects
+- ✅ Empty state ilustrado si no hay cambios
 
 **Pendiente:**
 - ❌ **Pasos 1-6**: Interfaz manual para auxiliar (actualización manual)
 - ❌ **Pasos 7-10**: Campos específicos por estado (causal rechazo, valor pago)
 - ❌ **Validación de transiciones** (E1)
 - ❌ **Campos obligatorios** por estado (E2, E3)
-- ❌ **Vista de historial** completo con trazabilidad
 
 ### 📦 UC15 - Almacenar Documentos (90%)
 **Implementado:**
@@ -445,15 +521,15 @@ python -m pytest tests/test_calendario.py -v
 - **UC2**: Notificaciones email e internas con reintentos y excepciones (16 tests)
 - **UC5**: Verificación automática de requisitos (494 líneas, 19 tests)
 
-### 🚧 En Desarrollo Activo (Release 1.0 - 50-95%)
-- **UC6**: Solicitud automatizada de documentos (95% - falta manejo excepciones E2/E4)
+### 🚧 En Desarrollo Activo (Release 1.0 - 70-95%)
+- **UC6**: Solicitud automatizada de documentos (95% - falta manejo excepciones E2/E4) + UI moderna
 - **UC15**: Almacenamiento de documentos (90% - falta cifrado para docs sensibles)
 - **UC7**: Aprobar/Rechazar (85% - falta lista motivos predefinidos)
 - **UC4**: Validar documentación (80% - falta validación manual detallada)
-- **UC3**: Consultar incapacidades (50% - faltan filtros, búsqueda y paginación)
+- **UC3**: Consultar incapacidades (70% - faltan filtros, búsqueda y paginación) + UI moderna
+- **UC8**: Actualizar estado (70% - cambios automáticos + historial visual completo)
 
 ### ⏸️ Implementación Parcial (Release 1.0 - <50%)
-- **UC8**: Actualizar estado (30% - solo automático, falta interfaz manual)
 - **UC16**: Descargar incapacidad (15% - solo individual, falta ZIP organizado)
 
 ### 🔄 Planificado (Release 2.0)

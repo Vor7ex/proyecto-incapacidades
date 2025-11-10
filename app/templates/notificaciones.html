@@ -3,30 +3,52 @@
 {% block title %}Mis Notificaciones - Sistema de Incapacidades{% endblock %}
 
 {% block content %}
-<div class="row">
-  <div class="col-12">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2><i class="bi bi-bell"></i> Mis Notificaciones</h2>
-      <button class="btn btn-outline-primary" id="btn-marcar-todas-leidas-pagina">
-        <i class="bi bi-check-all"></i> Marcar todas como leídas
+<div class="notificaciones-container">
+  <!-- Header -->
+  <div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h2 class="mb-1">
+          <i class="bi bi-bell-fill"></i>
+          Mis Notificaciones
+        </h2>
+        <p class="text-muted mb-0">Gestiona todas tus notificaciones del sistema</p>
+      </div>
+      <button class="btn-action-modern btn-action-primary" id="btn-marcar-todas-leidas-pagina">
+        <i class="bi bi-check-all"></i>
+        <span>Marcar todas como leídas</span>
       </button>
     </div>
+  </div>
 
-    <!-- Filtros -->
-    <div class="card mb-4">
-      <div class="card-body">
-        <div class="row g-3">
-          <div class="col-md-6">
-            <label class="form-label fw-bold">Filtrar por estado:</label>
-            <select class="form-select" id="filtro-estado">
+  <!-- Filtros Card -->
+  <div class="filters-card mb-4">
+    <div class="filters-card-header">
+      <i class="bi bi-funnel"></i>
+      <span>Filtros</span>
+    </div>
+    <div class="filters-card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="filter-group">
+            <label class="filter-label">
+              <i class="bi bi-filter-circle"></i>
+              Filtrar por estado
+            </label>
+            <select class="filter-select" id="filtro-estado">
               <option value="todas">Todas las notificaciones</option>
               <option value="no_leidas">Solo no leídas</option>
               <option value="leidas">Solo leídas</option>
             </select>
           </div>
-          <div class="col-md-6">
-            <label class="form-label fw-bold">Ordenar por:</label>
-            <select class="form-select" id="filtro-orden">
+        </div>
+        <div class="col-md-6">
+          <div class="filter-group">
+            <label class="filter-label">
+              <i class="bi bi-sort-down"></i>
+              Ordenar por
+            </label>
+            <select class="filter-select" id="filtro-orden">
               <option value="recientes">Más recientes primero</option>
               <option value="antiguas">Más antiguas primero</option>
             </select>
@@ -34,160 +56,590 @@
         </div>
       </div>
     </div>
-
-    <!-- Lista de Notificaciones -->
-    <div id="notificaciones-container">
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Cargando...</span>
-        </div>
-        <p class="mt-3 text-muted">Cargando notificaciones...</p>
-      </div>
-    </div>
-
-    <!-- Paginación -->
-    <nav aria-label="Paginación de notificaciones" id="paginacion-container" style="display: none;">
-      <ul class="pagination justify-content-center" id="paginacion">
-      </ul>
-    </nav>
   </div>
+
+  <!-- Lista de Notificaciones -->
+  <div id="notificaciones-container">
+    <div class="loader-container">
+      <div class="loader-spinner"></div>
+      <p class="loader-text">Cargando notificaciones...</p>
+    </div>
+  </div>
+
+  <!-- Paginación -->
+  <nav aria-label="Paginación de notificaciones" id="paginacion-container" style="display: none;">
+    <ul class="pagination-modern" id="paginacion">
+    </ul>
+  </nav>
 </div>
 
 <style>
-  .notificacion-card {
-    transition: all 0.2s ease;
-    border-left: 4px solid transparent;
-  }
+/* ==================================================
+   NOTIFICACIONES - ESTILOS MODERNOS
+   ================================================== */
 
-  .notificacion-card.no-leida {
-    background-color: #f8f9fa;
-    border-left-color: #0d6efd;
-  }
+.notificaciones-container {
+  animation: fadeInUp 0.5s ease;
+}
 
-  .notificacion-card:hover {
-    transform: translateX(5px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-
-  .tipo-badge {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
 
-  .notificacion-contenido {
-    line-height: 1.6;
-    color: #495057;
-    max-height: 60px;
-    overflow: hidden;
-    position: relative;
-    padding-right: 20px;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
+/* Header */
+.page-header h2 {
+  color: #1f2937;
+  font-weight: 700;
+  font-size: 28px;
+}
+
+.page-header i {
+  color: #3b82f6;
+}
+
+/* Botón Moderno de Acción */
+.btn-action-modern {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-action-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+}
+
+.btn-action-primary:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Filters Card */
+.filters-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.filters-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  border-bottom: 2px solid #e5e7eb;
+  font-weight: 700;
+  color: #1f2937;
+  font-size: 15px;
+}
+
+.filters-card-header i {
+  color: #3b82f6;
+  font-size: 18px;
+}
+
+.filters-card-body {
+  padding: 20px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.filter-label i {
+  color: #3b82f6;
+}
+
+.filter-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  background: white;
+  cursor: pointer;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.filter-select:hover {
+  border-color: #3b82f6;
+}
+
+/* Loader */
+.loader-container {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.loader-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loader-text {
+  color: #6b7280;
+  font-size: 15px;
+  margin: 0;
+}
+
+/* Notificación Card */
+.notificacion-card {
+  background: white;
+  border-radius: 14px;
+  border: 2px solid #e5e7eb;
+  margin-bottom: 16px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.notificacion-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.notificacion-card.no-leida {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-color: #fbbf24;
+}
+
+.notificacion-card.no-leida::before {
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+}
+
+.notificacion-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+.notificacion-card:hover::before {
+  width: 6px;
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+}
+
+/* Header de Notificación */
+.notif-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.notif-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.notif-icon.icon-primary {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+}
+
+.notif-icon.icon-warning {
+  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+  color: #9a3412;
+}
+
+.notif-icon.icon-danger {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+}
+
+.notif-icon.icon-success {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+}
+
+.notif-icon.icon-info {
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  color: #3730a3;
+}
+
+.notif-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.notif-title {
+  font-weight: 700;
+  color: #1f2937;
+  font-size: 16px;
+  margin: 0;
+}
+
+.notif-card.no-leida .notif-title {
+  color: #92400e;
+}
+
+.badge-new {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.badge-type {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-type.type-primary { background: #dbeafe; color: #1e40af; }
+.badge-type.type-warning { background: #fed7aa; color: #9a3412; }
+.badge-type.type-danger { background: #fee2e2; color: #991b1b; }
+.badge-type.type-success { background: #d1fae5; color: #065f46; }
+.badge-type.type-info { background: #e0e7ff; color: #3730a3; }
+.badge-type.type-secondary { background: #e5e7eb; color: #4b5563; }
+
+/* Contenido de Notificación */
+.notif-message {
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 12px;
+  max-height: 4.8em;
+  overflow: hidden;
+  position: relative;
+}
+
+.notif-message::after {
+  content: '...';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: white;
+  padding-left: 10px;
+}
+
+.notificacion-card.no-leida .notif-message::after {
+  background: linear-gradient(90deg, transparent, #fef3c7 30%);
+}
+
+.notificacion-expandida .notif-message {
+  max-height: none;
+}
+
+.notificacion-expandida .notif-message::after {
+  display: none;
+}
+
+/* Footer de Notificación */
+.notif-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 2px solid #f3f4f6;
+}
+
+.notif-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.notif-time i {
+  color: #3b82f6;
+}
+
+.notif-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-notif {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 2px solid;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.btn-notif-secondary {
+  border-color: #e5e7eb;
+  color: #6b7280;
+}
+
+.btn-notif-secondary:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background: #eff6ff;
+}
+
+.btn-notif-primary {
+  border-color: #3b82f6;
+  color: #1e40af;
+  background: #eff6ff;
+}
+
+.btn-notif-primary:hover {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-notif-warning {
+  border-color: #f59e0b;
+  color: #92400e;
+  background: #fffbeb;
+}
+
+.btn-notif-warning:hover {
+  background: #f59e0b;
+  color: white;
+}
+
+/* Empty State */
+.empty-state {
+  background: white;
+  border-radius: 16px;
+  padding: 60px 20px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+}
+
+.empty-icon {
+  font-size: 80px;
+  color: #cbd5e1;
+  margin-bottom: 16px;
+}
+
+.empty-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.empty-message {
+  color: #6b7280;
+  font-size: 15px;
+}
+
+/* Error State */
+.error-state {
+  padding: 32px 24px;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border: 2px solid #f87171;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.error-icon {
+  font-size: 32px;
+  color: #dc2626;
+  flex-shrink: 0;
+}
+
+.error-text {
+  color: #991b1b;
+  font-size: 15px;
+  margin: 0;
+}
+
+/* Paginación Moderna */
+.pagination-modern {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 32px 0 40px 0;
+  flex-wrap: wrap;
+}
+
+.page-item {
+  margin: 0;
+}
+
+.page-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 2px solid #e5e7eb;
+  background: white;
+  color: #4b5563;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.page-link:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background: #eff6ff;
+  transform: translateY(-2px);
+}
+
+.page-item.active .page-link {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #3b82f6;
+  color: white;
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.page-item.disabled .page-link {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Iframe para contenido expandido */
+.notif-iframe {
+  width: 100%;
+  min-height: 200px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  margin-top: 12px;
+}
+
+/* Animación de destacado */
+@keyframes destacar {
+  0%, 100% { background-color: transparent; border-color: #e5e7eb; }
+  50% { background-color: #dbeafe; border-color: #3b82f6; }
+}
+
+.destacar {
+  animation: destacar 2s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page-header h2 {
+    font-size: 24px;
   }
-
-  /* Forzar que TODO el contenido HTML respete el ancho */
-  .notificacion-contenido * {
-    max-width: 100% !important;
-    box-sizing: border-box !important;
+  
+  .btn-action-modern {
+    width: 100%;
+    justify-content: center;
   }
-
-  .notificacion-contenido table {
-    width: 100% !important;
-    table-layout: auto !important;
+  
+  .notif-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
-
-  .notificacion-contenido img {
-    max-width: 100% !important;
-    height: auto !important;
+  
+  .notif-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
   }
-
-  .notificacion-contenido::after {
-    content: '...';
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    background: white;
-    padding-left: 10px;
+  
+  .notif-footer {
+    flex-direction: column;
+    align-items: flex-start;
   }
-
-  .notificacion-card.no-leida .notificacion-contenido::after {
-    background: #f8f9fa;
-  }
-
-  .notificacion-contenido.expandida {
-    max-height: none;
-    overflow: visible;
-  }
-
-  .notificacion-contenido.expandida::after {
-    content: '';
-    display: none;
-  }
-
-  /* Estilos para notificaciones */
-  .notificacion-card {
-    transition: all 0.3s ease;
-    cursor: pointer;
-    margin-bottom: 0.75rem;
-  }
-
-  .notificacion-card .card-body {
-    padding: 1rem;
-  }
-
-  .notificacion-card.no-leida {
-    border-left: 4px solid #0d6efd;
-    background-color: #f8f9fa;
-  }
-
-  .notificacion-card:hover {
-    box-shadow: 0 0.125rem 0.5rem rgba(0,0,0,0.15);
-  }
-
-  /* Preview colapsado del contenido - SIN renderizar HTML */
-  .notificacion-contenido {
-    max-height: 3em; /* ~3 líneas de texto */
-    overflow: hidden;
-    position: relative;
-    word-wrap: break-word;
-    line-height: 1.4;
-    font-size: 0.95rem;
-  }
-
-  .notificacion-contenido::after {
-    content: '...';
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    background: white;
-    padding-left: 10px;
-  }
-
-  .notificacion-expandida .notificacion-contenido {
-    max-height: none;
-  }
-
-  .notificacion-expandida .notificacion-contenido::after {
-    content: none;
-  }
-
-  .notificacion-contenido iframe {
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
+  
+  .notif-actions {
     width: 100%;
   }
-
-  /* Responsive fixes */
-  @media (max-width: 768px) {
-    .btn-group-sm .btn {
-      font-size: 0.75rem;
-      padding: 0.25rem 0.5rem;
-    }
-    
-    .notificacion-card h5 {
-      font-size: 1rem;
-    }
+  
+  .btn-notif {
+    flex: 1;
+    justify-content: center;
   }
+  
+  .pagination-modern {
+    gap: 4px;
+  }
+  
+  .page-link {
+    min-width: 36px;
+    height: 36px;
+    font-size: 13px;
+  }
+}
 </style>
 {% endblock %}
 
@@ -227,17 +679,24 @@
     
     // Mostrar loader
     document.getElementById('notificaciones-container').innerHTML = `
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Cargando...</span>
-        </div>
-        <p class="mt-3 text-muted">Cargando notificaciones...</p>
+      <div class="loader-container">
+        <div class="loader-spinner"></div>
+        <p class="loader-text">Cargando notificaciones...</p>
       </div>
     `;
 
     fetch(url)
       .then(response => response.json())
       .then(data => {
+        // Aplicar ordenamiento en el frontend
+        if (filtroOrden === 'antiguas') {
+          // Ordenar de más antigua a más reciente
+          data.notificaciones.sort((a, b) => 
+            new Date(a.fecha_envio) - new Date(b.fecha_envio)
+          );
+        }
+        // Por defecto viene ordenado desc (más recientes primero) desde el backend
+        
         mostrarNotificaciones(data);
         mostrarPaginacion(data);
         
@@ -257,8 +716,9 @@
       .catch(error => {
         console.error('Error:', error);
         document.getElementById('notificaciones-container').innerHTML = `
-          <div class="alert alert-danger">
-            <i class="bi bi-exclamation-triangle"></i> Error al cargar las notificaciones. Por favor, intenta de nuevo.
+          <div class="error-state">
+            <i class="bi bi-exclamation-triangle-fill error-icon"></i>
+            <p class="error-text">Error al cargar las notificaciones. Por favor, intenta de nuevo.</p>
           </div>
         `;
       });
@@ -270,12 +730,10 @@
     
     if (data.notificaciones.length === 0) {
       container.innerHTML = `
-        <div class="card">
-          <div class="card-body text-center py-5">
-            <i class="bi bi-inbox display-1 text-muted"></i>
-            <h5 class="mt-3">No hay notificaciones</h5>
-            <p class="text-muted">No tienes notificaciones en este momento.</p>
-          </div>
+        <div class="empty-state">
+          <i class="bi bi-inbox empty-icon"></i>
+          <h5 class="empty-title">No hay notificaciones</h5>
+          <p class="empty-message">No tienes notificaciones en este momento.</p>
         </div>
       `;
       return;
@@ -285,48 +743,55 @@
     data.notificaciones.forEach(notif => {
       const esLeida = notif.es_leida;
       const iconoTipo = obtenerIconoTipo(notif.tipo);
+      const colorIcono = obtenerColorIcono(notif.tipo);
       const colorBadge = obtenerColorBadge(notif.tipo);
       
       // CRÍTICO: Convertir HTML a texto plano para prevenir que rompa el layout
       const contenidoTexto = htmlToText(notif.contenido);
       
+      // Guardar el HTML completo sin escapar (JSON.stringify lo maneja correctamente)
+      const htmlCompleto = notif.contenido.replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+      
       html += `
-        <div class="card notificacion-card ${!esLeida ? 'no-leida' : ''}" id="notif-${notif.id}" data-notif-id="${notif.id}">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start flex-wrap">
-              <div class="flex-grow-1">
-                <div class="d-flex align-items-center mb-1 flex-wrap">
-                  <i class="${iconoTipo} me-2"></i>
-                  <h6 class="mb-0 me-2 ${!esLeida ? 'fw-bold' : ''}">${notif.asunto}</h6>
-                  ${!esLeida ? '<span class="badge bg-primary badge-sm">Nueva</span>' : ''}
+        <div class="notificacion-card ${!esLeida ? 'no-leida' : ''}" id="notif-${notif.id}" data-notif-id="${notif.id}">
+          <div class="notif-header">
+            <div class="notif-icon ${colorIcono}">
+              <i class="${iconoTipo}"></i>
+            </div>
+            <div class="notif-content">
+              <div class="notif-title-row">
+                <h5 class="notif-title">${notif.asunto}</h5>
+                ${!esLeida ? '<span class="badge-new">Nueva</span>' : ''}
+                <span class="badge-type ${colorBadge}">${formatearTipo(notif.tipo)}</span>
+              </div>
+              
+              <div class="notif-message" id="contenido-${notif.id}" data-html-completo="${htmlCompleto}">
+                ${contenidoTexto}
+              </div>
+              
+              <div class="notif-footer">
+                <div class="notif-time">
+                  <i class="bi bi-clock"></i>
+                  <span>${notif.tiempo_relativo}</span>
+                  ${notif.fecha_lectura ? `<span class="ms-2"><i class="bi bi-check2"></i> Leída ${formatearFecha(notif.fecha_lectura)}</span>` : ''}
                 </div>
                 
-                <span class="badge ${colorBadge} badge-sm mb-2">${formatearTipo(notif.tipo)}</span>
-                
-                <div class="notificacion-contenido mt-1" id="contenido-${notif.id}" data-html-completo="${notif.contenido.replace(/"/g, '&quot;')}">
-                  ${contenidoTexto}
-                </div>
-                
-                <div class="mt-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                  <small class="text-muted">
-                    <i class="bi bi-clock"></i> ${notif.tiempo_relativo}
-                    ${notif.fecha_lectura ? `<span class="ms-2"><i class="bi bi-check2"></i> Leída ${formatearFecha(notif.fecha_lectura)}</span>` : ''}
-                  </small>
-                  
-                  <div class="btn-group btn-group-sm" role="group">
-                    <button class="btn btn-outline-secondary btn-expandir" data-id="${notif.id}">
-                      <i class="bi bi-arrows-expand"></i> Ver completo
+                <div class="notif-actions">
+                  <button class="btn-notif btn-notif-secondary btn-expandir" data-id="${notif.id}">
+                    <i class="bi bi-arrows-expand"></i>
+                    <span>Ver completo</span>
+                  </button>
+                  ${!esLeida ? `
+                    <button class="btn-notif btn-notif-primary btn-marcar-leida" data-id="${notif.id}">
+                      <i class="bi bi-check"></i>
+                      <span>Marcar leída</span>
                     </button>
-                    ${!esLeida ? `
-                      <button class="btn btn-outline-primary btn-marcar-leida" data-id="${notif.id}">
-                        <i class="bi bi-check"></i> Marcar leída
-                      </button>
-                    ` : `
-                      <button class="btn btn-outline-warning btn-marcar-no-leida" data-id="${notif.id}">
-                        <i class="bi bi-arrow-counterclockwise"></i> Marcar no leída
-                      </button>
-                    `}
-                  </div>
+                  ` : `
+                    <button class="btn-notif btn-notif-warning btn-marcar-no-leida" data-id="${notif.id}">
+                      <i class="bi bi-arrow-counterclockwise"></i>
+                      <span>Marcar no leída</span>
+                    </button>
+                  `}
                 </div>
               </div>
             </div>
@@ -339,19 +804,22 @@
 
     // Agregar eventos a los botones
     document.querySelectorAll('.btn-marcar-leida').forEach(btn => {
-      btn.addEventListener('click', function() {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
         marcarComoLeida(this.getAttribute('data-id'));
       });
     });
 
     document.querySelectorAll('.btn-marcar-no-leida').forEach(btn => {
-      btn.addEventListener('click', function() {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
         marcarComoNoLeida(this.getAttribute('data-id'));
       });
     });
 
     document.querySelectorAll('.btn-expandir').forEach(btn => {
-      btn.addEventListener('click', function() {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
         const id = this.getAttribute('data-id');
         const contenido = document.getElementById(`contenido-${id}`);
         const card = document.getElementById(`notif-${id}`);
@@ -361,31 +829,37 @@
           card.classList.remove('notificacion-expandida');
           const htmlCompleto = contenido.getAttribute('data-html-completo');
           contenido.textContent = htmlToText(htmlCompleto);
-          this.innerHTML = '<i class="bi bi-arrows-expand"></i> Ver completo';
+          this.innerHTML = '<i class="bi bi-arrows-expand"></i><span>Ver completo</span>';
         } else {
           // Expandir: mostrar HTML completo pero en iframe para aislarlo
           card.classList.add('notificacion-expandida');
           let htmlCompleto = contenido.getAttribute('data-html-completo');
           
+          // Decodificar entidades HTML
+          const textarea = document.createElement('textarea');
+          textarea.innerHTML = htmlCompleto;
+          htmlCompleto = textarea.value;
+          
           // Agregar <base target="_parent"> para que los enlaces se abran en la ventana padre
           const baseTag = '<base target="_parent">';
           if (!htmlCompleto.includes('<head>')) {
-            // Si no hay etiqueta head, agregar el base al inicio
             htmlCompleto = baseTag + htmlCompleto;
           } else {
-            // Si hay etiqueta head, insertar dentro de ella
             htmlCompleto = htmlCompleto.replace('<head>', '<head>' + baseTag);
           }
           
+          // Escapar comillas para el atributo srcdoc
+          const srcdocContent = htmlCompleto.replace(/"/g, '&quot;');
+          
           // Crear iframe para aislar el HTML y prevenir problemas de layout
           contenido.innerHTML = `
-            <iframe srcdoc="${htmlCompleto.replace(/"/g, '&quot;')}" 
-                    style="width: 100%; min-height: 200px;"
+            <iframe srcdoc="${srcdocContent}" 
+                    class="notif-iframe"
                     sandbox="allow-same-origin allow-top-navigation"
                     onload="this.style.height = (this.contentWindow.document.documentElement.scrollHeight + 20) + 'px'">
             </iframe>
           `;
-          this.innerHTML = '<i class="bi bi-arrows-collapse"></i> Ver menos';
+          this.innerHTML = '<i class="bi bi-arrows-collapse"></i><span>Ver menos</span>';
         }
       });
     });
@@ -407,7 +881,9 @@
     // Botón anterior
     html += `
       <li class="page-item ${paginaActual === 1 ? 'disabled' : ''}">
-        <a class="page-link" href="#" data-pagina="${paginaActual - 1}">Anterior</a>
+        <a class="page-link" href="#" data-pagina="${paginaActual - 1}">
+          <i class="bi bi-chevron-left"></i>
+        </a>
       </li>
     `;
 
@@ -420,14 +896,20 @@
           </li>
         `;
       } else if (i === paginaActual - 3 || i === paginaActual + 3) {
-        html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        html += `
+          <li class="page-item disabled">
+            <span class="page-link">...</span>
+          </li>
+        `;
       }
     }
 
     // Botón siguiente
     html += `
       <li class="page-item ${paginaActual === data.total_paginas ? 'disabled' : ''}">
-        <a class="page-link" href="#" data-pagina="${paginaActual + 1}">Siguiente</a>
+        <a class="page-link" href="#" data-pagina="${paginaActual + 1}">
+          <i class="bi bi-chevron-right"></i>
+        </a>
       </li>
     `;
 
@@ -482,7 +964,7 @@
     .catch(error => console.error('Error:', error));
   }
 
-  // Marcar todas como leídas (SIN confirmación)
+  // Marcar todas como leídas
   document.getElementById('btn-marcar-todas-leidas-pagina').addEventListener('click', function() {
     fetch('/notificaciones/api/marcar-todas-leidas', {
       method: 'POST',
@@ -500,7 +982,7 @@
     .catch(error => console.error('Error:', error));
   });
 
-  // Filtros automáticos (sin botón "Aplicar")
+  // Filtros automáticos
   document.getElementById('filtro-estado').addEventListener('change', function() {
     filtroEstado = this.value;
     cargarNotificaciones(1);
@@ -512,34 +994,58 @@
   });
 
   // Funciones auxiliares
+  function escapeHtml(unsafe) {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
   function obtenerIconoTipo(tipo) {
     const iconos = {
       'REGISTRO_INCAPACIDAD': 'bi bi-file-earmark-plus',
-      'DOCUMENTOS_FALTANTES': 'bi bi-exclamation-triangle',
+      'DOCUMENTOS_FALTANTES': 'bi bi-exclamation-triangle-fill',
       'RECORDATORIO_DOCUMENTOS_DIA2': 'bi bi-clock-history',
-      'SEGUNDA_NOTIFICACION_DOCUMENTOS': 'bi bi-exclamation-circle',
+      'SEGUNDA_NOTIFICACION_DOCUMENTOS': 'bi bi-exclamation-circle-fill',
       'REQUERIMIENTO_CITACION': 'bi bi-calendar-event',
-      'DOCUMENTACION_COMPLETADA': 'bi bi-check-circle',
-      'APROBACION': 'bi bi-check-circle-fill',
-      'RECHAZO': 'bi bi-x-circle-fill',
+      'DOCUMENTACION_COMPLETADA': 'bi bi-check-circle-fill',
+      'APROBACION': 'bi bi-hand-thumbs-up-fill',
+      'RECHAZO': 'bi bi-hand-thumbs-down-fill',
       'CAMBIO_ESTADO': 'bi bi-arrow-repeat'
     };
-    return iconos[tipo] || 'bi bi-info-circle';
+    return iconos[tipo] || 'bi bi-info-circle-fill';
+  }
+
+  function obtenerColorIcono(tipo) {
+    const colores = {
+      'REGISTRO_INCAPACIDAD': 'icon-primary',
+      'DOCUMENTOS_FALTANTES': 'icon-warning',
+      'RECORDATORIO_DOCUMENTOS_DIA2': 'icon-info',
+      'SEGUNDA_NOTIFICACION_DOCUMENTOS': 'icon-danger',
+      'REQUERIMIENTO_CITACION': 'icon-info',
+      'DOCUMENTACION_COMPLETADA': 'icon-success',
+      'APROBACION': 'icon-success',
+      'RECHAZO': 'icon-danger',
+      'CAMBIO_ESTADO': 'icon-info'
+    };
+    return colores[tipo] || 'icon-info';
   }
 
   function obtenerColorBadge(tipo) {
     const colores = {
-      'REGISTRO_INCAPACIDAD': 'bg-primary',
-      'DOCUMENTOS_FALTANTES': 'bg-warning',
-      'RECORDATORIO_DOCUMENTOS_DIA2': 'bg-info',
-      'SEGUNDA_NOTIFICACION_DOCUMENTOS': 'bg-danger',
-      'REQUERIMIENTO_CITACION': 'bg-secondary',
-      'DOCUMENTACION_COMPLETADA': 'bg-success',
-      'APROBACION': 'bg-success',
-      'RECHAZO': 'bg-danger',
-      'CAMBIO_ESTADO': 'bg-info'
+      'REGISTRO_INCAPACIDAD': 'type-primary',
+      'DOCUMENTOS_FALTANTES': 'type-warning',
+      'RECORDATORIO_DOCUMENTOS_DIA2': 'type-info',
+      'SEGUNDA_NOTIFICACION_DOCUMENTOS': 'type-danger',
+      'REQUERIMIENTO_CITACION': 'type-secondary',
+      'DOCUMENTACION_COMPLETADA': 'type-success',
+      'APROBACION': 'type-success',
+      'RECHAZO': 'type-danger',
+      'CAMBIO_ESTADO': 'type-info'
     };
-    return colores[tipo] || 'bg-secondary';
+    return colores[tipo] || 'type-secondary';
   }
 
   function formatearTipo(tipo) {
@@ -560,15 +1066,4 @@
   // Cargar al inicio
   cargarNotificaciones(1);
 </script>
-
-<style>
-  .destacar {
-    animation: destacar 2s ease;
-  }
-
-  @keyframes destacar {
-    0%, 100% { background-color: transparent; }
-    50% { background-color: #fff3cd; }
-  }
-</style>
 {% endblock %}

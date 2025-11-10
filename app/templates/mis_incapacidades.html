@@ -3,143 +3,776 @@
 {% block title %}Mis Incapacidades{% endblock %}
 
 {% block content %}
-<div class="row">
-  <div class="col-12">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2><i class="bi bi-clipboard-check"></i> Mis Incapacidades</h2>
-      <a href="{{ url_for('incapacidades.registrar') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nueva Incapacidad
-      </a>
-    </div>
+<div class="mis-incapacidades-container">
+    <div class="row">
+        <div class="col-12">
+            
+            <!-- Header -->
+            <div class="page-header d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-clipboard2-pulse me-2"></i>
+                        Mis Incapacidades
+                    </h2>
+                    <p class="text-muted mb-0" style="font-size: 14px;">
+                        Gestione y consulte todas sus solicitudes de incapacidad
+                    </p>
+                </div>
+                <a href="{{ url_for('incapacidades.registrar') }}" class="btn-nueva-incapacidad">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Nueva Incapacidad</span>
+                </a>
+            </div>
 
-    {% if incapacidades %}
-    <div class="card shadow">
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead class="table-light">
-              <tr>
-                <th><i class="bi bi-hash"></i> Código</th>
-                <th><i class="bi bi-file-text"></i> Tipo</th>
-                <th><i class="bi bi-calendar-event"></i> Fecha Inicio</th>
-                <th><i class="bi bi-calendar-event"></i> Fecha Fin</th>
-                <th><i class="bi bi-hourglass-split"></i> Duración</th>
-                <th><i class="bi bi-info-circle"></i> Estado</th>
-                <th><i class="bi bi-tools"></i> Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for inc in incapacidades %}
-              <tr>
-                <td>
-                  <strong style="color: #0d6efd;">{{ inc.codigo_radicacion or 'N/A' }}</strong>
-                  <br><small class="text-muted">#{{ inc.id }}</small>
-                </td>
-                <td>
-                  <span class="badge bg-secondary">{{ inc.tipo }}</span>
-                </td>
-                <td>
-                  <small>{{ inc.fecha_inicio.strftime('%d/%m/%Y') }}</small>
-                </td>
-                <td>
-                  <small>{{ inc.fecha_fin.strftime('%d/%m/%Y') }}</small>
-                </td>
-                <td>
-                  <span class="badge bg-info text-dark fw-bold">{{ inc.dias }} días</span>
-                </td>
-                <td>
-                  {% set estado_clean = inc.estado.lower().replace('_', '-') %}
-                  <span class="badge badge-estado estado-{{ estado_clean }} fw-bold" 
-                        style="font-size: 0.85rem; padding: 0.5rem 0.75rem;">
-                    {% set estado_display = {
-                      'PENDIENTE': '⏳ Pendiente',
-                      'EN_REVISION': '🔍 En Revisión',
-                      'APROBADA': '✅ Aprobada',
-                      'RECHAZADA': '❌ Rechazada',
-                      'DOCUMENTACION_INCOMPLETA': '📄 Documentación Incompleta',
-                      'DOCUMENTACION_COMPLETA': '✔️ Documentación Completa',
-                      'PENDIENTE_VALIDACION': '⏳ Pendiente Validación',
-                      'VALIDADA': '✅ Validada'
-                    } %}
-                    {{ estado_display.get(inc.estado, inc.estado) }}
-                  </span>
-                </td>
-                <td>
-                  <div class="btn-group btn-group-sm" role="group">
-                    <a href="{{ url_for('incapacidades.detalle', id=inc.id) }}" 
-                       class="btn btn-outline-info" 
-                       title="Ver detalles de la incapacidad">
-                      <i class="bi bi-eye"></i> Ver
-                    </a>
+            {% if incapacidades %}
+            
+            <!-- Estadísticas Rápidas -->
+            <div class="stats-row mb-4">
+                {% set total = incapacidades|length %}
+                {% set pendientes = incapacidades|selectattr('estado', 'in', ['PENDIENTE', 'EN_REVISION', 'PENDIENTE_VALIDACION'])|list|length %}
+                {% set aprobadas = incapacidades|selectattr('estado', 'in', ['APROBADA', 'APROBADA_PENDIENTE_TRANSCRIPCION'])|list|length %}
+                {% set rechazadas = incapacidades|selectattr('estado', 'equalto', 'RECHAZADA')|list|length %}
+                
+                <div class="stat-mini stat-mini-blue">
+                    <div class="stat-mini-icon">
+                        <i class="bi bi-clipboard-data"></i>
+                    </div>
+                    <div class="stat-mini-content">
+                        <div class="stat-mini-value">{{ total }}</div>
+                        <div class="stat-mini-label">Total</div>
+                    </div>
+                </div>
+                
+                <div class="stat-mini stat-mini-orange">
+                    <div class="stat-mini-icon">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div class="stat-mini-content">
+                        <div class="stat-mini-value">{{ pendientes }}</div>
+                        <div class="stat-mini-label">En Proceso</div>
+                    </div>
+                </div>
+                
+                <div class="stat-mini stat-mini-green">
+                    <div class="stat-mini-icon">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                    <div class="stat-mini-content">
+                        <div class="stat-mini-value">{{ aprobadas }}</div>
+                        <div class="stat-mini-label">Aprobadas</div>
+                    </div>
+                </div>
+                
+                <div class="stat-mini stat-mini-red">
+                    <div class="stat-mini-icon">
+                        <i class="bi bi-x-circle"></i>
+                    </div>
+                    <div class="stat-mini-content">
+                        <div class="stat-mini-value">{{ rechazadas }}</div>
+                        <div class="stat-mini-label">Rechazadas</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Incapacidades -->
+            <div class="incapacidades-grid">
+                {% for inc in incapacidades %}
+                <div class="incapacidad-card">
                     
-                    <!-- UC6: Botón para cargar documentos solicitados -->
-                    {% if inc.estado == 'DOCUMENTACION_INCOMPLETA' %}
-                    <a href="{{ url_for('incapacidades.cargar_documentos_solicitados', incapacidad_id=inc.id) }}" 
-                       class="btn btn-warning" 
-                       title="Cargar documentos solicitados">
-                      <i class="bi bi-cloud-upload"></i> Docs
-                    </a>
-                    {% elif inc.estado == 'DOCUMENTACION_COMPLETA' %}
-                    <span class="btn btn-success disabled" title="Documentación completada">
-                      <i class="bi bi-check-circle"></i> Completo
-                    </span>
-                    {% elif inc.estado == 'PENDIENTE_VALIDACION' %}
-                    <span class="btn btn-info disabled text-dark" title="En validación">
-                      <i class="bi bi-hourglass-split"></i> Validando
-                    </span>
-                    {% endif %}
-                  </div>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+                    <!-- Header de la tarjeta -->
+                    <div class="incapacidad-card-header">
+                        <div class="incapacidad-codigo">
+                            <i class="bi bi-qr-code"></i>
+                            <div>
+                                <div class="codigo-principal">{{ inc.codigo_radicacion or 'Pendiente' }}</div>
+                                <div class="codigo-id">#{{ inc.id }}</div>
+                            </div>
+                        </div>
+                        
+                        {% set estado_clean = inc.estado.lower().replace('_', '-') %}
+                        <span class="estado-badge estado-badge-{{ estado_clean }}">
+                            {% set estado_icons = {
+                                'PENDIENTE': 'clock-history',
+                                'EN_REVISION': 'search',
+                                'APROBADA': 'check-circle-fill',
+                                'APROBADA_PENDIENTE_TRANSCRIPCION': 'check-circle',
+                                'RECHAZADA': 'x-circle-fill',
+                                'DOCUMENTACION_INCOMPLETA': 'file-earmark-excel',
+                                'DOCUMENTACION_COMPLETA': 'file-earmark-check',
+                                'PENDIENTE_VALIDACION': 'hourglass-split',
+                                'VALIDADA': 'shield-check'
+                            } %}
+                            {% set estado_display = {
+                                'PENDIENTE': 'Pendiente',
+                                'EN_REVISION': 'En Revisión',
+                                'APROBADA': 'Aprobada',
+                                'APROBADA_PENDIENTE_TRANSCRIPCION': 'Aprobada (Pend. Trans.)',
+                                'RECHAZADA': 'Rechazada',
+                                'DOCUMENTACION_INCOMPLETA': 'Doc. Incompleta',
+                                'DOCUMENTACION_COMPLETA': 'Doc. Completa',
+                                'PENDIENTE_VALIDACION': 'Pendiente Validación',
+                                'VALIDADA': 'Validada'
+                            } %}
+                            <i class="bi bi-{{ estado_icons.get(inc.estado, 'circle') }}"></i>
+                            {{ estado_display.get(inc.estado, inc.estado) }}
+                        </span>
+                    </div>
+
+                    <!-- Información Principal -->
+                    <div class="incapacidad-card-body">
+                        <div class="incapacidad-tipo">
+                            <i class="bi bi-tag-fill"></i>
+                            <span>{{ inc.tipo }}</span>
+                        </div>
+
+                        <div class="incapacidad-info-grid">
+                            <div class="info-item">
+                                <i class="bi bi-calendar-event"></i>
+                                <div>
+                                    <label>Fecha Inicio</label>
+                                    <p>{{ inc.fecha_inicio.strftime('%d/%m/%Y') }}</p>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <i class="bi bi-calendar-check"></i>
+                                <div>
+                                    <label>Fecha Fin</label>
+                                    <p>{{ inc.fecha_fin.strftime('%d/%m/%Y') }}</p>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <i class="bi bi-hourglass-split"></i>
+                                <div>
+                                    <label>Duración</label>
+                                    <p>{{ inc.dias }} día{% if inc.dias != 1 %}s{% endif %}</p>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <i class="bi bi-clock"></i>
+                                <div>
+                                    <label>Registrada</label>
+                                    <p>{{ inc.fecha_registro.strftime('%d/%m/%Y') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Acciones -->
+                    <div class="incapacidad-card-footer">
+                        <a href="{{ url_for('incapacidades.detalle', id=inc.id) }}" 
+                           class="btn-card-action btn-card-action-primary">
+                            <i class="bi bi-eye"></i>
+                            <span>Ver Detalle</span>
+                        </a>
+                        
+                        <!-- UC6: Botón dinámico según estado -->
+                        {% if inc.estado == 'DOCUMENTACION_INCOMPLETA' %}
+                        <a href="{{ url_for('incapacidades.cargar_documentos_solicitados', incapacidad_id=inc.id) }}" 
+                           class="btn-card-action btn-card-action-warning">
+                            <i class="bi bi-cloud-upload"></i>
+                            <span>Cargar Documentos</span>
+                        </a>
+                        {% elif inc.estado == 'DOCUMENTACION_COMPLETA' %}
+                        <div class="btn-card-action btn-card-action-success disabled">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Documentación Completa</span>
+                        </div>
+                        {% elif inc.estado == 'PENDIENTE_VALIDACION' %}
+                        <div class="btn-card-action btn-card-action-info disabled">
+                            <i class="bi bi-hourglass-split"></i>
+                            <span>En Validación</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+                {% endfor %}
+            </div>
+
+            {% else %}
+            
+            <!-- Estado Vacío -->
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="bi bi-inbox"></i>
+                </div>
+                <h4>No tiene incapacidades registradas</h4>
+                <p>Comience registrando su primera solicitud de incapacidad</p>
+                <a href="{{ url_for('incapacidades.registrar') }}" class="btn-empty-state">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Registrar Primera Incapacidad</span>
+                </a>
+            </div>
+
+            {% endif %}
+
         </div>
-      </div>
     </div>
-    {% else %}
-    <div class="alert alert-info alert-dismissible fade show" role="alert">
-      <h5><i class="bi bi-info-circle"></i> No tiene incapacidades registradas</h5>
-      <p>Haga clic en el botón <strong>"Nueva Incapacidad"</strong> para registrar su primera solicitud de incapacidad.</p>
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    {% endif %}
-  </div>
 </div>
 
 <style>
-  .badge-estado {
-    display: inline-block;
-    min-width: 150px;
+/* ==================================================
+   MIS INCAPACIDADES - ESTILOS MODERNOS
+   ================================================== */
+
+.mis-incapacidades-container {
+    animation: fadeInUp 0.5s ease;
+    padding-bottom: 3rem;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header */
+.page-header {
+    animation: slideInLeft 0.4s ease;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.page-header h2 {
+    color: #1f2937;
+    font-weight: 700;
+    font-size: 28px;
+}
+
+.page-header i {
+    color: #3b82f6;
+}
+
+/* Botón Nueva Incapacidad */
+.btn-nueva-incapacidad {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-nueva-incapacidad:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+    color: white;
+}
+
+.btn-nueva-incapacidad i {
+    font-size: 20px;
+}
+
+/* Estadísticas Mini */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    animation: fadeInScale 0.5s ease backwards;
+    animation-delay: 0.1s;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.stat-mini {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.stat-mini:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.stat-mini-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+.stat-mini:hover .stat-mini-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.stat-mini-blue .stat-mini-icon {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+}
+
+.stat-mini-orange .stat-mini-icon {
+    background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+    color: #9a3412;
+}
+
+.stat-mini-green .stat-mini-icon {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+}
+
+.stat-mini-red .stat-mini-icon {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+}
+
+.stat-mini-content {
+    flex: 1;
+}
+
+.stat-mini-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1f2937;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.stat-mini-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Grid de Incapacidades */
+.incapacidades-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+    gap: 24px;
+    animation: fadeInUp 0.5s ease backwards;
+    animation-delay: 0.2s;
+}
+
+/* Tarjeta de Incapacidad */
+.incapacidad-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.incapacidad-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+}
+
+/* Header de la Tarjeta */
+.incapacidad-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.incapacidad-codigo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.incapacidad-codigo > i {
+    font-size: 32px;
+    color: #3b82f6;
+}
+
+.codigo-principal {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1f2937;
+    font-family: 'Courier New', monospace;
+}
+
+.codigo-id {
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+/* Badge de Estado */
+.estado-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.estado-badge i {
+    font-size: 14px;
+}
+
+.estado-badge-pendiente {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border: 2px solid #fbbf24;
+}
+
+.estado-badge-en-revision {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+    border: 2px solid #60a5fa;
+}
+
+.estado-badge-aprobada {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    border: 2px solid #34d399;
+}
+
+.estado-badge-aprobada-pendiente-transcripcion {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    border: 2px solid #34d399;
+    position: relative;
+}
+
+.estado-badge-aprobada-pendiente-transcripcion::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: #fbbf24;
+    border: 2px solid white;
+    border-radius: 50%;
+    animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+.estado-badge-rechazada {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+    border: 2px solid #f87171;
+}
+
+.estado-badge-documentacion-incompleta {
+    background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+    color: #9a3412;
+    border: 2px solid #fb923c;
+}
+
+.estado-badge-documentacion-completa {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    border: 2px solid #34d399;
+}
+
+.estado-badge-pendiente-validacion {
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    color: #3730a3;
+    border: 2px solid #818cf8;
+}
+
+.estado-badge-validada {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    border: 2px solid #34d399;
+}
+
+/* Body de la Tarjeta */
+.incapacidad-card-body {
+    padding: 24px;
+}
+
+.incapacidad-tipo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-weight: 700;
+    color: #1e40af;
+    font-size: 15px;
+}
+
+.incapacidad-tipo i {
+    font-size: 18px;
+}
+
+.incapacidad-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.info-item:hover {
+    background: #f3f4f6;
+}
+
+.info-item > i {
+    font-size: 20px;
+    color: #6b7280;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.info-item label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.info-item p {
+    color: #1f2937;
+    font-weight: 600;
+    margin-bottom: 0;
+    font-size: 13px;
+}
+
+/* Footer de la Tarjeta */
+.incapacidad-card-footer {
+    display: flex;
+    gap: 12px;
+    padding: 20px;
+    background: #fafafa;
+    border-top: 1px solid #e5e7eb;
+}
+
+.btn-card-action {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-card-action i {
+    font-size: 16px;
+}
+
+.btn-card-action:hover:not(.disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-card-action-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.btn-card-action-primary:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: white;
+}
+
+.btn-card-action-warning {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #78350f;
+}
+
+.btn-card-action-warning:hover {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #78350f;
+}
+
+.btn-card-action-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.btn-card-action-info {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: white;
+}
+
+.btn-card-action.disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Estado Vacío */
+.empty-state {
     text-align: center;
-  }
+    padding: 80px 20px;
+    animation: fadeInScale 0.5s ease;
+}
 
-  .btn-group-sm .btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-  }
+.empty-state-icon {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 56px;
+    color: #1e40af;
+    animation: pulse 2s infinite;
+}
 
-  @media (max-width: 768px) {
-    .badge-estado {
-      font-size: 0.75rem !important;
-      min-width: 120px;
-      padding: 0.4rem 0.5rem !important;
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.empty-state h4 {
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 12px;
+    font-size: 24px;
+}
+
+.empty-state p {
+    color: #6b7280;
+    margin-bottom: 32px;
+    font-size: 16px;
+}
+
+.btn-empty-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-empty-state:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+    color: white;
+}
+
+.btn-empty-state i {
+    font-size: 20px;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .incapacidades-grid {
+        grid-template-columns: 1fr;
     }
+}
 
-    .btn-group-sm {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 16px;
     }
+    
+    .btn-nueva-incapacidad {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .incapacidad-info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .incapacidad-card-footer {
+        flex-direction: column;
+    }
+    
+    .btn-card-action {
+        width: 100%;
+    }
+}
 
-    .btn-group-sm .btn {
-      width: 100%;
+@media (max-width: 480px) {
+    .stats-row {
+        grid-template-columns: 1fr;
     }
-
-    table th, table td {
-      padding: 0.5rem !important;
-      font-size: 0.875rem;
+    
+    .estado-badge {
+        font-size: 10px;
+        padding: 6px 10px;
     }
-  }
+}
 </style>
 {% endblock %}

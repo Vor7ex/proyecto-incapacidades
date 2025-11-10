@@ -3,223 +3,343 @@
 {% block title %}Validar Incapacidad #{{ incapacidad.id }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="mb-3">
-            <a href="{{ url_for('incapacidades.dashboard_auxiliar') }}" class="btn btn-secondary">
-                &larr; Volver al Dashboard
-            </a>
-        </div>
-
-        <div class="card shadow">
-            <div class="card-header bg-info text-white">
-                <h3 class="mb-0">
-                    <i class="bi bi-clipboard-check"></i>
-                    Validacion de Documentacion - Incapacidad #{{ incapacidad.id }}
-                </h3>
-            </div>
-            <div class="card-body">
-                <!-- Informacion del Colaborador -->
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <h5>Colaborador</h5>
-                        <p class="mb-1"><strong>{{ incapacidad.usuario.nombre }}</strong></p>
-                        <p class="text-muted mb-0">{{ incapacidad.usuario.email }}</p>
+<div class="validar-container">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header con botón volver -->
+            <div class="page-header mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <a href="{{ url_for('incapacidades.dashboard_auxiliar') }}" 
+                           class="btn-back">
+                            <i class="bi bi-arrow-left-circle"></i>
+                        </a>
+                        <div>
+                            <h2 class="mb-1">
+                                <i class="bi bi-clipboard-check-fill"></i>
+                                Validación de Documentación
+                            </h2>
+                            <p class="text-muted mb-0">Incapacidad #{{ incapacidad.id }}</p>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <h5>Detalles de la Incapacidad</h5>
-                        <p class="mb-1"><strong>Tipo:</strong> {{ incapacidad.tipo }}</p>
-                        <p class="mb-1">
-                            <strong>Periodo:</strong> 
-                            {{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }} - 
-                            {{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}
-                        </p>
-                        <p class="mb-0">
-                            <strong>Dias:</strong> 
-                            <span class="badge bg-secondary">{{ incapacidad.dias }} dias</span>
-                        </p>
+                    <div class="status-badge status-badge-warning">
+                        <i class="bi bi-hourglass-split"></i>
+                        Pendiente Validación
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información del Colaborador y Detalles -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <div class="info-card-header">
+                            <i class="bi bi-person-circle"></i>
+                            <span>Información del Colaborador</span>
+                        </div>
+                        <div class="info-card-body">
+                            <div class="info-item">
+                                <label>Nombre completo</label>
+                                <p>{{ incapacidad.usuario.nombre }}</p>
+                            </div>
+                            <div class="info-item mb-0">
+                                <label>Correo electrónico</label>
+                                <p>{{ incapacidad.usuario.email }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <div class="info-card-header">
+                            <i class="bi bi-file-medical"></i>
+                            <span>Detalles de la Incapacidad</span>
+                        </div>
+                        <div class="info-card-body">
+                            <div class="info-item">
+                                <label>Tipo de incapacidad</label>
+                                <p>
+                                    <span class="badge-modern badge-modern-secondary">
+                                        {{ incapacidad.tipo }}
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="info-item">
+                                <label>Período</label>
+                                <p>
+                                    <i class="bi bi-calendar-range text-muted"></i>
+                                    {{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }} - 
+                                    {{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}
+                                </p>
+                            </div>
+                            <div class="info-item mb-0">
+                                <label>Duración</label>
+                                <p>
+                                    <span class="badge-modern badge-modern-purple">
+                                        <i class="bi bi-calendar-check"></i>
+                                        {{ incapacidad.dias }} días
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Validación Automática -->
+            <div class="validation-section">
+                <div class="section-title">
+                    <div class="section-title-icon">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <div>
+                        <h4>Validación Automática de Requisitos</h4>
+                        <p>Sistema de verificación de documentos obligatorios</p>
                     </div>
                 </div>
 
-                <hr>
+                <div class="validation-card {% if validacion.todos_documentos %}validation-success{% else %}validation-warning{% endif %}">
+                    <div class="validation-header">
+                        <i class="bi {% if validacion.todos_documentos %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %}"></i>
+                        <h5>Checklist de Documentos Obligatorios</h5>
+                    </div>
 
-                <!-- Validacion Automatica (UC10) -->
-                <h5>
-                    <i class="bi bi-robot"></i>
-                    Validacion Automatica de Requisitos
-                </h5>
-                <div class="alert {% if validacion.todos_documentos %}alert-success{% else %}alert-warning{% endif %}">
-                    <h6><strong>Checklist de Documentos Obligatorios:</strong></h6>
-                    <ul class="mb-2">
-                        <li>
-                            {% if validacion.certificado_presente %}
-                                <i class="bi bi-check-circle-fill text-success"></i>
-                                <strong>Certificado de Incapacidad:</strong> Presente ✅
-                            {% else %}
-                                <i class="bi bi-x-circle-fill text-danger"></i>
-                                <strong>Certificado de Incapacidad:</strong> FALTANTE ❌ (Obligatorio)
-                            {% endif %}
-                        </li>
-                        <li>
-                            {% if validacion.epicrisis_requerida %}
-                                {% if validacion.epicrisis_presente %}
-                                    <i class="bi bi-check-circle-fill text-success"></i>
-                                    <strong>Epicrisis:</strong> Presente ✅
+                    <div class="validation-checklist">
+                        <div class="checklist-item {% if validacion.certificado_presente %}item-success{% else %}item-danger{% endif %}">
+                            <div class="checklist-icon">
+                                {% if validacion.certificado_presente %}
+                                    <i class="bi bi-check-circle-fill"></i>
                                 {% else %}
-                                    <i class="bi bi-x-circle-fill text-danger"></i>
-                                    <strong>Epicrisis:</strong> FALTANTE ❌ (Requerida para este caso)
+                                    <i class="bi bi-x-circle-fill"></i>
                                 {% endif %}
-                            {% else %}
-                                <i class="bi bi-info-circle-fill text-info"></i>
-                                <strong>Epicrisis:</strong> No requerida para este caso
-                                {% if validacion.epicrisis_presente %}
-                                    (Presente de todas formas ✅)
+                            </div>
+                            <div class="checklist-content">
+                                <strong>Certificado de Incapacidad</strong>
+                                <span>
+                                    {% if validacion.certificado_presente %}
+                                        Documento presente y cargado correctamente
+                                    {% else %}
+                                        DOCUMENTO OBLIGATORIO FALTANTE
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="checklist-item {% if validacion.epicrisis_requerida %}{% if validacion.epicrisis_presente %}item-success{% else %}item-danger{% endif %}{% else %}item-info{% endif %}">
+                            <div class="checklist-icon">
+                                {% if validacion.epicrisis_requerida %}
+                                    {% if validacion.epicrisis_presente %}
+                                        <i class="bi bi-check-circle-fill"></i>
+                                    {% else %}
+                                        <i class="bi bi-x-circle-fill"></i>
+                                    {% endif %}
+                                {% else %}
+                                    <i class="bi bi-info-circle-fill"></i>
                                 {% endif %}
-                            {% endif %}
-                        </li>
-                    </ul>
+                            </div>
+                            <div class="checklist-content">
+                                <strong>Epicrisis</strong>
+                                <span>
+                                    {% if validacion.epicrisis_requerida %}
+                                        {% if validacion.epicrisis_presente %}
+                                            Documento requerido presente
+                                        {% else %}
+                                            DOCUMENTO REQUERIDO FALTANTE
+                                        {% endif %}
+                                    {% else %}
+                                        No requerida para este tipo de incapacidad
+                                        {% if validacion.epicrisis_presente %}
+                                            (Adjuntada de todas formas)
+                                        {% endif %}
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                     
                     {% if validacion.advertencias %}
-                    <hr class="my-2">
-                    <h6 class="text-danger"><strong>⚠️ Advertencias:</strong></h6>
-                    <ul class="mb-0">
-                        {% for adv in validacion.advertencias %}
-                        <li class="text-danger">{{ adv }}</li>
-                        {% endfor %}
-                    </ul>
+                    <div class="validation-alerts alert-danger-modern">
+                        <div class="alert-icon">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                        </div>
+                        <div class="alert-content">
+                            <h6>Advertencias detectadas</h6>
+                            <ul>
+                                {% for adv in validacion.advertencias %}
+                                <li>{{ adv }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
                     {% endif %}
                     
                     {% if validacion.recomendaciones %}
-                    <hr class="my-2">
-                    <h6 class="text-success"><strong>✓ Estado:</strong></h6>
-                    <ul class="mb-0">
-                        {% for rec in validacion.recomendaciones %}
-                        <li class="text-success">{{ rec }}</li>
-                        {% endfor %}
-                    </ul>
+                    <div class="validation-alerts alert-success-modern">
+                        <div class="alert-icon">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <div class="alert-content">
+                            <h6>Estado de validación</h6>
+                            <ul>
+                                {% for rec in validacion.recomendaciones %}
+                                <li>{{ rec }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
                     {% endif %}
                 </div>
+            </div>
 
-                <hr>
+            <!-- Documentos Adjuntos -->
+            <div class="documents-section">
+                <div class="section-title">
+                    <div class="section-title-icon">
+                        <i class="bi bi-files"></i>
+                    </div>
+                    <div>
+                        <h4>Documentos Adjuntos para Revisión</h4>
+                        <p>Revise y descargue los documentos enviados por el colaborador</p>
+                    </div>
+                </div>
 
-                <!-- Documentos Adjuntos para Revision -->
-                <h5>
-                    <i class="bi bi-file-earmark-text"></i>
-                    Documentos Adjuntos para Revision
-                </h5>
                 {% if incapacidad.documentos %}
-                <div class="row mb-4">
+                <div class="row g-3">
                     {% for doc in incapacidad.documentos %}
-                    <div class="col-md-6 mb-3">
-                        <div class="documento-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <p class="mb-1">
-                                        <strong>
-                                            {% if doc.tipo_documento == 'certificado' %}
-                                                �� Certificado de Incapacidad
-                                            {% else %}
-                                                �� Epicrisis
-                                            {% endif %}
-                                        </strong>
-                                    </p>
-                                    <p class="mb-0 text-muted small">{{ doc.nombre_archivo }}</p>
-                                    <p class="mb-0 text-muted small">
-                                        Cargado: {{ doc.fecha_carga.strftime('%d/%m/%Y %H:%M') }}
-                                    </p>
-                                </div>
-                                <div>
-                                    <a href="{{ url_for('documentos.descargar', documento_id=doc.id) }}" 
-                                       class="btn btn-sm btn-primary" target="_blank">
-                                        <i class="bi bi-download"></i> Ver/Descargar
-                                    </a>
-                                </div>
+                    <div class="col-md-6">
+                        <div class="document-card">
+                            <div class="document-icon">
+                                {% if doc.tipo_documento == 'certificado' %}
+                                    <i class="bi bi-file-earmark-medical"></i>
+                                {% else %}
+                                    <i class="bi bi-file-earmark-text"></i>
+                                {% endif %}
                             </div>
+                            <div class="document-info">
+                                <h6>
+                                    {% if doc.tipo_documento == 'certificado' %}
+                                        Certificado de Incapacidad
+                                    {% else %}
+                                        Epicrisis
+                                    {% endif %}
+                                </h6>
+                                <p class="document-filename">{{ doc.nombre_archivo }}</p>
+                                <p class="document-date">
+                                    <i class="bi bi-clock"></i>
+                                    Cargado: {{ doc.fecha_carga.strftime('%d/%m/%Y %H:%M') }}
+                                </p>
+                            </div>
+                            <a href="{{ url_for('documentos.descargar', documento_id=doc.id) }}" 
+                               class="btn-document-action" 
+                               target="_blank"
+                               data-bs-toggle="tooltip"
+                               title="Ver o descargar documento">
+                                <i class="bi bi-download"></i>
+                            </a>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
                 {% else %}
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                    <strong>No hay documentos adjuntos</strong>
+                <div class="empty-state empty-state-danger">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <h5>Sin documentos adjuntos</h5>
+                    <p>No se han cargado documentos para esta incapacidad</p>
                 </div>
                 {% endif %}
+            </div>
 
-                <hr>
-
-                <!-- Checklist Manual -->
-                <h5>
-                    <i class="bi bi-list-check"></i>
-                    Checklist de Validacion Manual
-                </h5>
-                <div class="card bg-light mb-3">
-                    <div class="card-body">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="check1">
-                            <label class="form-check-label" for="check1">
-                                Los documentos son legibles y de calidad suficiente
-                            </label>
-                        </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="check2">
-                            <label class="form-check-label" for="check2">
-                                Las fechas en el certificado coinciden con las registradas
-                            </label>
-                        </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="check3">
-                            <label class="form-check-label" for="check3">
-                                El certificado es original (no fotocopia)
-                            </label>
-                        </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="check4">
-                            <label class="form-check-label" for="check4">
-                                Los datos del colaborador son correctos
-                            </label>
-                        </div>
-                        <div class="form-check mb-0">
-                            <input class="form-check-input" type="checkbox" id="check5">
-                            <label class="form-check-label" for="check5">
-                                No hay signos de alteracion o falsificacion
-                            </label>
-                        </div>
+            <!-- Checklist Manual -->
+            <div class="checklist-section">
+                <div class="section-title">
+                    <div class="section-title-icon">
+                        <i class="bi bi-list-check"></i>
+                    </div>
+                    <div>
+                        <h4>Checklist de Validación Manual</h4>
+                        <p>Verifique manualmente cada aspecto antes de aprobar</p>
                     </div>
                 </div>
 
-                <!-- Formulario de Accion -->
+                <div class="checklist-card">
+                    <div class="custom-checkbox-item">
+                        <input type="checkbox" id="check1" class="custom-checkbox">
+                        <label for="check1">
+                            <div class="checkbox-icon"><i class="bi bi-check"></i></div>
+                            <span>Los documentos son legibles y de calidad suficiente</span>
+                        </label>
+                    </div>
+                    <div class="custom-checkbox-item">
+                        <input type="checkbox" id="check2" class="custom-checkbox">
+                        <label for="check2">
+                            <div class="checkbox-icon"><i class="bi bi-check"></i></div>
+                            <span>Las fechas en el certificado coinciden con las registradas</span>
+                        </label>
+                    </div>
+                    <div class="custom-checkbox-item">
+                        <input type="checkbox" id="check3" class="custom-checkbox">
+                        <label for="check3">
+                            <div class="checkbox-icon"><i class="bi bi-check"></i></div>
+                            <span>El certificado es original (no fotocopia)</span>
+                        </label>
+                    </div>
+                    <div class="custom-checkbox-item">
+                        <input type="checkbox" id="check4" class="custom-checkbox">
+                        <label for="check4">
+                            <div class="checkbox-icon"><i class="bi bi-check"></i></div>
+                            <span>Los datos del colaborador son correctos</span>
+                        </label>
+                    </div>
+                    <div class="custom-checkbox-item">
+                        <input type="checkbox" id="check5" class="custom-checkbox">
+                        <label for="check5">
+                            <div class="checkbox-icon"><i class="bi bi-check"></i></div>
+                            <span>No hay signos de alteración o falsificación</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario de Acción -->
+            <div class="action-section">
                 <form method="POST" id="formValidacion">
                     {% if validacion.todos_documentos %}
-                    <!-- Documentacion completa - Puede aprobar -->
-                    <div class="alert alert-success">
+                    <!-- Documentación completa -->
+                    <div class="status-alert status-alert-success">
                         <i class="bi bi-check-circle-fill"></i>
-                        <strong>Documentacion completa:</strong> Todos los documentos obligatorios estan presentes.
+                        <div>
+                            <strong>Documentación completa</strong>
+                            <p>Todos los documentos obligatorios están presentes. Puede marcar como completa o solicitar documentos adicionales.</p>
+                        </div>
                     </div>
-                    <div class="d-grid gap-2">
+                    <div class="action-buttons-grid">
                         <button type="submit" name="accion" value="completar_revision" 
-                                class="btn btn-success btn-lg" id="btnCompletar">
-                            <i class="bi bi-check-lg"></i> Marcar Documentacion como Completa
+                                class="btn-action-large btn-action-success" id="btnCompletar">
+                            <i class="bi bi-check-lg"></i>
+                            <span>Marcar Documentación como Completa</span>
                         </button>
                         <button type="submit" name="accion" value="solicitar_documentos_uc6" 
-                                class="btn btn-warning">
-                            <i class="bi bi-file-earmark-plus"></i> 
-                            Solicitar Documentos Adicionales (UC6)
+                                class="btn-action-large btn-action-warning">
+                            <i class="bi bi-file-earmark-plus"></i>
+                            <span>Solicitar Documentos Adicionales</span>
                         </button>
                     </div>
-                    
                     {% else %}
-                    <!-- Documentacion incompleta - Redirigir a UC6 -->
-                    <div class="alert alert-danger">
+                    <!-- Documentación incompleta -->
+                    <div class="status-alert status-alert-danger">
                         <i class="bi bi-x-circle-fill"></i>
-                        <strong>Documentación incompleta:</strong> 
-                        Faltan documentos obligatorios. Use el formulario de solicitud de documentos UC6.
+                        <div>
+                            <strong>Documentación incompleta</strong>
+                            <p>Faltan documentos obligatorios. Debe usar el formulario de solicitud de documentos UC6.</p>
+                        </div>
                     </div>
-                    <div class="d-grid">
+                    <div class="action-buttons-grid">
                         <button type="submit" name="accion" value="solicitar_documentos_uc6" 
-                                class="btn btn-primary btn-lg">
-                            <i class="bi bi-file-earmark-plus"></i> 
-                            Ir a Formulario de Solicitud de Documentos (UC6)
+                                class="btn-action-large btn-action-primary">
+                            <i class="bi bi-file-earmark-plus"></i>
+                            <span>Ir a Formulario de Solicitud de Documentos (UC6)</span>
                         </button>
                     </div>
                     {% endif %}
@@ -228,42 +348,840 @@
         </div>
     </div>
 </div>
+
+<style>
+/* ==================================================
+   VALIDAR INCAPACIDADES - ESTILOS MODERNOS
+   ================================================== */
+
+.validar-container {
+    animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header de Página */
+.page-header {
+    animation: slideInLeft 0.4s ease;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.page-header h2 {
+    color: #1f2937;
+    font-weight: 700;
+    font-size: 28px;
+}
+
+.page-header i {
+    color: #06b6d4;
+}
+
+.btn-back {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: white;
+    border: 2px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #6b7280;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-back:hover {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: white;
+    border-color: #06b6d4;
+    transform: translateX(-5px);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+}
+
+.status-badge {
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.status-badge-warning {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+}
+
+/* Tarjetas de Información */
+.info-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    animation: fadeInScale 0.5s ease backwards;
+}
+
+.info-card:nth-child(1) { animation-delay: 0.1s; }
+.info-card:nth-child(2) { animation-delay: 0.2s; }
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.info-card:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.info-card-header {
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    color: #374151;
+}
+
+.info-card-header i {
+    font-size: 20px;
+    color: #06b6d4;
+}
+
+.info-card-body {
+    padding: 20px;
+}
+
+.info-item {
+    margin-bottom: 16px;
+}
+
+.info-item label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.info-item p {
+    color: #1f2937;
+    font-weight: 500;
+    margin-bottom: 0;
+    font-size: 15px;
+}
+
+/* Secciones */
+.validation-section,
+.documents-section,
+.checklist-section,
+.action-section {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    animation: fadeInUp 0.5s ease backwards;
+}
+
+.validation-section { animation-delay: 0.3s; }
+.documents-section { animation-delay: 0.4s; }
+.checklist-section { animation-delay: 0.5s; }
+.action-section { animation-delay: 0.6s; }
+
+.section-title {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.section-title-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: #1e40af;
+    box-shadow: 0 4px 8px rgba(30, 64, 175, 0.15);
+    flex-shrink: 0;
+}
+
+.section-title h4 {
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 4px;
+    font-size: 20px;
+}
+
+.section-title p {
+    color: #6b7280;
+    margin-bottom: 0;
+    font-size: 14px;
+}
+
+/* Tarjeta de Validación */
+.validation-card {
+    border-radius: 16px;
+    padding: 24px;
+    border: 2px solid;
+}
+
+.validation-success {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border-color: #86efac;
+}
+
+.validation-warning {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border-color: #fde68a;
+}
+
+.validation-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.validation-header i {
+    font-size: 28px;
+}
+
+.validation-success .validation-header i {
+    color: #16a34a;
+}
+
+.validation-warning .validation-header i {
+    color: #d97706;
+}
+
+.validation-header h5 {
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+    font-size: 18px;
+}
+
+.validation-checklist {
+    margin-bottom: 20px;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+}
+
+.checklist-item:last-child {
+    margin-bottom: 0;
+}
+
+.item-success {
+    background: white;
+    border: 2px solid #86efac;
+}
+
+.item-danger {
+    background: white;
+    border: 2px solid #fca5a5;
+}
+
+.item-info {
+    background: white;
+    border: 2px solid #93c5fd;
+}
+
+.checklist-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.item-success .checklist-icon {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.item-danger .checklist-icon {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.item-info .checklist-icon {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.checklist-content strong {
+    display: block;
+    color: #1f2937;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.checklist-content span {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.validation-alerts {
+    padding: 16px;
+    border-radius: 12px;
+    display: flex;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.alert-danger-modern {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-left: 4px solid #dc2626;
+}
+
+.alert-success-modern {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    border-left: 4px solid #16a34a;
+}
+
+.validation-alerts .alert-icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    font-size: 24px;
+}
+
+.alert-danger-modern .alert-icon {
+    color: #dc2626;
+}
+
+.alert-success-modern .alert-icon {
+    color: #16a34a;
+}
+
+.validation-alerts h6 {
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.validation-alerts ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.validation-alerts li {
+    color: #374151;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+/* Tarjetas de Documentos */
+.document-card {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.document-card:hover {
+    border-color: #06b6d4;
+    box-shadow: 0 8px 20px rgba(6, 182, 212, 0.15);
+    transform: translateY(-4px);
+}
+
+.document-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: #2563eb;
+    flex-shrink: 0;
+}
+
+.document-info {
+    flex: 1;
+}
+
+.document-info h6 {
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 6px;
+    font-size: 15px;
+}
+
+.document-filename {
+    color: #6b7280;
+    font-size: 13px;
+    margin-bottom: 4px;
+    word-break: break-word;
+}
+
+.document-date {
+    color: #9ca3af;
+    font-size: 12px;
+    margin-bottom: 0;
+}
+
+.document-date i {
+    margin-right: 4px;
+}
+
+.btn-document-action {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.btn-document-action:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+/* Estado Vacío */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-state-danger .empty-state-icon {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 24px;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    color: #dc2626;
+    box-shadow: 0 8px 24px rgba(220, 38, 38, 0.2);
+}
+
+.empty-state h5 {
+    color: #1f2937;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    color: #6b7280;
+    margin-bottom: 0;
+}
+
+/* Checklist Personalizado */
+.checklist-card {
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border-radius: 16px;
+    padding: 20px;
+}
+
+.custom-checkbox-item {
+    position: relative;
+    margin-bottom: 16px;
+}
+
+.custom-checkbox-item:last-child {
+    margin-bottom: 0;
+}
+
+.custom-checkbox {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.custom-checkbox-item label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: #374151;
+}
+
+.custom-checkbox-item label:hover {
+    border-color: #06b6d4;
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.15);
+}
+
+.checkbox-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 2px solid #d1d5db;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.checkbox-icon i {
+    font-size: 16px;
+    color: white;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.custom-checkbox:checked + label {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+.custom-checkbox:checked + label .checkbox-icon {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-color: #10b981;
+}
+
+.custom-checkbox:checked + label .checkbox-icon i {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Alertas de Estado */
+.status-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+}
+
+.status-alert i {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+.status-alert strong {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.status-alert p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.status-alert-success {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 2px solid #86efac;
+}
+
+.status-alert-success i {
+    color: #16a34a;
+}
+
+.status-alert-danger {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border: 2px solid #fca5a5;
+}
+
+.status-alert-danger i {
+    color: #dc2626;
+}
+
+/* Botones de Acción Grandes */
+.action-buttons-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.btn-action-large {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 18px 32px;
+    border-radius: 14px;
+    border: none;
+    font-weight: 700;
+    font-size: 16px;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-action-large::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.5s, height 0.5s;
+}
+
+.btn-action-large:hover::before {
+    width: 400px;
+    height: 400px;
+}
+
+.btn-action-large i {
+    font-size: 22px;
+    transition: transform 0.3s ease;
+}
+
+.btn-action-large:hover i {
+    transform: scale(1.2);
+}
+
+.btn-action-large:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.btn-action-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.btn-action-success:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.btn-action-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.btn-action-warning:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+}
+
+.btn-action-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.btn-action-primary:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+/* Badges Modernos */
+.badge-modern {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.badge-modern-secondary {
+    background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+    color: #1f2937;
+}
+
+.badge-modern-purple {
+    background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+    color: #5b21b6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 16px;
+    }
+    
+    .status-badge {
+        align-self: flex-start;
+    }
+    
+    .section-title {
+        flex-direction: column;
+    }
+    
+    .action-buttons-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 {% endblock %}
 
 {% block scripts %}
 <script>
-// Validar que todos los checks esten marcados antes de completar
-document.getElementById('btnCompletar')?.addEventListener('click', function(e) {
-    const checks = document.querySelectorAll('input[type="checkbox"]');
-    const todosChecked = Array.from(checks).every(check => check.checked);
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar tooltips de Bootstrap
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
     
-    if (!todosChecked) {
-        e.preventDefault();
-        alert('⚠️ Por favor, verifique todos los items del checklist manual antes de continuar.');
-        
-        // Resaltar checks no marcados
-        checks.forEach(check => {
-            if (!check.checked) {
-                check.parentElement.style.backgroundColor = '#fff3cd';
-                check.parentElement.style.padding = '5px';
-                check.parentElement.style.borderRadius = '5px';
+    // Validar que todos los checks estén marcados antes de completar
+    const btnCompletar = document.getElementById('btnCompletar');
+    if (btnCompletar) {
+        btnCompletar.addEventListener('click', function(e) {
+            const checks = document.querySelectorAll('.custom-checkbox');
+            const todosChecked = Array.from(checks).every(check => check.checked);
+            
+            if (!todosChecked) {
+                e.preventDefault();
+                
+                // Mostrar alerta moderna
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'status-alert status-alert-danger';
+                alertDiv.style.animation = 'shake 0.5s ease';
+                alertDiv.innerHTML = `
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <div>
+                        <strong>Checklist incompleto</strong>
+                        <p>Por favor, verifique todos los items del checklist manual antes de continuar.</p>
+                    </div>
+                `;
+                
+                const form = document.getElementById('formValidacion');
+                form.insertBefore(alertDiv, form.firstChild);
+                
+                // Resaltar checks no marcados con animación
+                checks.forEach(check => {
+                    if (!check.checked) {
+                        const label = check.nextElementSibling;
+                        label.style.animation = 'shake 0.5s ease';
+                        label.style.borderColor = '#fca5a5';
+                        label.style.background = 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)';
+                        
+                        setTimeout(() => {
+                            label.style.animation = '';
+                        }, 500);
+                    }
+                });
+                
+                // Scroll a la alerta
+                alertDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Remover alerta después de 5 segundos
+                setTimeout(() => {
+                    alertDiv.style.animation = 'fadeOut 0.3s ease';
+                    setTimeout(() => alertDiv.remove(), 300);
+                }, 5000);
+            } else {
+                // Confirmación con estilo moderno
+                if (!confirm('¿Está seguro de que la documentación está completa y correcta?\n\nEsto permitirá aprobar o rechazar la incapacidad.')) {
+                    e.preventDefault();
+                }
             }
         });
-    } else {
-        if (!confirm('¿Esta seguro de que la documentacion esta completa y correcta?\n\nEsto permitira aprobar o rechazar la incapacidad.')) {
-            e.preventDefault();
-        }
     }
-});
-
-// Limpiar resaltado cuando se marque un check
-document.querySelectorAll('input[type="checkbox"]').forEach(check => {
-    check.addEventListener('change', function() {
-        if (this.checked) {
-            this.parentElement.style.backgroundColor = '';
-            this.parentElement.style.padding = '';
-        }
+    
+    // Limpiar resaltado cuando se marque un check
+    document.querySelectorAll('.custom-checkbox').forEach(check => {
+        check.addEventListener('change', function() {
+            const label = this.nextElementSibling;
+            if (this.checked) {
+                label.style.borderColor = '';
+                label.style.background = '';
+            }
+        });
     });
 });
+
+// Animaciones CSS adicionales
+const styleAnimations = document.createElement('style');
+styleAnimations.textContent = `
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+    
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+    }
+`;
+document.head.appendChild(styleAnimations);
+</script>
 </script>
 {% endblock %}

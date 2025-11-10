@@ -1,138 +1,1022 @@
 {% extends "base.html" %}
 
-{% block title %}Aprobar/Rechazar Incapacidad #{{ incapacidad.id }}{% endblock %}
+{% block title %}Decisión Final - Incapacidad #{{ incapacidad.id }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8 offset-md-2">
-        <div class="mb-3">
-            <a href="{{ url_for('incapacidades.dashboard_auxiliar') }}" class="btn btn-secondary">
-                &larr; Volver al Dashboard
-            </a>
-        </div>
-
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h3 class="mb-0">Decision Final - Incapacidad #{{ incapacidad.id }}</h3>
-            </div>
-            <div class="card-body">
-                <!-- Resumen -->
-                <div class="alert alert-info">
-                    <h5>Resumen de la Incapacidad</h5>
-                    <p><strong>Colaborador:</strong> {{ incapacidad.usuario.nombre }}</p>
-                    <p><strong>Tipo:</strong> {{ incapacidad.tipo }}</p>
-                    <p><strong>Periodo:</strong> {{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }} al {{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}</p>
-                    <p><strong>Dias:</strong> {{ incapacidad.dias }}</p>
-                    <p class="mb-0"><strong>Documentos:</strong> {{ incapacidad.documentos|length }} adjuntos</p>
+<div class="aprobar-rechazar-container">
+    <div class="row">
+        <div class="col-12 col-xl-10 offset-xl-1">
+            
+            <!-- Header -->
+            <div class="page-header d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <a href="{{ url_for('incapacidades.dashboard_auxiliar') }}" class="btn-back">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h2 class="mb-1">
+                            <i class="bi bi-clipboard-check me-2"></i>
+                            Decisión Final
+                        </h2>
+                        <p class="text-muted mb-0" style="font-size: 14px;">
+                            Revise y tome una decisión sobre esta incapacidad
+                        </p>
+                    </div>
                 </div>
+                <div class="codigo-badge">
+                    <i class="bi bi-hash"></i>
+                    <span>{{ incapacidad.id }}</span>
+                </div>
+            </div>
 
-                <hr>
+            <!-- Resumen de Información -->
+            <div class="info-summary-card">
+                <div class="info-summary-header">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span>Resumen de la Incapacidad</span>
+                </div>
+                <div class="info-summary-grid">
+                    <div class="info-summary-item">
+                        <i class="bi bi-person-circle"></i>
+                        <div>
+                            <label>Colaborador</label>
+                            <p>{{ incapacidad.usuario.nombre }}</p>
+                        </div>
+                    </div>
+                    <div class="info-summary-item">
+                        <i class="bi bi-tag-fill"></i>
+                        <div>
+                            <label>Tipo</label>
+                            <p>{{ incapacidad.tipo }}</p>
+                        </div>
+                    </div>
+                    <div class="info-summary-item">
+                        <i class="bi bi-calendar-range"></i>
+                        <div>
+                            <label>Periodo</label>
+                            <p>{{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }} - {{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                    </div>
+                    <div class="info-summary-item">
+                        <i class="bi bi-hourglass-split"></i>
+                        <div>
+                            <label>Días</label>
+                            <p>{{ incapacidad.dias }} día{% if incapacidad.dias != 1 %}s{% endif %}</p>
+                        </div>
+                    </div>
+                    <div class="info-summary-item">
+                        <i class="bi bi-files"></i>
+                        <div>
+                            <label>Documentos</label>
+                            <p>{{ incapacidad.documentos|length }} adjunto{% if incapacidad.documentos|length != 1 %}s{% endif %}</p>
+                        </div>
+                    </div>
+                    <div class="info-summary-item">
+                        <i class="bi bi-clock-history"></i>
+                        <div>
+                            <label>Fecha de Registro</label>
+                            <p>{{ incapacidad.fecha_registro.strftime('%d/%m/%Y %H:%M') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <!-- Formulario de Decision -->
-                <form method="POST" id="formDecision">
-                    <h5>Seleccione su decision:</h5>
-                    
-                    <!-- Opcion Aprobar -->
-                    <div class="card mb-3 border-success">
-                        <div class="card-body">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="decision" 
-                                       id="radioAprobar" value="aprobar" required>
-                                <label class="form-check-label" for="radioAprobar">
-                                    <h5 class="text-success mb-2">✓ Aprobar Incapacidad</h5>
-                                    <p class="text-muted mb-0">
-                                        La documentacion esta completa y correcta. La incapacidad sera marcada como aprobada.
-                                    </p>
-                                </label>
-                            </div>
+            <!-- Formulario de Decisión -->
+            <form method="POST" id="formDecision">
+                
+                <!-- Tarjeta de Decisiones -->
+                <div class="decision-card">
+                    <div class="section-title mb-4">
+                        <div class="section-title-icon">
+                            <i class="bi bi-check2-square"></i>
+                        </div>
+                        <div>
+                            <h4>Seleccione su Decisión</h4>
+                            <p>Esta acción es definitiva y notificará al colaborador</p>
                         </div>
                     </div>
 
-                    <!-- Opcion Rechazar -->
-                    <div class="card mb-3 border-danger">
-                        <div class="card-body">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="decision" 
-                                       id="radioRechazar" value="rechazar">
-                                <label class="form-check-label" for="radioRechazar">
-                                    <h5 class="text-danger mb-2">✗ Rechazar Incapacidad</h5>
-                                    <p class="text-muted mb-0">
-                                        La incapacidad no cumple con los requisitos necesarios.
-                                    </p>
-                                </label>
+                    <div class="decision-options">
+                        
+                        <!-- Opción: Aprobar -->
+                        <div class="decision-option decision-option-approve" id="optionAprobar">
+                            <div class="decision-radio-wrapper">
+                                <input type="radio" name="decision" id="radioAprobar" value="aprobar" 
+                                       class="decision-radio" required>
+                                <label for="radioAprobar" class="decision-radio-label"></label>
                             </div>
-                            
-                            <!-- Campo de motivo (se muestra solo si se selecciona rechazar) -->
-                            <div id="divMotivo" style="display: none;" class="mt-3">
-                                <label for="motivo_rechazo" class="form-label">
-                                    Motivo del Rechazo *
-                                </label>
-                                <textarea class="form-control" id="motivo_rechazo" name="motivo_rechazo" 
-                                          rows="4" placeholder="Explique detalladamente el motivo del rechazo (minimo 10 caracteres)..."></textarea>
-                                <div class="form-text">
-                                    El colaborador vera este mensaje. Sea claro y especifico.
+                            <div class="decision-content">
+                                <div class="decision-header">
+                                    <div class="decision-icon decision-icon-success">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="decision-title">Aprobar Incapacidad</h5>
+                                        <p class="decision-description">
+                                            La documentación está completa y correcta. La incapacidad será marcada como aprobada.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="decision-benefits">
+                                    <div class="benefit-item">
+                                        <i class="bi bi-check2"></i>
+                                        <span>El colaborador será notificado inmediatamente</span>
+                                    </div>
+                                    <div class="benefit-item">
+                                        <i class="bi bi-check2"></i>
+                                        <span>La incapacidad quedará registrada en el sistema</span>
+                                    </div>
+                                    <div class="benefit-item">
+                                        <i class="bi bi-check2"></i>
+                                        <span>Se actualizará el historial de estados</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <hr>
+                        <!-- Opción: Rechazar -->
+                        <div class="decision-option decision-option-reject" id="optionRechazar">
+                            <div class="decision-radio-wrapper">
+                                <input type="radio" name="decision" id="radioRechazar" value="rechazar" 
+                                       class="decision-radio">
+                                <label for="radioRechazar" class="decision-radio-label"></label>
+                            </div>
+                            <div class="decision-content">
+                                <div class="decision-header">
+                                    <div class="decision-icon decision-icon-danger">
+                                        <i class="bi bi-x-circle-fill"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="decision-title">Rechazar Incapacidad</h5>
+                                        <p class="decision-description">
+                                            La incapacidad no cumple con los requisitos necesarios.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="decision-benefits">
+                                    <div class="benefit-item">
+                                        <i class="bi bi-exclamation-circle"></i>
+                                        <span>Debe especificar el motivo del rechazo</span>
+                                    </div>
+                                    <div class="benefit-item">
+                                        <i class="bi bi-exclamation-circle"></i>
+                                        <span>El colaborador recibirá una notificación detallada</span>
+                                    </div>
+                                    <div class="benefit-item">
+                                        <i class="bi bi-exclamation-circle"></i>
+                                        <span>Se registrará en el historial de estados</span>
+                                    </div>
+                                </div>
 
-                    <!-- Botones -->
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-lg" id="btnSubmit">
-                            Confirmar Decision
-                        </button>
-                        <a href="{{ url_for('incapacidades.detalle', id=incapacidad.id) }}" 
-                           class="btn btn-outline-secondary">
-                            Ver Detalle Completo
-                        </a>
+                                <!-- Campo de Motivo (se muestra al seleccionar) -->
+                                <div id="divMotivo" class="motivo-rechazo-section" style="display: none;">
+                                    <label for="motivo_rechazo" class="motivo-label">
+                                        <i class="bi bi-chat-left-text"></i>
+                                        <span>Motivo del Rechazo</span>
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea class="motivo-textarea" id="motivo_rechazo" name="motivo_rechazo" 
+                                              rows="5" placeholder="Explique detalladamente el motivo del rechazo. Sea claro y específico, el colaborador verá este mensaje..."></textarea>
+                                    <div class="motivo-help">
+                                        <i class="bi bi-info-circle"></i>
+                                        <span>Mínimo 10 caracteres. Sea profesional y constructivo en su explicación.</span>
+                                    </div>
+                                    <div id="motivoCounter" class="character-counter">0 / 10 caracteres mínimos</div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
-                </form>
+                </div>
+
+                <!-- Alerta de Validación -->
+                <div id="alertValidacion" class="validation-alert" style="display: none;">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <div>
+                        <strong>Acción Requerida</strong>
+                        <p id="mensajeValidacion"></p>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="action-buttons-row mb-4">
+                    <a href="{{ url_for('incapacidades.detalle', id=incapacidad.id) }}" 
+                       class="btn-action-large btn-action-secondary">
+                        <i class="bi bi-eye"></i>
+                        <span>Ver Detalle Completo</span>
+                    </a>
+                    <button type="submit" class="btn-action-large btn-action-primary" id="btnSubmit">
+                        <i class="bi bi-check-circle"></i>
+                        <span>Confirmar Decisión</span>
+                    </button>
+                </div>
+
+            </form>
+
+            <!-- Información Importante -->
+            <div class="info-box-card mb-5">
+                <div class="info-box-header">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Información Importante</span>
+                </div>
+                <div class="info-box-content">
+                    <ul>
+                        <li>
+                            <i class="bi bi-dot"></i>
+                            Esta decisión es <strong>definitiva</strong> y quedará registrada en el historial de estados.
+                        </li>
+                        <li>
+                            <i class="bi bi-dot"></i>
+                            El colaborador recibirá una <strong>notificación por correo electrónico</strong> con el resultado.
+                        </li>
+                        <li>
+                            <i class="bi bi-dot"></i>
+                            Si rechaza, asegúrese de proporcionar un <strong>motivo claro y específico</strong>.
+                        </li>
+                        <li>
+                            <i class="bi bi-dot"></i>
+                            Puede revisar el <strong>detalle completo</strong> antes de tomar su decisión.
+                        </li>
+                    </ul>
+                </div>
             </div>
+
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
-<script>
-// Mostrar/ocultar campo de motivo segun seleccion
-document.getElementById('radioRechazar').addEventListener('change', function() {
-    document.getElementById('divMotivo').style.display = 'block';
-    document.getElementById('motivo_rechazo').required = true;
-});
+<style>
+/* ==================================================
+   APROBAR/RECHAZAR - ESTILOS MODERNOS
+   ================================================== */
 
-document.getElementById('radioAprobar').addEventListener('change', function() {
-    document.getElementById('divMotivo').style.display = 'none';
-    document.getElementById('motivo_rechazo').required = false;
-    document.getElementById('motivo_rechazo').value = '';
-});
+.aprobar-rechazar-container {
+    animation: fadeInUp 0.5s ease;
+}
 
-// Confirmar decision
-document.getElementById('formDecision').addEventListener('submit', function(e) {
-    const decision = document.querySelector('input[name="decision"]:checked');
-    
-    if (!decision) {
-        e.preventDefault();
-        alert('Por favor, seleccione una decision (Aprobar o Rechazar)');
-        return;
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header */
+.page-header {
+    animation: slideInLeft 0.4s ease;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.page-header h2 {
+    color: #1f2937;
+    font-weight: 700;
+    font-size: 28px;
+}
+
+.page-header i {
+    color: #8b5cf6;
+}
+
+.btn-back {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: white;
+    border: 2px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #6b7280;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-back:hover {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    border-color: #8b5cf6;
+    transform: translateX(-5px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.codigo-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 2px solid #93c5fd;
+    border-radius: 14px;
+    font-weight: 700;
+    color: #1e40af;
+    font-family: 'Courier New', monospace;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    animation: fadeInScale 0.5s ease backwards;
+    animation-delay: 0.1s;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.codigo-badge i {
+    font-size: 20px;
+}
+
+/* Tarjeta de Resumen */
+.info-summary-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    animation: fadeInScale 0.5s ease backwards;
+    animation-delay: 0.2s;
+}
+
+.info-summary-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #f3f4f6;
+    font-weight: 700;
+    color: #1f2937;
+    font-size: 16px;
+}
+
+.info-summary-header i {
+    font-size: 24px;
+    color: #3b82f6;
+}
+
+.info-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.info-summary-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.info-summary-item:hover {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.info-summary-item > i {
+    font-size: 28px;
+    color: #3b82f6;
+    flex-shrink: 0;
+}
+
+.info-summary-item label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.info-summary-item p {
+    color: #1f2937;
+    font-weight: 600;
+    margin-bottom: 0;
+    font-size: 14px;
+}
+
+/* Tarjeta de Decisión */
+.decision-card {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    animation: fadeInUp 0.5s ease backwards;
+    animation-delay: 0.3s;
+}
+
+.section-title {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.section-title-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: #6b21a8;
+    box-shadow: 0 4px 8px rgba(139, 92, 246, 0.15);
+    flex-shrink: 0;
+}
+
+.section-title h4 {
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 4px;
+    font-size: 20px;
+}
+
+.section-title p {
+    color: #6b7280;
+    margin-bottom: 0;
+    font-size: 14px;
+}
+
+/* Opciones de Decisión */
+.decision-options {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.decision-option {
+    display: flex;
+    gap: 20px;
+    padding: 28px;
+    border-radius: 16px;
+    border: 3px solid #e5e7eb;
+    background: white;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.decision-option:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+}
+
+.decision-option-approve:hover {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+.decision-option-reject:hover {
+    border-color: #ef4444;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+/* Radio Button Personalizado */
+.decision-radio-wrapper {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 8px;
+}
+
+.decision-radio {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.decision-radio-label {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 3px solid #d1d5db;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.decision-radio-label::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.decision-radio:checked + .decision-radio-label::after {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.decision-option-approve .decision-radio:checked + .decision-radio-label {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-color: #10b981;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+}
+
+.decision-option-reject .decision-radio:checked + .decision-radio-label {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+}
+
+.decision-radio-label:hover {
+    border-color: #8b5cf6;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+/* Contenido de Decisión */
+.decision-content {
+    flex: 1;
+}
+
+.decision-header {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.decision-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.decision-icon-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+}
+
+.decision-icon-danger {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+}
+
+.decision-title {
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 6px;
+    font-size: 18px;
+}
+
+.decision-description {
+    color: #6b7280;
+    margin-bottom: 0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Beneficios */
+.decision-benefits {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 12px;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #374151;
+    font-size: 14px;
+}
+
+.benefit-item i {
+    font-size: 16px;
+    color: #6b7280;
+    flex-shrink: 0;
+}
+
+/* Campo de Motivo */
+.motivo-rechazo-section {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 2px solid #fee2e2;
+    animation: slideDown 0.4s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        max-height: 500px;
+        transform: translateY(0);
+    }
+}
+
+.motivo-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 12px;
+    font-size: 15px;
+}
+
+.motivo-label i {
+    color: #ef4444;
+    font-size: 18px;
+}
+
+.motivo-textarea {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    transition: all 0.3s ease;
+    line-height: 1.6;
+}
+
+.motivo-textarea:focus {
+    outline: none;
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+.motivo-textarea::placeholder {
+    color: #9ca3af;
+}
+
+.motivo-help {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.motivo-help i {
+    color: #ef4444;
+}
+
+.character-counter {
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    text-align: right;
+}
+
+.character-counter.valid {
+    color: #10b981;
+}
+
+/* Alerta de Validación */
+.validation-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border: 2px solid #fca5a5;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+.validation-alert i {
+    font-size: 28px;
+    color: #dc2626;
+    flex-shrink: 0;
+}
+
+.validation-alert strong {
+    display: block;
+    color: #1f2937;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.validation-alert p {
+    color: #374151;
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Botones de Acción */
+.action-buttons-row {
+    display: flex;
+    gap: 16px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.btn-action-large {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px 32px;
+    border-radius: 14px;
+    border: none;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-action-large::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.5s, height 0.5s;
+}
+
+.btn-action-large:hover::before {
+    width: 400px;
+    height: 400px;
+}
+
+.btn-action-large i {
+    font-size: 20px;
+    transition: transform 0.3s ease;
+}
+
+.btn-action-large:hover i {
+    transform: scale(1.2);
+}
+
+.btn-action-large:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.btn-action-primary {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+}
+
+.btn-action-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+}
+
+.btn-action-secondary {
+    background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+    color: #1f2937;
+}
+
+.btn-action-secondary:hover {
+    background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+}
+
+/* Info Box */
+.info-box-card {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 2px solid #7dd3fc;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.15);
+    animation: fadeInUp 0.5s ease backwards;
+    animation-delay: 0.4s;
+}
+
+.info-box-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    font-weight: 700;
+    color: #0c4a6e;
+    font-size: 16px;
+}
+
+.info-box-header i {
+    font-size: 24px;
+    color: #0284c7;
+}
+
+.info-box-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.info-box-content li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    color: #374151;
+    font-size: 14px;
+    line-height: 1.6;
+    border-bottom: 1px solid rgba(125, 211, 252, 0.3);
+}
+
+.info-box-content li:last-child {
+    border-bottom: none;
+}
+
+.info-box-content li i {
+    font-size: 8px;
+    color: #0284c7;
+    flex-shrink: 0;
+    margin-top: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-header > div {
+        flex-direction: column;
+        align-items: flex-start !important;
     }
     
-    if (decision.value === 'aprobar') {
-        if (!confirm('¿Esta seguro de APROBAR esta incapacidad?')) {
-            e.preventDefault();
+    .codigo-badge {
+        align-self: flex-start;
+    }
+    
+    .info-summary-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .decision-option {
+        flex-direction: column;
+    }
+    
+    .decision-radio-wrapper {
+        align-self: flex-start;
+    }
+    
+    .action-buttons-row {
+        flex-direction: column-reverse;
+    }
+    
+    .btn-action-large {
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('formDecision');
+    const radioAprobar = document.getElementById('radioAprobar');
+    const radioRechazar = document.getElementById('radioRechazar');
+    const optionAprobar = document.getElementById('optionAprobar');
+    const optionRechazar = document.getElementById('optionRechazar');
+    const divMotivo = document.getElementById('divMotivo');
+    const motivoTextarea = document.getElementById('motivo_rechazo');
+    const motivoCounter = document.getElementById('motivoCounter');
+    const alertValidacion = document.getElementById('alertValidacion');
+    const mensajeValidacion = document.getElementById('mensajeValidacion');
+    
+    // Hacer clic en la tarjeta selecciona el radio
+    optionAprobar.addEventListener('click', function(e) {
+        if (e.target.tagName !== 'INPUT') {
+            radioAprobar.checked = true;
+            radioAprobar.dispatchEvent(new Event('change'));
         }
-    } else {
-        const motivo = document.getElementById('motivo_rechazo').value.trim();
-        if (motivo.length < 10) {
-            e.preventDefault();
-            alert('El motivo de rechazo debe tener al menos 10 caracteres');
+    });
+    
+    optionRechazar.addEventListener('click', function(e) {
+        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            radioRechazar.checked = true;
+            radioRechazar.dispatchEvent(new Event('change'));
+        }
+    });
+    
+    // Mostrar/ocultar campo de motivo
+    radioRechazar.addEventListener('change', function() {
+        if (this.checked) {
+            divMotivo.style.display = 'block';
+            motivoTextarea.required = true;
+            alertValidacion.style.display = 'none';
+        }
+    });
+    
+    radioAprobar.addEventListener('change', function() {
+        if (this.checked) {
+            divMotivo.style.display = 'none';
+            motivoTextarea.required = false;
+            motivoTextarea.value = '';
+            alertValidacion.style.display = 'none';
+            updateCounter();
+        }
+    });
+    
+    // Contador de caracteres
+    function updateCounter() {
+        const length = motivoTextarea.value.trim().length;
+        motivoCounter.textContent = `${length} / 10 caracteres mínimos`;
+        
+        if (length >= 10) {
+            motivoCounter.classList.add('valid');
+        } else {
+            motivoCounter.classList.remove('valid');
+        }
+    }
+    
+    motivoTextarea.addEventListener('input', updateCounter);
+    
+    // Validar y confirmar antes de enviar
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const decision = document.querySelector('input[name="decision"]:checked');
+        
+        // Validar que se haya seleccionado una opción
+        if (!decision) {
+            mensajeValidacion.textContent = 'Por favor, seleccione una decisión (Aprobar o Rechazar)';
+            alertValidacion.style.display = 'flex';
+            alertValidacion.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
-        if (!confirm('¿Esta seguro de RECHAZAR esta incapacidad?\n\nEsta accion notificara al colaborador.')) {
-            e.preventDefault();
+        
+        // Si es aprobar
+        if (decision.value === 'aprobar') {
+            if (confirm('¿Está seguro de APROBAR esta incapacidad?\n\nEsta acción es definitiva y el colaborador será notificado inmediatamente.')) {
+                form.submit();
+            }
+            return;
         }
+        
+        // Si es rechazar, validar motivo
+        const motivo = motivoTextarea.value.trim();
+        if (motivo.length < 10) {
+            mensajeValidacion.textContent = 'El motivo de rechazo debe tener al menos 10 caracteres. Sea claro y específico.';
+            alertValidacion.style.display = 'flex';
+            alertValidacion.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            motivoTextarea.focus();
+            return;
+        }
+        
+        // Confirmar rechazo
+        if (confirm('¿Está seguro de RECHAZAR esta incapacidad?\n\nEl colaborador recibirá una notificación con el motivo del rechazo.\n\nEsta acción es definitiva.')) {
+            form.submit();
+        }
+    });
+    
+    // Inicializar tooltips si están disponibles
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
     }
 });
 </script>

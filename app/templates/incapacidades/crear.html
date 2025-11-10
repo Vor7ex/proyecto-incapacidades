@@ -3,218 +3,1374 @@
 {% block title %}Registrar Incapacidad{% endblock %}
 
 {% block content %}
-<div class="row">
-  <div class="col-md-10 offset-md-1">
-    <div class="card shadow">
-      <div class="card-header bg-primary text-white">
-        <h3 class="mb-0">📋 Registrar Nueva Incapacidad</h3>
-      </div>
-      <div class="card-body">
-        <!-- Alertas de validación del servidor -->
-        <div id="serverErrors" style="display: none;" class="alert alert-danger alert-dismissible fade show">
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          <strong>❌ Errores de validación:</strong>
-          <ul id="serverErrorsList" class="mb-0 mt-2"></ul>
-        </div>
-
-        <form method="POST" enctype="multipart/form-data" id="formIncapacidad">
-          <!-- Tipo de Incapacidad -->
-          <div class="mb-4">
-            <label for="tipo" class="form-label fw-bold">Tipo de Incapacidad *</label>
-            <select class="form-select" id="tipo" name="tipo" required>
-              <option value="">-- Seleccione un tipo --</option>
-              <option value="Enfermedad General">Enfermedad General</option>
-              <option value="Accidente Laboral">Accidente Laboral</option>
-              <option value="Accidente de Tránsito">Accidente de Tránsito</option>
-              <option value="Licencia de Maternidad">Licencia de Maternidad</option>
-              <option value="Licencia de Paternidad">Licencia de Paternidad</option>
-            </select>
-            <div class="form-text">Seleccione el tipo para ver los documentos requeridos</div>
-          </div>
-
-          <!-- Fechas -->
-          <div class="row mb-4">
-            <div class="col-md-6 mb-3">
-              <label for="fecha_inicio" class="form-label fw-bold">Fecha de Inicio *</label>
-              <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" required>
+<div class="registrar-incapacidad-container">
+    <div class="row">
+        <div class="col-12 col-xl-10 offset-xl-1">
+            
+            <!-- Header -->
+            <div class="page-header d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <a href="{{ url_for('incapacidades.mis_incapacidades') }}" class="btn-back">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h2 class="mb-1">
+                            <i class="bi bi-file-earmark-plus me-2"></i>
+                            Registrar Nueva Incapacidad
+                        </h2>
+                        <p class="text-muted mb-0" style="font-size: 14px;">
+                            Complete el formulario para registrar su solicitud de incapacidad
+                        </p>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-6 mb-3">
-              <label for="fecha_fin" class="form-label fw-bold">Fecha de Fin *</label>
-              <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" required>
-            </div>
-          </div>
 
-          <!-- Días calculados -->
-          <div class="mb-4">
-            <div class="alert alert-info" id="diasCalculados" style="display: none;">
-              <div class="d-flex align-items-center">
-                <i class="bi bi-calendar-check fs-3 me-3"></i>
+            <!-- Alertas de validación del servidor -->
+            <div id="serverErrors" style="display: none;" class="validation-alert mb-4">
+                <i class="bi bi-exclamation-triangle-fill"></i>
                 <div>
-                  <strong>Días de incapacidad:</strong> <span id="numeroDias" class="fs-4 text-primary fw-bold">0</span> día(s)
-                  <div class="small text-muted">Del <span id="fechaInicioText"></span> al <span id="fechaFinText"></span></div>
+                    <strong>Errores de validación</strong>
+                    <ul id="serverErrorsList" class="mb-0 mt-2"></ul>
                 </div>
-              </div>
             </div>
-          </div>
 
-          <!-- UC5: Panel de Documentos Requeridos Dinámico -->
-          <div class="mb-4" id="documentos-requeridos" style="display: none;">
-            <div class="card border-info">
-              <div class="card-header bg-info bg-opacity-10 d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">📄 Documentos Requeridos</h5>
-                <div id="progress-indicator" class="badge bg-primary fs-6">
-                  <i class="bi bi-file-earmark-check me-1"></i>
-                  <span id="progress-text">0 de 0 documentos</span>
-                </div>
-              </div>
-              <div class="card-body">
-                <!-- Indicador de progreso visual -->
-                <div class="progress mb-3" style="height: 8px;">
-                  <div class="progress-bar" id="progress-bar" role="progressbar" 
-                       style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                  </div>
-                </div>
+            <form method="POST" enctype="multipart/form-data" id="formIncapacidad">
                 
-                <!-- Lista dinámica de documentos -->
-                <div id="checklist-documentos">
-                  <!-- Se llena dinámicamente con JavaScript -->
+                <!-- Tarjeta de Información Básica -->
+                <div class="form-card">
+                    <div class="form-card-header">
+                        <div class="form-card-icon">
+                            <i class="bi bi-info-circle-fill"></i>
+                        </div>
+                        <div>
+                            <h4>Información Básica</h4>
+                            <p>Datos principales de la incapacidad</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-card-body">
+                        <!-- Tipo de Incapacidad -->
+                        <div class="form-group-modern">
+                            <label for="tipo" class="form-label-modern">
+                                <i class="bi bi-tag-fill"></i>
+                                <span>Tipo de Incapacidad</span>
+                                <span class="required-mark">*</span>
+                            </label>
+                            <select class="form-control-modern" id="tipo" name="tipo" required>
+                                <option value="">-- Seleccione un tipo --</option>
+                                <option value="Enfermedad General">Enfermedad General</option>
+                                <option value="Accidente Laboral">Accidente Laboral</option>
+                                <option value="Accidente de Tránsito">Accidente de Tránsito</option>
+                                <option value="Licencia de Maternidad">Licencia de Maternidad</option>
+                                <option value="Licencia de Paternidad">Licencia de Paternidad</option>
+                            </select>
+                            <div class="form-help">
+                                <i class="bi bi-lightbulb"></i>
+                                Seleccione el tipo para ver los documentos requeridos
+                            </div>
+                        </div>
+
+                        <!-- Fechas -->
+                        <div class="form-row">
+                            <div class="form-group-modern">
+                                <label for="fecha_inicio" class="form-label-modern">
+                                    <i class="bi bi-calendar-event"></i>
+                                    <span>Fecha de Inicio</span>
+                                    <span class="required-mark">*</span>
+                                </label>
+                                <input type="date" class="form-control-modern" id="fecha_inicio" name="fecha_inicio" required>
+                            </div>
+                            <div class="form-group-modern">
+                                <label for="fecha_fin" class="form-label-modern">
+                                    <i class="bi bi-calendar-check"></i>
+                                    <span>Fecha de Fin</span>
+                                    <span class="required-mark">*</span>
+                                </label>
+                                <input type="date" class="form-control-modern" id="fecha_fin" name="fecha_fin" required>
+                            </div>
+                        </div>
+
+                        <!-- Días calculados -->
+                        <div id="diasCalculados" class="dias-calculados-card" style="display: none;">
+                            <div class="dias-icon">
+                                <i class="bi bi-hourglass-split"></i>
+                            </div>
+                            <div class="dias-content">
+                                <div class="dias-label">Duración de la Incapacidad</div>
+                                <div class="dias-value">
+                                    <span id="numeroDias">0</span> día<span id="diasPlural">s</span>
+                                </div>
+                                <div class="dias-periodo">
+                                    Del <strong id="fechaInicioText">--/--/----</strong> al <strong id="fechaFinText">--/--/----</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
-                <!-- Alertas de validación -->
-                <div id="validation-alerts" class="mt-3">
-                  <!-- Se llenan dinámicamente -->
+
+                <!-- UC5: Panel de Documentos Requeridos Dinámico -->
+                <div id="documentos-requeridos" class="form-card" style="display: none;">
+                    <div class="form-card-header">
+                        <div class="form-card-icon form-card-icon-success">
+                            <i class="bi bi-file-earmark-check"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h4>Documentos Requeridos</h4>
+                            <p>Verificación de documentación necesaria</p>
+                        </div>
+                        <div class="progress-badge">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span id="progress-text">0 de 0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-card-body">
+                        <!-- Barra de progreso -->
+                        <div class="progress-bar-modern mb-4">
+                            <div class="progress-bar-fill" id="progress-bar" style="width: 0%">
+                                <span class="progress-bar-percentage" id="progress-percentage">0%</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Lista dinámica de documentos -->
+                        <div id="checklist-documentos" class="checklist-container">
+                            <!-- Se llena dinámicamente con JavaScript -->
+                        </div>
+                        
+                        <!-- Alertas de validación -->
+                        <div id="validation-alerts" class="mt-3">
+                            <!-- Se llenan dinámicamente -->
+                        </div>
+                    </div>
                 </div>
-              </div>
-            </div>
-          </div>
 
-          <!-- Información inicial cuando no hay tipo seleccionado -->
-          <div class="mb-4" id="info-inicial">
-            <div class="card border-info">
-              <div class="card-header bg-info bg-opacity-10">
-                <h5 class="mb-0">📄 Documentos Requeridos</h5>
-              </div>
-              <div class="card-body">
-                <div class="alert alert-info mb-0">
-                  <strong>ℹ️ Información:</strong> Seleccione un tipo de incapacidad para ver los documentos requeridos.
+                <!-- Información inicial cuando no hay tipo seleccionado -->
+                <div id="info-inicial" class="form-card">
+                    <div class="form-card-header">
+                        <div class="form-card-icon form-card-icon-info">
+                            <i class="bi bi-file-earmark"></i>
+                        </div>
+                        <div>
+                            <h4>Documentos Requeridos</h4>
+                            <p>Información sobre documentación necesaria</p>
+                        </div>
+                    </div>
+                    <div class="form-card-body">
+                        <div class="info-message">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <div>
+                                <strong>Información</strong>
+                                <p>Seleccione un tipo de incapacidad para ver los documentos requeridos.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            </div>
-          </div>
 
-          <hr class="my-4">
+                <!-- Tarjeta de Adjuntar Documentos -->
+                <div class="form-card">
+                    <div class="form-card-header">
+                        <div class="form-card-icon form-card-icon-warning">
+                            <i class="bi bi-paperclip"></i>
+                        </div>
+                        <div>
+                            <h4>Adjuntar Documentos</h4>
+                            <p>Carga de archivos (opcional en registro inicial)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-card-body">
+                        <!-- UC6: Información sobre documentos opcionales -->
+                        <div id="info-documentos-opcional" class="info-message info-message-warning mb-4">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <div>
+                                <strong>Importante</strong>
+                                <p>La carga de documentos es <strong>OPCIONAL</strong> en el registro inicial.
+                                Si no tiene todos los documentos listos, puede registrar la incapacidad ahora y Gestión Humana le solicitará
+                                los documentos faltantes posteriormente.</p>
+                            </div>
+                        </div>
 
-          <!-- Sección de Documentos -->
-          <h5 class="mb-3">📎 Adjuntar Documentos</h5>
-          
-          <!-- UC6: Información sobre documentos opcionales -->
-          <div class="alert alert-warning mb-4" id="info-documentos-opcional">
-            <i class="bi bi-info-circle-fill me-2"></i>
-            <strong>Importante:</strong> La carga de documentos es <strong>OPCIONAL</strong> en el registro inicial.
-            Si no tiene todos los documentos listos, puede registrar la incapacidad ahora y Gestión Humana le solicitará
-            los documentos faltantes posteriormente.
-          </div>
+                        <!-- Campos de documentos dinámicos -->
+                        <div id="campos-documentos">
+                            <!-- Certificado de Incapacidad (siempre visible) -->
+                            <div class="documento-field-modern" id="field-certificado">
+                                <label for="certificado" class="documento-label" id="label-certificado">
+                                    <div class="documento-label-header">
+                                        <div class="documento-icon">
+                                            <i class="bi bi-file-earmark-medical"></i>
+                                        </div>
+                                        <div>
+                                            <span class="documento-nombre">Certificado de Incapacidad</span>
+                                            <span class="documento-badge documento-badge-opcional" id="badge-certificado">Opcional</span>
+                                        </div>
+                                    </div>
+                                </label>
+                                <input type="file" class="documento-input-modern" id="certificado" name="certificado" 
+                                       accept=".pdf,.jpg,.jpeg,.png" data-tipo="CERTIFICADO_INCAPACIDAD" 
+                                       data-nombre="Certificado de Incapacidad"
+                                       onchange="onDocumentoChange(this)">
+                                <div class="documento-help">
+                                    <i class="bi bi-info-circle"></i>
+                                    Formato: PDF, JPG, PNG. Máximo: 10MB
+                                </div>
+                                <div class="preview-container" id="preview-certificado" style="display: none;"></div>
+                                <div class="invalid-feedback-modern" id="error-certificado"></div>
+                            </div>
 
-          <!-- Campos de documentos dinámicos -->
-          <div id="campos-documentos">
-            <!-- Certificado de Incapacidad (siempre visible) -->
-            <div class="mb-4 documento-field" id="field-certificado">
-              <label for="certificado" class="form-label fw-bold" id="label-certificado">
-                <i class="bi bi-file-earmark-medical me-2"></i>
-                Certificado de Incapacidad 
-                <span class="badge bg-secondary ms-2" id="badge-certificado">Opcional</span>
-              </label>
-              <input type="file" class="form-control documento-input" id="certificado" name="certificado" 
-                     accept=".pdf,.jpg,.jpeg,.png" data-tipo="CERTIFICADO_INCAPACIDAD" 
-                     data-nombre="Certificado de Incapacidad">
-              <div class="form-text">
-                <i class="bi bi-info-circle me-1"></i>
-                Formato: PDF, JPG, PNG. Máx: 10MB
-              </div>
-              <div class="preview-container mt-2" id="preview-certificado" style="display: none;"></div>
-              <div class="invalid-feedback"></div>
-            </div>
-
-            <!-- Otros campos se muestran dinámicamente -->
-          </div>
-
-          <hr class="my-4">
-
-          <!-- Indicador de progreso de envío -->
-          <div id="uploadProgress" style="display: none;" class="mb-3">
-            <div class="alert alert-info">
-              <div class="d-flex align-items-center">
-                <div class="spinner-border spinner-border-sm me-2" role="status">
-                  <span class="visually-hidden">Cargando...</span>
+                            <!-- Otros campos se muestran dinámicamente -->
+                        </div>
+                    </div>
                 </div>
-                <span>Procesando incapacidad... Por favor espere.</span>
-              </div>
-            </div>
-          </div>
 
-          <!-- Botones -->
-          <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary btn-lg" id="btnSubmit">
-              <i class="bi bi-check-circle me-2"></i>Registrar Incapacidad
-            </button>
-            <a href="{{ url_for('incapacidades.mis_incapacidades') }}" class="btn btn-outline-secondary">
-              <i class="bi bi-x-circle me-2"></i>Cancelar
-            </a>
-          </div>
-        </form>
-      </div>
+                <!-- Indicador de progreso de envío -->
+                <div id="uploadProgress" style="display: none;" class="upload-progress-card mb-4">
+                    <div class="spinner-container">
+                        <div class="spinner-modern"></div>
+                    </div>
+                    <div>
+                        <strong>Procesando incapacidad...</strong>
+                        <p class="mb-0">Por favor espere, estamos guardando su información.</p>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="action-buttons-row mb-5">
+                    <a href="{{ url_for('incapacidades.mis_incapacidades') }}" class="btn-action-large btn-action-secondary">
+                        <i class="bi bi-x-circle"></i>
+                        <span>Cancelar</span>
+                    </a>
+                    <button type="submit" class="btn-action-large btn-action-primary" id="btnSubmit">
+                        <i class="bi bi-check-circle"></i>
+                        <span>Registrar Incapacidad</span>
+                    </button>
+                </div>
+            </form>
+
+        </div>
     </div>
-  </div>
 </div>
 
 <!-- Modal de Confirmación -->
 <div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-labelledby="modalConfirmacionLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title" id="modalConfirmacionLabel">
-          <i class="bi bi-check-circle-fill me-2"></i>¡Incapacidad Registrada!
-        </h5>
-      </div>
-      <div class="modal-body text-center py-4">
-        <div class="mb-4">
-          <i class="bi bi-file-earmark-check text-success" style="font-size: 4rem;"></i>
-        </div>
-        <h4 class="mb-3">Su incapacidad ha sido registrada exitosamente</h4>
-        
-        <div class="card border-primary mb-4">
-          <div class="card-body">
-            <p class="mb-2"><strong>Código de Radicación:</strong></p>
-            <h2 class="text-primary mb-0" id="codigoRadicacion" style="font-family: 'Courier New', monospace;">
-              ---
-            </h2>
-            <button class="btn btn-sm btn-outline-primary mt-2" onclick="copiarCodigo()">
-              <i class="bi bi-clipboard me-1"></i>Copiar código
-            </button>
-          </div>
-        </div>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-modern">
+            <div class="modal-header-modern modal-header-success">
+                <div class="modal-icon-success">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <h5 class="modal-title-modern" id="modalConfirmacionLabel">
+                    ¡Incapacidad Registrada!
+                </h5>
+            </div>
+            <div class="modal-body-modern">
+                <div class="success-icon-container mb-4">
+                    <div class="success-icon-circle">
+                        <i class="bi bi-file-earmark-check"></i>
+                    </div>
+                </div>
+                <h4 class="modal-subtitle mb-4">Su incapacidad ha sido registrada exitosamente</h4>
+                
+                <div class="codigo-card mb-4">
+                    <div class="codigo-card-header">
+                        <i class="bi bi-qr-code"></i>
+                        <span>Código de Radicación</span>
+                    </div>
+                    <div class="codigo-card-body">
+                        <div class="codigo-value" id="codigoRadicacion">---</div>
+                        <button class="btn-copy-codigo" onclick="copiarCodigo()">
+                            <i class="bi bi-clipboard"></i>
+                            <span>Copiar código</span>
+                        </button>
+                    </div>
+                </div>
 
-        <div class="alert alert-info text-start">
-          <strong>📋 Próximos pasos:</strong>
-          <ol class="mb-0 mt-2 small">
-            <li>Guarde su código de radicación para futuras consultas</li>
-            <li>Recibirá un email de confirmación</li>
-            <li>Gestión Humana validará los documentos adjuntos</li>
-            <li>Será notificado del resultado de la validación</li>
-          </ol>
+                <div class="proximos-pasos-card">
+                    <div class="proximos-pasos-header">
+                        <i class="bi bi-list-check"></i>
+                        <span>Próximos pasos</span>
+                    </div>
+                    <ol class="proximos-pasos-list">
+                        <li>
+                            <i class="bi bi-1-circle-fill"></i>
+                            <span>Guarde su código de radicación para futuras consultas</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-2-circle-fill"></i>
+                            <span>Recibirá un email de confirmación</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-3-circle-fill"></i>
+                            <span>Gestión Humana validará los documentos adjuntos</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-4-circle-fill"></i>
+                            <span>Será notificado del resultado de la validación</span>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+            <div class="modal-footer-modern">
+                <a href="{{ url_for('incapacidades.mis_incapacidades') }}" 
+                   class="btn-modal btn-modal-primary" 
+                   id="btnVerMisIncapacidades"
+                   data-url="{{ url_for('incapacidades.mis_incapacidades') }}">
+                    <i class="bi bi-list-ul"></i>
+                    <span>Ver Mis Incapacidades</span>
+                </a>
+                <button type="button" 
+                        class="btn-modal btn-modal-secondary" 
+                        id="btnRegistrarOtra">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Registrar Otra</span>
+                </button>
+            </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <a href="{{ url_for('incapacidades.mis_incapacidades') }}" class="btn btn-primary">
-          Ver Mis Incapacidades
-        </a>
-        <button type="button" class="btn btn-secondary" onclick="location.reload()">
-          Registrar Otra
-        </button>
-      </div>
     </div>
-  </div>
 </div>
+
+<style>
+/* ==================================================
+   REGISTRAR INCAPACIDAD - ESTILOS MODERNOS
+   ================================================== */
+
+.registrar-incapacidad-container {
+    animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header */
+.page-header {
+    animation: slideInLeft 0.4s ease;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.page-header h2 {
+    color: #1f2937;
+    font-weight: 700;
+    font-size: 28px;
+}
+
+.page-header i {
+    color: #3b82f6;
+}
+
+.btn-back {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: white;
+    border: 2px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #6b7280;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-back:hover {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border-color: #3b82f6;
+    transform: translateX(-5px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Validation Alert */
+.validation-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border: 2px solid #fca5a5;
+    border-radius: 16px;
+    animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+.validation-alert i {
+    font-size: 28px;
+    color: #dc2626;
+    flex-shrink: 0;
+}
+
+.validation-alert strong {
+    display: block;
+    color: #1f2937;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.validation-alert ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.validation-alert li {
+    color: #374151;
+    font-size: 14px;
+    padding: 4px 0;
+}
+
+.validation-alert li::before {
+    content: '•';
+    color: #dc2626;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+/* Form Cards */
+.form-card {
+    background: white;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    animation: fadeInScale 0.5s ease backwards;
+}
+
+.form-card:nth-child(2) { animation-delay: 0.1s; }
+.form-card:nth-child(3) { animation-delay: 0.2s; }
+.form-card:nth-child(4) { animation-delay: 0.3s; }
+.form-card:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.form-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 24px;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.form-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: #1e40af;
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.15);
+    flex-shrink: 0;
+}
+
+.form-card-icon-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+}
+
+.form-card-icon-warning {
+    background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+    color: #9a3412;
+}
+
+.form-card-icon-info {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+}
+
+.form-card-header h4 {
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 4px;
+    font-size: 18px;
+}
+
+.form-card-header p {
+    color: #6b7280;
+    margin-bottom: 0;
+    font-size: 14px;
+}
+
+.form-card-body {
+    padding: 24px;
+}
+
+/* Progress Badge */
+.progress-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.progress-badge i {
+    font-size: 16px;
+}
+
+/* Modern Form Groups */
+.form-group-modern {
+    margin-bottom: 24px;
+}
+
+.form-label-modern {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 10px;
+    font-size: 15px;
+}
+
+.form-label-modern i {
+    color: #3b82f6;
+    font-size: 18px;
+}
+
+.required-mark {
+    color: #ef4444;
+    font-weight: 700;
+    margin-left: 4px;
+}
+
+.form-control-modern {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 15px;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-control-modern:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.form-control-modern:hover {
+    border-color: #3b82f6;
+}
+
+.form-help {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.form-help i {
+    color: #3b82f6;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+/* Días Calculados Card */
+.dias-calculados-card {
+    display: flex;
+    gap: 20px;
+    padding: 24px;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 2px solid #93c5fd;
+    border-radius: 14px;
+    margin-top: 16px;
+    animation: slideInRight 0.5s ease;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.dias-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.dias-content {
+    flex: 1;
+}
+
+.dias-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e40af;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.dias-value {
+    font-size: 36px;
+    font-weight: 800;
+    color: #1e3a8a;
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+.dias-periodo {
+    font-size: 14px;
+    color: #1e40af;
+}
+
+.dias-periodo strong {
+    color: #1e3a8a;
+}
+
+/* Progress Bar Modern */
+.progress-bar-modern {
+    width: 100%;
+    height: 32px;
+    background: #e5e7eb;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 16px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 16px;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar-fill::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.3) 50%, 
+        transparent 100%);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.progress-bar-percentage {
+    font-size: 13px;
+    font-weight: 700;
+    color: white;
+    position: relative;
+    z-index: 1;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Checklist Container */
+.checklist-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.documento-checklist-item {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.3s ease;
+}
+
+.documento-checklist-item:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+
+.documento-checklist-item .bi-check-circle-fill {
+    color: #10b981;
+}
+
+.documento-checklist-item .bi-circle {
+    color: #d1d5db;
+}
+
+.documento-checklist-item .badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.documento-checklist-item .bg-warning {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+    color: #92400e;
+    border: 1px solid #fbbf24;
+}
+
+.documento-checklist-item .bg-info {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+    color: #1e40af;
+    border: 1px solid #60a5fa;
+}
+
+.documento-checklist-item .bg-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%) !important;
+    color: #065f46;
+    border: 1px solid #34d399;
+}
+
+.documento-checklist-item .bg-light {
+    background: #f3f4f6 !important;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+}
+
+/* Info Messages */
+.info-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 2px solid #93c5fd;
+    border-radius: 14px;
+}
+
+.info-message i {
+    font-size: 24px;
+    color: #1e40af;
+    flex-shrink: 0;
+}
+
+.info-message strong {
+    display: block;
+    color: #1f2937;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.info-message p {
+    color: #374151;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.info-message-warning {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border-color: #fbbf24;
+}
+
+.info-message-warning i {
+    color: #d97706;
+}
+
+/* Documento Field Modern */
+.documento-field-modern {
+    padding: 20px;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 14px;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+}
+
+.documento-field-modern:hover {
+    background: white;
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+
+.documento-label {
+    cursor: pointer;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.documento-label-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.documento-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #1e40af;
+}
+
+.documento-nombre {
+    font-weight: 700;
+    color: #1f2937;
+    font-size: 15px;
+}
+
+.documento-badge {
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.documento-badge-opcional {
+    background: #e5e7eb;
+    color: #6b7280;
+}
+
+.documento-badge-requerido {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+}
+
+.documento-input-modern {
+    width: 100%;
+    padding: 12px;
+    border: 2px dashed #cbd5e1;
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.documento-input-modern:hover {
+    border-color: #3b82f6;
+    background: #f8fafc;
+}
+
+.documento-input-modern:focus {
+    outline: none;
+    border-style: solid;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.documento-input-modern.is-valid {
+    border-color: #10b981;
+    border-style: solid;
+}
+
+.documento-input-modern.is-valid:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+.documento-input-modern.is-invalid {
+    border-color: #ef4444;
+    border-style: solid;
+}
+
+.documento-input-modern.is-invalid:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+.documento-help {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.documento-help i {
+    color: #3b82f6;
+}
+
+.preview-container {
+    margin-top: 12px;
+    padding: 12px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+}
+
+.invalid-feedback-modern {
+    display: none;
+    margin-top: 8px;
+    color: #dc2626;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Upload Progress Card */
+.upload-progress-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 24px;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 2px solid #93c5fd;
+    border-radius: 16px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.9; }
+}
+
+.spinner-container {
+    flex-shrink: 0;
+}
+
+.spinner-modern {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #bfdbfe;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.upload-progress-card strong {
+    display: block;
+    color: #1e40af;
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.upload-progress-card p {
+    color: #1e40af;
+    font-size: 14px;
+}
+
+/* Action Buttons */
+.action-buttons-row {
+    display: flex;
+    gap: 16px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.btn-action-large {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px 32px;
+    border-radius: 14px;
+    border: none;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-action-large::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.5s, height 0.5s;
+}
+
+.btn-action-large:hover::before {
+    width: 400px;
+    height: 400px;
+}
+
+.btn-action-large i {
+    font-size: 20px;
+    transition: transform 0.3s ease;
+}
+
+.btn-action-large:hover i {
+    transform: scale(1.2);
+}
+
+.btn-action-large:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.btn-action-large:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.btn-action-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.btn-action-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: white;
+}
+
+.btn-action-secondary {
+    background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+    color: #1f2937;
+}
+
+.btn-action-secondary:hover {
+    background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+}
+
+/* Modal Modern Styles */
+.modal-modern {
+    border-radius: 20px;
+    overflow: hidden;
+    border: none;
+}
+
+.modal-header-modern {
+    padding: 32px;
+    text-align: center;
+    border-bottom: none;
+    position: relative;
+}
+
+.modal-header-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+
+.modal-icon-success {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    color: white;
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    animation: scaleIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0); }
+    to { transform: scale(1); }
+}
+
+.modal-title-modern {
+    font-size: 28px;
+    font-weight: 800;
+    color: #065f46;
+    margin: 0;
+}
+
+.modal-body-modern {
+    padding: 32px;
+}
+
+.success-icon-container {
+    text-align: center;
+}
+
+.success-icon-circle {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
+    color: #059669;
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);
+}
+
+.modal-subtitle {
+    text-align: center;
+    font-weight: 700;
+    color: #1f2937;
+    font-size: 20px;
+}
+
+/* Codigo Card */
+.codigo-card {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 2px solid #93c5fd;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.codigo-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    background: rgba(59, 130, 246, 0.1);
+    border-bottom: 2px solid #93c5fd;
+    font-weight: 700;
+    color: #1e40af;
+    font-size: 14px;
+}
+
+.codigo-card-header i {
+    font-size: 20px;
+}
+
+.codigo-card-body {
+    padding: 24px;
+    text-align: center;
+}
+
+.codigo-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1e3a8a;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+}
+
+.btn-copy-codigo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: white;
+    border: 2px solid #3b82f6;
+    border-radius: 10px;
+    color: #1e40af;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-copy-codigo:hover {
+    background: #3b82f6;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-copy-codigo i {
+    font-size: 16px;
+}
+
+/* Proximos Pasos Card */
+.proximos-pasos-card {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 2px solid #7dd3fc;
+    border-radius: 16px;
+    padding: 20px;
+}
+
+.proximos-pasos-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    font-weight: 700;
+    color: #0c4a6e;
+    font-size: 15px;
+}
+
+.proximos-pasos-header i {
+    font-size: 22px;
+    color: #0284c7;
+}
+
+.proximos-pasos-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: step-counter;
+}
+
+.proximos-pasos-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    color: #374151;
+    font-size: 14px;
+    line-height: 1.6;
+    border-bottom: 1px solid rgba(125, 211, 252, 0.3);
+}
+
+.proximos-pasos-list li:last-child {
+    border-bottom: none;
+}
+
+.proximos-pasos-list li i {
+    font-size: 20px;
+    color: #0284c7;
+    flex-shrink: 0;
+}
+
+.modal-footer-modern {
+    padding: 24px 32px;
+    background: #f9fafb;
+    border-top: 2px solid #e5e7eb;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.btn-modal {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-modal i {
+    font-size: 18px;
+}
+
+.btn-modal-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-modal-primary:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    color: white;
+}
+
+.btn-modal-secondary {
+    background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+    color: #1f2937;
+}
+
+.btn-modal-secondary:hover {
+    background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+    transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-header > div {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .dias-calculados-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .dias-icon {
+        margin: 0 auto;
+    }
+    
+    .action-buttons-row {
+        flex-direction: column-reverse;
+    }
+    
+    .btn-action-large {
+        width: 100%;
+    }
+    
+    .modal-footer-modern {
+        flex-direction: column;
+    }
+    
+    .btn-modal {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
 
 {% endblock %}
 
@@ -302,6 +1458,9 @@ const tiposDocumento = {
   }
 };
 
+// Variable para indicar que NO se debe guardar borrador (después de envío exitoso)
+let noGuardarBorrador = false;
+
 document.addEventListener('DOMContentLoaded', function() {
   const tipoSelect = document.getElementById('tipo');
   const fechaInicio = document.getElementById('fecha_inicio');
@@ -321,8 +1480,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   
-  // UC1-E5: Recuperar borrador si existe
-  recuperarBorrador();
+  // UC1-E5: Recuperar borrador si existe (SOLO si hay parámetro en URL que lo indique)
+  // Esto previene que se recupere el borrador después de un registro exitoso
+  const urlParams = new URLSearchParams(window.location.search);
+  if (!urlParams.has('registro_exitoso')) {
+    recuperarBorrador();
+  } else {
+    // Si viene de registro exitoso, eliminar cualquier borrador que pueda existir
+    localStorage.removeItem(BORRADOR_KEY);
+    console.log('Borrador eliminado - Página limpia después de registro exitoso');
+  }
   
   // UC1-E5/E6: Guardar borrador automático cada 30 segundos
   setInterval(guardarBorradorAutomatico, 30000);
@@ -331,9 +1498,9 @@ document.addEventListener('DOMContentLoaded', function() {
   window.addEventListener('online', onConexionRestaurada);
   window.addEventListener('offline', onConexionPerdida);
   
-  // UC1-E5: Guardar borrador antes de cambiar de página
+  // UC1-E5: Guardar borrador antes de cambiar de página (SOLO si NO está marcado para no guardar)
   window.addEventListener('beforeunload', function(e) {
-    if (formularioTieneDatos()) {
+    if (!noGuardarBorrador && formularioTieneDatos()) {
       guardarBorradorLocal();
     }
   });
@@ -421,6 +1588,9 @@ function actualizarUIDocumentos() {
   document.getElementById('info-inicial').style.display = 'none';
   document.getElementById('documentos-requeridos').style.display = 'block';
   
+  // Limpiar estado de documentos que ya no son requeridos
+  limpiarDocumentosNoRequeridos();
+  
   // Renderizar checklist dinámico
   renderizarChecklistDocumentos();
   
@@ -432,6 +1602,46 @@ function actualizarUIDocumentos() {
   
   // Actualizar indicadores de progreso
   actualizarProgreso();
+}
+
+// Limpiar estado de documentos que ya no son requeridos
+function limpiarDocumentosNoRequeridos() {
+  // Obtener todos los documentos actualmente requeridos
+  const documentosRequeridosActuales = [
+    ...documentosRequeridos.obligatorios || [],
+    ...documentosRequeridos.condicionales || []
+  ];
+  
+  // Convertir tipos a IDs
+  const idsRequeridos = documentosRequeridosActuales
+    .map(tipo => tiposDocumento[tipo]?.id)
+    .filter(Boolean);
+  
+  // Limpiar estado de documentos que ya no están requeridos
+  Object.keys(documentosCargados).forEach(docId => {
+    // Mantener solo el certificado y los documentos requeridos actuales
+    if (docId !== 'certificado' && !idsRequeridos.includes(docId)) {
+      // Verificar si el input todavía existe en el DOM
+      const inputElement = document.getElementById(docId);
+      if (!inputElement) {
+        // Si el input ya no existe, limpiar su estado
+        delete documentosCargados[docId];
+        console.log(`✓ Limpiado estado de documento no requerido: ${docId}`);
+      }
+    }
+  });
+  
+  // Además, verificar que los documentos marcados como cargados realmente tengan archivos
+  idsRequeridos.forEach(docId => {
+    const inputElement = document.getElementById(docId);
+    if (inputElement && inputElement.files && inputElement.files.length === 0) {
+      // Si el input existe pero no tiene archivo, marcar como no cargado
+      if (documentosCargados[docId]) {
+        delete documentosCargados[docId];
+        console.log(`✓ Limpiado estado de documento sin archivo: ${docId}`);
+      }
+    }
+  });
 }
 
 // UC5: Renderizar checklist dinámico de documentos
@@ -457,6 +1667,17 @@ function renderizarChecklistDocumentos() {
   todosDocumentos.forEach(({ tipo, obligatorio }) => {
     const config = tiposDocumento[tipo];
     if (!config) return;
+    
+    // Verificar estado real del archivo en el input
+    const inputElement = document.getElementById(config.id);
+    const tieneArchivoReal = inputElement && inputElement.files && inputElement.files.length > 0;
+    
+    // Actualizar estado en documentosCargados basado en la realidad del DOM
+    if (tieneArchivoReal) {
+      documentosCargados[config.id] = true;
+    } else {
+      documentosCargados[config.id] = false;
+    }
     
     const cargado = documentosCargados[config.id] || false;
     const checkIcon = cargado ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted';
@@ -501,7 +1722,7 @@ function crearCamposDocumentos() {
   const certificadoField = document.getElementById('field-certificado');
   
   // Limpiar otros campos
-  const camposExistentes = container.querySelectorAll('.documento-field:not(#field-certificado)');
+  const camposExistentes = container.querySelectorAll('.documento-field-modern:not(#field-certificado)');
   camposExistentes.forEach(campo => campo.remove());
   
   const todosDocumentos = [
@@ -521,28 +1742,37 @@ function crearCamposDocumentos() {
     // No duplicar campos existentes
     if (document.getElementById(fieldId)) return;
     
-    const badgeClass = obligatorio ? 'bg-warning' : 'bg-info';
+    const badgeClass = obligatorio ? 'documento-badge-requerido' : 'documento-badge-opcional';
     const badgeText = obligatorio ? 'Obligatorio' : 'Condicional';
     
     const field = document.createElement('div');
-    field.className = 'mb-4 documento-field';
+    field.className = 'documento-field-modern';
     field.id = fieldId;
     
     field.innerHTML = `
-      <label for="${config.id}" class="form-label fw-bold">
-        <i class="bi ${config.icono} me-2"></i>
-        ${obtenerNombreDocumento(tipo, document.getElementById('tipo').value)}
-        <span class="badge ${badgeClass} ms-2">${badgeText}</span>
+      <label for="${config.id}" class="documento-label">
+        <div class="documento-label-header">
+          <div class="documento-icon">
+            <i class="bi ${config.icono}"></i>
+          </div>
+          <div class="flex-grow-1">
+            <span class="documento-nombre">
+              ${obtenerNombreDocumento(tipo, document.getElementById('tipo').value)}
+            </span>
+            <span class="documento-badge ${badgeClass}">${badgeText}</span>
+          </div>
+        </div>
       </label>
-      <input type="file" class="form-control documento-input" id="${config.id}" 
+      <input type="file" class="documento-input-modern" id="${config.id}" 
              name="${config.id}" accept=".pdf,.jpg,.jpeg,.png" 
-             data-tipo="${tipo}" data-nombre="${obtenerNombreDocumento(tipo, document.getElementById('tipo').value)}">
-      <div class="form-text">
-        <i class="bi bi-info-circle me-1"></i>
-        ${obtenerDescripcionDocumento(tipo, document.getElementById('tipo').value)}. Formato: PDF, JPG, PNG. Máx: 10MB
+             data-tipo="${tipo}" data-nombre="${obtenerNombreDocumento(tipo, document.getElementById('tipo').value)}"
+             onchange="onDocumentoChange(this)">
+      <div class="documento-help">
+        <i class="bi bi-info-circle"></i>
+        <span>${obtenerDescripcionDocumento(tipo, document.getElementById('tipo').value)}. Formato: PDF, JPG, PNG. Máx: 10MB</span>
       </div>
-      <div class="preview-container mt-2" id="preview-${config.id}" style="display: none;"></div>
-      <div class="invalid-feedback"></div>
+      <div class="preview-container" id="preview-${config.id}" style="display: none;"></div>
+      <div class="invalid-feedback-modern" id="error-${config.id}"></div>
     `;
     
     container.appendChild(field);
@@ -558,10 +1788,10 @@ function actualizarBadgeCertificado() {
   const certificadoObligatorio = documentosRequeridos.obligatorios?.includes('CERTIFICADO_INCAPACIDAD') || false;
   
   if (certificadoObligatorio) {
-    badgeElement.className = 'badge bg-warning ms-2';
+    badgeElement.className = 'documento-badge documento-badge-requerido';
     badgeElement.textContent = 'Obligatorio';
   } else {
-    badgeElement.className = 'badge bg-info ms-2';
+    badgeElement.className = 'documento-badge documento-badge-opcional';
     badgeElement.textContent = 'Condicional';
   }
 }
@@ -614,15 +1844,23 @@ function onDocumentoChange(input) {
   
   // Limpiar validación previa
   input.classList.remove('is-valid', 'is-invalid');
+  const errorElement = document.getElementById(`error-${fieldId}`);
+  if (errorElement) {
+    errorElement.style.display = 'none';
+    errorElement.textContent = '';
+  }
   
   if (file) {
     // Validar archivo
     const validation = validarArchivo(file);
     if (!validation.valido) {
       input.classList.add('is-invalid');
-      const feedbackEl = input.parentElement.querySelector('.invalid-feedback');
-      if (feedbackEl) feedbackEl.textContent = validation.error;
-      document.getElementById(`preview-${fieldId}`).style.display = 'none';
+      if (errorElement) {
+        errorElement.textContent = validation.error;
+        errorElement.style.display = 'block';
+      }
+      const previewElement = document.getElementById(`preview-${fieldId}`);
+      if (previewElement) previewElement.style.display = 'none';
       
       // Actualizar estado
       documentosCargados[fieldId] = false;
@@ -634,7 +1872,8 @@ function onDocumentoChange(input) {
       documentosCargados[fieldId] = true;
     }
   } else {
-    document.getElementById(`preview-${fieldId}`).style.display = 'none';
+    const previewElement = document.getElementById(`preview-${fieldId}`);
+    if (previewElement) previewElement.style.display = 'none';
     documentosCargados[fieldId] = false;
   }
   
@@ -678,22 +1917,30 @@ function actualizarProgreso() {
   const porcentaje = totalDocumentos > 0 ? Math.round((documentosCargadosCount / totalDocumentos) * 100) : 0;
   
   // Actualizar texto
-  document.getElementById('progress-text').textContent = 
-    `${documentosCargadosCount} de ${totalDocumentos} documentos`;
+  const progressText = document.getElementById('progress-text');
+  if (progressText) {
+    progressText.textContent = `${documentosCargadosCount} de ${totalDocumentos} documentos`;
+  }
   
   // Actualizar barra de progreso
   const progressBar = document.getElementById('progress-bar');
-  progressBar.style.width = `${porcentaje}%`;
-  progressBar.setAttribute('aria-valuenow', porcentaje);
+  if (progressBar) {
+    progressBar.style.width = `${porcentaje}%`;
+    progressBar.setAttribute('aria-valuenow', porcentaje);
+  }
   
-  // Cambiar color según progreso
-  progressBar.className = 'progress-bar';
-  if (porcentaje === 100) {
-    progressBar.classList.add('bg-success');
-  } else if (porcentaje >= 50) {
-    progressBar.classList.add('bg-info');
-  } else {
-    progressBar.classList.add('bg-warning');
+  // Actualizar porcentaje en el texto
+  const progressPercentage = document.getElementById('progress-percentage');
+  if (progressPercentage) {
+    progressPercentage.textContent = `${porcentaje}%`;
+    // Ocultar porcentaje si es muy pequeño (menos de 10%)
+    progressPercentage.style.display = porcentaje < 10 ? 'none' : 'inline';
+  }
+  
+  // Cambiar color según progreso - mantener gradiente verde
+  if (progressBar) {
+    // El gradiente verde ya está definido en CSS, no necesitamos cambiar clases
+    progressBar.className = 'progress-bar-fill';
   }
 }
 
@@ -755,13 +2002,13 @@ function mostrarInfoInicial() {
   
   // Limpiar campos dinámicos
   const container = document.getElementById('campos-documentos');
-  const camposExistentes = container.querySelectorAll('.documento-field:not(#field-certificado)');
+  const camposExistentes = container.querySelectorAll('.documento-field-modern:not(#field-certificado)');
   camposExistentes.forEach(campo => campo.remove());
   
   // Resetear badge del certificado a su estado original
   const badgeElement = document.getElementById('badge-certificado');
   if (badgeElement) {
-    badgeElement.className = 'badge bg-secondary ms-2';
+    badgeElement.className = 'documento-badge documento-badge-opcional';
     badgeElement.textContent = 'Opcional';
   }
   
@@ -930,8 +2177,13 @@ function handleSubmit(e) {
     document.getElementById('btnSubmit').disabled = false;
     
     if (data.success) {
-      // UC1-E5/E6: Limpiar borrador al registrar exitosamente
+      // Marcar que NO se debe guardar más el borrador
+      noGuardarBorrador = true;
+      
+      // UC1-E5/E6: Limpiar borrador INMEDIATAMENTE al registrar exitosamente
       localStorage.removeItem(BORRADOR_KEY);
+      console.log('✅ Borrador eliminado - Registro exitoso');
+      
       mostrarModalConfirmacion(data.codigo_radicacion);
     } else {
       mostrarErroresServidor(data.errors || ['Error al procesar la solicitud']);
@@ -962,6 +2214,10 @@ function mostrarErroresServidor(errores) {
 }
 
 function mostrarModalConfirmacion(codigoRadicacion) {
+  // Asegurar que el borrador esté eliminado y NO se guarde más
+  noGuardarBorrador = true;
+  localStorage.removeItem(BORRADOR_KEY);
+  
   document.getElementById('codigoRadicacion').textContent = codigoRadicacion;
   const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
   modal.show();
@@ -982,6 +2238,23 @@ function copiarCodigo() {
       btn.classList.add('btn-outline-primary');
     }, 2000);
   });
+}
+
+// Funciones para limpiar borrador al navegar desde modal
+function limpiarBorradorYRecargar() {
+  noGuardarBorrador = true;
+  localStorage.removeItem(BORRADOR_KEY);
+  console.log('🔄 Borrador eliminado - Recargando página');
+  // Recargar con parámetro para indicar que viene de registro exitoso
+  window.location.href = window.location.pathname + '?registro_exitoso=1';
+}
+
+function limpiarBorradorYNavegar(event, url) {
+  event.preventDefault();
+  noGuardarBorrador = true;
+  localStorage.removeItem(BORRADOR_KEY);
+  console.log('🔗 Borrador eliminado - Navegando a:', url);
+  window.location.href = url;
 }
 
 // Función de formateo de fecha
@@ -1034,6 +2307,12 @@ function formularioTieneDatos() {
 }
 
 function guardarBorradorLocal() {
+  // NO guardar si está marcado para no guardar (después de envío exitoso)
+  if (noGuardarBorrador) {
+    console.log('⚠️ Guardado de borrador bloqueado - Formulario ya enviado');
+    return;
+  }
+  
   if (!formularioTieneDatos()) return;
   
   const borrador = {
@@ -1049,7 +2328,7 @@ function guardarBorradorLocal() {
   
   try {
     localStorage.setItem(BORRADOR_KEY, JSON.stringify(borrador));
-    console.log('UC1-E5/E6: Borrador guardado localmente');
+    console.log('💾 UC1-E5/E6: Borrador guardado localmente');
   } catch (e) {
     console.error('Error guardando borrador:', e);
   }
@@ -1103,6 +2382,11 @@ function recuperarBorrador() {
 }
 
 function guardarBorradorAutomatico() {
+  // NO guardar si está marcado para no guardar o si no hay conexión
+  if (noGuardarBorrador) {
+    return;
+  }
+  
   if (formularioTieneDatos() && navigator.onLine) {
     guardarBorradorLocal();
   }
@@ -1149,6 +2433,26 @@ function onConexionRestaurada() {
   
   console.log('UC1-E6: Conexión restaurada');
 }
+
+// Event listeners para botones del modal de éxito
+document.addEventListener('DOMContentLoaded', function() {
+  const btnVerMisIncapacidades = document.getElementById('btnVerMisIncapacidades');
+  const btnRegistrarOtra = document.getElementById('btnRegistrarOtra');
+  
+  if (btnVerMisIncapacidades) {
+    btnVerMisIncapacidades.addEventListener('click', function(e) {
+      e.preventDefault();
+      const url = this.getAttribute('data-url');
+      limpiarBorradorYNavegar(e, url);
+    });
+  }
+  
+  if (btnRegistrarOtra) {
+    btnRegistrarOtra.addEventListener('click', function() {
+      limpiarBorradorYRecargar();
+    });
+  }
+});
 
 </script>
 {% endblock %}

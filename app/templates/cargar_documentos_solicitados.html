@@ -3,291 +3,1078 @@
 {% block title %}Cargar Documentos Solicitados - {{ incapacidad.codigo_radicacion }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-10 offset-md-1">
-            <!-- Breadcrumb -->
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url_for('incapacidades.mis_incapacidades') }}">Mis Incapacidades</a></li>
-                    <li class="breadcrumb-item active">Cargar Documentos</li>
-                </ol>
-            </nav>
+<style>
+/* ===========================
+   CONTENEDOR PRINCIPAL
+   =========================== */
+.cargar-documentos-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  animation: fadeInUp 0.6s ease;
+}
 
-            <!-- Alerta si hay plazos vencidos -->
-            {% if tiene_vencidas %}
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> ¡Atención!</h5>
-                <p class="mb-0">Tiene documentos con plazo <strong>VENCIDO</strong>. Cárguelos lo antes posible para evitar sanciones.</p>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            {% endif %}
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
-            <!-- Card principal -->
-            <div class="card shadow-sm">
-                <div class="card-header bg-warning text-dark">
-                    <h4 class="mb-0">
-                        <i class="bi bi-cloud-upload"></i>
-                        Carga de Documentos Solicitados
-                    </h4>
-                    <small>Incapacidad: <strong>{{ incapacidad.codigo_radicacion }}</strong></small>
-                </div>
+/* ===========================
+   BREADCRUMB MODERNO
+   =========================== */
+.breadcrumb-modern {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  animation: slideInLeft 0.5s ease;
+}
 
-                <div class="card-body">
-                    <!-- Información de la incapacidad -->
-                    <div class="alert alert-info">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p class="mb-1"><strong>Tipo:</strong> {{ incapacidad.tipo }}</p>
-                                <p class="mb-1"><strong>Estado:</strong> 
-                                    <span class="badge bg-warning text-dark">{{ incapacidad.estado }}</span>
-                                </p>
-                            </div>
-                            <div class="col-md-6">
-                                <p class="mb-1"><strong>Periodo:</strong> {{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }} - {{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}</p>
-                                <p class="mb-1"><strong>Días:</strong> {{ incapacidad.dias }}</p>
-                            </div>
-                        </div>
-                    </div>
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
 
-                    <!-- Mensaje importante -->
-                    <div class="alert alert-warning">
-                        <i class="bi bi-info-circle"></i>
-                        <strong>Importante:</strong> Debe cargar <strong>TODOS</strong> los documentos solicitados. 
-                        Formatos permitidos: PDF, JPG, PNG, JPEG. Tamaño máximo: <strong>10 MB</strong> por archivo.
-                    </div>
+.breadcrumb-modern ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
 
-                    <!-- Formulario -->
-                    <form method="POST" 
-                          enctype="multipart/form-data" 
-                          id="formCargarDocs"
-                          action="{{ url_for('incapacidades.procesar_cargar_documentos_solicitados', incapacidad_id=incapacidad.id) }}">
-                        
-                        <h5 class="mb-3">Documentos solicitados:</h5>
+.breadcrumb-modern li {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #64748b;
+}
 
-                        <!-- Lista de solicitudes -->
-                        <div class="row">
-                            {% for solicitud in solicitudes %}
-                            <div class="col-md-6 mb-4">
-                                <div class="card border-{{ solicitud.clase_urgencia }}">
-                                    <div class="card-header bg-{{ solicitud.clase_urgencia }} text-white">
-                                        <h6 class="mb-0">
-                                            {{ solicitud.tipo_documento.replace('_', ' ').title() }}
-                                        </h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <!-- Estado y plazo -->
-                                        <div class="mb-2">
-                                            <strong>Estado:</strong> 
-                                            <span class="badge bg-{{ solicitud.clase_urgencia }}">
-                                                {{ solicitud.estado }}
-                                            </span>
-                                        </div>
-                                        
-                                        <div class="mb-2">
-                                            <strong>Vencimiento:</strong> {{ solicitud.fecha_vencimiento_formateada }}
-                                        </div>
-                                        
-                                        <div class="mb-3">
-                                            {% if solicitud.esta_vencida_calc %}
-                                            <span class="text-danger fw-bold">
-                                                <i class="bi bi-exclamation-triangle-fill"></i>
-                                                VENCIDO hace {{ solicitud.dias_restantes_calc|abs }} día(s)
-                                            </span>
-                                            {% elif solicitud.dias_restantes_calc == 0 %}
-                                            <span class="text-warning fw-bold">
-                                                <i class="bi bi-clock-fill"></i>
-                                                Vence HOY
-                                            </span>
-                                            {% else %}
-                                            <span class="text-{{ solicitud.clase_urgencia }}">
-                                                <i class="bi bi-calendar-check"></i>
-                                                {{ solicitud.dias_restantes_calc }} día(s) restante(s)
-                                            </span>
-                                            {% endif %}
-                                        </div>
+.breadcrumb-modern li a {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
 
-                                        <!-- Observaciones del auxiliar -->
-                                        {% if solicitud.observaciones_auxiliar %}
-                                        <div class="alert alert-light mb-3">
-                                            <small class="text-muted"><strong>Observaciones del auxiliar:</strong></small>
-                                            <p class="mb-0 small">{{ solicitud.observaciones_auxiliar }}</p>
-                                        </div>
-                                        {% endif %}
+.breadcrumb-modern li a:hover {
+  color: #2563eb;
+  transform: translateX(2px);
+}
 
-                                        <!-- Input de archivo -->
-                                        <div class="mb-2">
-                                            <label for="documento_{{ solicitud.tipo_documento }}" class="form-label fw-bold">
-                                                Seleccionar archivo:
-                                            </label>
-                                            <input type="file" 
-                                                   class="form-control file-input" 
-                                                   id="documento_{{ solicitud.tipo_documento }}"
-                                                   name="documento_{{ solicitud.tipo_documento }}"
-                                                   accept=".pdf,.jpg,.jpeg,.png"
-                                                   data-tipo="{{ solicitud.tipo_documento }}"
-                                                   required>
-                                            <small class="text-muted">PDF, JPG, PNG, JPEG (máx. 10MB)</small>
-                                        </div>
+.breadcrumb-modern li:not(:last-child)::after {
+  content: '›';
+  margin-left: 0.5rem;
+  color: #94a3b8;
+  font-size: 18px;
+}
 
-                                        <!-- Preview -->
-                                        <div id="preview_{{ solicitud.tipo_documento }}" class="mt-2" style="display: none;">
-                                            <div class="alert alert-success small mb-0">
-                                                <i class="bi bi-file-earmark-check"></i>
-                                                <span id="filename_{{ solicitud.tipo_documento }}"></span>
-                                                <span id="filesize_{{ solicitud.tipo_documento }}" class="text-muted"></span>
-                                            </div>
-                                        </div>
+.breadcrumb-modern li.active {
+  color: #1e293b;
+  font-weight: 600;
+}
 
-                                        <!-- Error específico -->
-                                        <div id="error_{{ solicitud.tipo_documento }}" class="alert alert-danger small mt-2" style="display: none;"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
+/* ===========================
+   ALERTA DE VENCIDOS
+   =========================== */
+.alert-vencidos {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border: 2px solid #ef4444;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  animation: shake 0.5s ease;
+}
 
-                        <!-- Área de errores globales -->
-                        <div id="erroresGlobales" class="alert alert-danger" style="display: none;">
-                            <h6><i class="bi bi-exclamation-circle"></i> Errores encontrados:</h6>
-                            <ul id="listaErrores" class="mb-0"></ul>
-                        </div>
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
 
-                        <!-- Área de éxito -->
-                        <div id="mensajeExito" class="alert alert-success" style="display: none;">
-                            <h6><i class="bi bi-check-circle"></i> <span id="textoExito"></span></h6>
-                        </div>
+.alert-vencidos .alert-heading {
+  color: #991b1b;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 
-                        <!-- Botones -->
-                        <div class="d-flex justify-content-between mt-4">
-                            <a href="{{ url_for('incapacidades.mis_incapacidades') }}" class="btn btn-secondary">
-                                <i class="bi bi-arrow-left"></i> Volver
-                            </a>
-                            <button type="submit" class="btn btn-primary" id="btnEnviar">
-                                <i class="bi bi-cloud-upload"></i> Enviar Documentos
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+.alert-vencidos .alert-heading i {
+  font-size: 24px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.alert-vencidos p {
+  color: #7f1d1d;
+  margin: 0;
+  font-size: 15px;
+}
+
+.alert-vencidos .btn-close {
+  filter: brightness(0.8);
+}
+
+/* ===========================
+   CARD PRINCIPAL
+   =========================== */
+.main-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  overflow: hidden;
+  margin-bottom: 2rem;
+  animation: fadeInScale 0.5s ease 0.2s both;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Header del card */
+.card-header-modern {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  padding: 1.5rem 2rem;
+  border: none;
+}
+
+.card-header-modern h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 24px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.card-header-modern h4 i {
+  font-size: 28px;
+}
+
+.card-header-modern small {
+  display: block;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.card-header-modern small strong {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Body del card */
+.card-body-modern {
+  padding: 2rem;
+}
+
+/* ===========================
+   INFO CARD (Datos de la incapacidad)
+   =========================== */
+.info-card {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border: 2px solid #3b82f6;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #1e40af;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 15px;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.badge-modern {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #78350f;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+}
+
+/* ===========================
+   ALERTA IMPORTANTE
+   =========================== */
+.alert-importante {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 2px solid #f59e0b;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: start;
+  gap: 1rem;
+}
+
+.alert-importante i {
+  font-size: 24px;
+  color: #d97706;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.alert-importante-content {
+  flex: 1;
+  color: #78350f;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.alert-importante-content strong {
+  font-weight: 700;
+  color: #92400e;
+}
+
+/* ===========================
+   SECCIÓN DE DOCUMENTOS
+   =========================== */
+.documentos-section {
+  margin-bottom: 2rem;
+}
+
+.documentos-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 3px solid #e2e8f0;
+}
+
+.documentos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 1.5rem;
+}
+
+/* ===========================
+   TARJETA DE DOCUMENTO
+   =========================== */
+.documento-card {
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.documento-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* Estados del documento */
+.documento-card.danger {
+  border-color: #ef4444;
+}
+
+.documento-card.warning {
+  border-color: #f59e0b;
+}
+
+.documento-card.info {
+  border-color: #10b981;
+}
+
+/* Header del documento */
+.documento-header {
+  padding: 1rem 1.25rem;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.documento-header.danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.documento-header.warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.documento-header.info {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.documento-header i {
+  font-size: 18px;
+}
+
+/* Body del documento */
+.documento-body {
+  padding: 1.25rem;
+}
+
+.doc-info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.doc-info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 14px;
+}
+
+.doc-info-label {
+  font-weight: 600;
+  color: #475569;
+  min-width: 100px;
+}
+
+.doc-badge {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.doc-badge.danger {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+  border: 1px solid #ef4444;
+}
+
+.doc-badge.warning {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1px solid #f59e0b;
+}
+
+.doc-badge.info {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+  border: 1px solid #10b981;
+}
+
+/* Indicador de vencimiento */
+.vencimiento-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.vencimiento-indicator i {
+  font-size: 18px;
+}
+
+.vencimiento-indicator.vencido {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+  border: 1px solid #ef4444;
+  animation: pulse 2s infinite;
+}
+
+.vencimiento-indicator.hoy {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1px solid #f59e0b;
+}
+
+.vencimiento-indicator.normal {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  border: 1px solid #3b82f6;
+}
+
+/* Observaciones */
+.observaciones-box {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-left: 4px solid #64748b;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.observaciones-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.observaciones-text {
+  font-size: 14px;
+  color: #334155;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Input de archivo moderno */
+.file-input-group {
+  margin-bottom: 1rem;
+}
+
+.file-input-label {
+  display: block;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+  font-size: 14px;
+}
+
+.file-input-modern {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.file-input-modern:hover {
+  border-color: #cbd5e1;
+}
+
+.file-input-modern:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.file-input-hint {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 0.35rem;
+}
+
+/* Preview de archivo */
+.file-preview {
+  display: none;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border: 2px solid #10b981;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-top: 0.75rem;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.file-preview.active {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.file-preview i {
+  font-size: 20px;
+  color: #059669;
+}
+
+.file-preview-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.file-preview-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #065f46;
+}
+
+.file-preview-size {
+  font-size: 12px;
+  color: #047857;
+}
+
+/* Error de archivo */
+.file-error {
+  display: none;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border: 2px solid #ef4444;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-top: 0.75rem;
+  font-size: 14px;
+  color: #991b1b;
+  font-weight: 500;
+  animation: shake 0.5s ease;
+}
+
+.file-error.active {
+  display: block;
+}
+
+/* ===========================
+   ALERTAS GLOBALES
+   =========================== */
+.alert-global {
+  display: none;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  animation: slideDown 0.3s ease;
+}
+
+.alert-global.active {
+  display: block;
+}
+
+.alert-global-error {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border: 2px solid #ef4444;
+}
+
+.alert-global-success {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border: 2px solid #10b981;
+}
+
+.alert-global h6 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.alert-global-error h6 {
+  color: #991b1b;
+}
+
+.alert-global-success h6 {
+  color: #065f46;
+}
+
+.alert-global h6 i {
+  font-size: 20px;
+}
+
+.alert-global ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.alert-global-error ul li {
+  color: #7f1d1d;
+  font-size: 14px;
+  margin-bottom: 0.25rem;
+}
+
+.alert-global-success ul li {
+  color: #047857;
+  font-size: 14px;
+}
+
+/* ===========================
+   BOTONES MODERNOS
+   =========================== */
+.buttons-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #e2e8f0;
+}
+
+.btn-modern {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-modern:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-modern:active {
+  transform: translateY(0);
+}
+
+.btn-modern i {
+  font-size: 18px;
+}
+
+.btn-secondary-modern {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+  color: #ffffff;
+}
+
+.btn-secondary-modern:hover {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  color: #ffffff;
+}
+
+.btn-primary-modern {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #ffffff;
+}
+
+.btn-primary-modern:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+}
+
+.btn-primary-modern:disabled {
+  background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-primary-modern:disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Spinner del botón */
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 0.15em;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===========================
+   RESPONSIVE
+   =========================== */
+@media (max-width: 1024px) {
+  .documentos-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .cargar-documentos-container {
+    padding: 1rem 0.5rem;
+  }
+  
+  .card-header-modern {
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .card-header-modern h4 {
+    font-size: 20px;
+  }
+  
+  .card-body-modern {
+    padding: 1.5rem;
+  }
+  
+  .info-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .buttons-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .btn-modern {
+    justify-content: center;
+  }
+}
+</style>
+
+<div class="cargar-documentos-container">
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb-modern" aria-label="breadcrumb">
+    <ol>
+      <li><a href="{{ url_for('incapacidades.mis_incapacidades') }}">Mis Incapacidades</a></li>
+      <li class="active">Cargar Documentos</li>
+    </ol>
+  </nav>
+
+  <!-- Alerta si hay plazos vencidos -->
+  {% if tiene_vencidas %}
+  <div class="alert-vencidos">
+    <h5 class="alert-heading">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      ¡Atención!
+    </h5>
+    <p>Tiene documentos con plazo <strong>VENCIDO</strong>. Cárguelos lo antes posible para evitar sanciones.</p>
+  </div>
+  {% endif %}
+
+  <!-- Card principal -->
+  <div class="main-card">
+    <div class="card-header-modern">
+      <h4>
+        <i class="bi bi-cloud-upload"></i>
+        Carga de Documentos Solicitados
+      </h4>
+      <small>Incapacidad: <strong>{{ incapacidad.codigo_radicacion }}</strong></small>
     </div>
+
+    <div class="card-body-modern">
+      <!-- Información de la incapacidad -->
+      <div class="info-card">
+        <div class="info-row">
+          <div class="info-item">
+            <span class="info-label">Tipo</span>
+            <span class="info-value">{{ incapacidad.tipo }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Estado</span>
+            <span class="badge-modern">{{ incapacidad.estado }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Periodo</span>
+            <span class="info-value">{{ incapacidad.fecha_inicio.strftime('%d/%m/%Y') }} - {{ incapacidad.fecha_fin.strftime('%d/%m/%Y') }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Días</span>
+            <span class="info-value">{{ incapacidad.dias }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mensaje importante -->
+      <div class="alert-importante">
+        <i class="bi bi-info-circle-fill"></i>
+        <div class="alert-importante-content">
+          <strong>Importante:</strong> Debe cargar <strong>TODOS</strong> los documentos solicitados. 
+          Formatos permitidos: PDF, JPG, PNG, JPEG. Tamaño máximo: <strong>10 MB</strong> por archivo.
+        </div>
+      </div>
+
+      <!-- Formulario -->
+      <form method="POST" 
+            enctype="multipart/form-data" 
+            id="formCargarDocs"
+            action="{{ url_for('incapacidades.procesar_cargar_documentos_solicitados', incapacidad_id=incapacidad.id) }}">
+        
+        <!-- Sección de documentos -->
+        <div class="documentos-section">
+          <h5 class="documentos-title">Documentos solicitados</h5>
+
+          <!-- Grid de documentos -->
+          <div class="documentos-grid">
+            {% for solicitud in solicitudes %}
+            <div class="documento-card {{ solicitud.clase_urgencia }}">
+              <!-- Header -->
+              <div class="documento-header {{ solicitud.clase_urgencia }}">
+                <i class="bi bi-file-earmark-text"></i>
+                {{ solicitud.tipo_documento.replace('_', ' ').title() }}
+              </div>
+
+              <!-- Body -->
+              <div class="documento-body">
+                <!-- Info del documento -->
+                <div class="doc-info-row">
+                  <div class="doc-info-item">
+                    <span class="doc-info-label">Estado:</span>
+                    <span class="doc-badge {{ solicitud.clase_urgencia }}">
+                      {{ solicitud.estado }}
+                    </span>
+                  </div>
+                  <div class="doc-info-item">
+                    <span class="doc-info-label">Vencimiento:</span>
+                    <span>{{ solicitud.fecha_vencimiento_formateada }}</span>
+                  </div>
+                </div>
+
+                <!-- Indicador de vencimiento -->
+                {% if solicitud.esta_vencida_calc %}
+                <div class="vencimiento-indicator vencido">
+                  <i class="bi bi-exclamation-triangle-fill"></i>
+                  VENCIDO hace {{ solicitud.dias_restantes_calc|abs }} día(s)
+                </div>
+                {% elif solicitud.dias_restantes_calc == 0 %}
+                <div class="vencimiento-indicator hoy">
+                  <i class="bi bi-clock-fill"></i>
+                  Vence HOY
+                </div>
+                {% else %}
+                <div class="vencimiento-indicator normal">
+                  <i class="bi bi-calendar-check"></i>
+                  {{ solicitud.dias_restantes_calc }} día(s) restante(s)
+                </div>
+                {% endif %}
+
+                <!-- Observaciones del auxiliar -->
+                {% if solicitud.observaciones_auxiliar %}
+                <div class="observaciones-box">
+                  <span class="observaciones-label">Observaciones del auxiliar:</span>
+                  <p class="observaciones-text">{{ solicitud.observaciones_auxiliar }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Input de archivo -->
+                <div class="file-input-group">
+                  <label for="documento_{{ solicitud.tipo_documento }}" class="file-input-label">
+                    Seleccionar archivo
+                  </label>
+                  <input type="file" 
+                         class="file-input-modern" 
+                         id="documento_{{ solicitud.tipo_documento }}"
+                         name="documento_{{ solicitud.tipo_documento }}"
+                         accept=".pdf,.jpg,.jpeg,.png"
+                         data-tipo="{{ solicitud.tipo_documento }}"
+                         required>
+                  <span class="file-input-hint">PDF, JPG, PNG, JPEG (máx. 10MB)</span>
+                </div>
+
+                <!-- Preview -->
+                <div class="file-preview" id="preview_{{ solicitud.tipo_documento }}">
+                  <i class="bi bi-file-earmark-check-fill"></i>
+                  <div class="file-preview-info">
+                    <span class="file-preview-name" id="filename_{{ solicitud.tipo_documento }}"></span>
+                    <span class="file-preview-size" id="filesize_{{ solicitud.tipo_documento }}"></span>
+                  </div>
+                </div>
+
+                <!-- Error -->
+                <div class="file-error" id="error_{{ solicitud.tipo_documento }}"></div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Área de errores globales -->
+        <div class="alert-global alert-global-error" id="erroresGlobales">
+          <h6>
+            <i class="bi bi-exclamation-circle-fill"></i>
+            Errores encontrados:
+          </h6>
+          <ul id="listaErrores"></ul>
+        </div>
+
+        <!-- Área de éxito -->
+        <div class="alert-global alert-global-success" id="mensajeExito">
+          <h6>
+            <i class="bi bi-check-circle-fill"></i>
+            <span id="textoExito"></span>
+          </h6>
+        </div>
+
+        <!-- Botones -->
+        <div class="buttons-row">
+          <a href="{{ url_for('incapacidades.mis_incapacidades') }}" class="btn-modern btn-secondary-modern">
+            <i class="bi bi-arrow-left"></i>
+            Volver
+          </a>
+          <button type="submit" class="btn-modern btn-primary-modern" id="btnEnviar">
+            <i class="bi bi-cloud-upload"></i>
+            Enviar Documentos
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('formCargarDocs');
-    const fileInputs = document.querySelectorAll('.file-input');
-    const btnEnviar = document.getElementById('btnEnviar');
-    const erroresGlobales = document.getElementById('erroresGlobales');
-    const mensajeExito = document.getElementById('mensajeExito');
-    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
-    
-    // Validación client-side de archivos
-    fileInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            const tipo = this.dataset.tipo;
-            const preview = document.getElementById(`preview_${tipo}`);
-            const errorDiv = document.getElementById(`error_${tipo}`);
-            const filenameSpan = document.getElementById(`filename_${tipo}`);
-            const filesizeSpan = document.getElementById(`filesize_${tipo}`);
-            
-            errorDiv.style.display = 'none';
-            preview.style.display = 'none';
-            
-            if (this.files.length === 0) return;
-            
-            const file = this.files[0];
-            const ext = file.name.split('.').pop().toLowerCase();
-            const validExtensions = ['pdf', 'jpg', 'jpeg', 'png'];
-            
-            // Validar extensión
-            if (!validExtensions.includes(ext)) {
-                errorDiv.textContent = `Formato no válido. Use: ${validExtensions.join(', ').toUpperCase()}`;
-                errorDiv.style.display = 'block';
-                this.value = '';
-                return;
-            }
-            
-            // Validar tamaño
-            if (file.size > MAX_SIZE) {
-                const sizeMB = (file.size / 1024 / 1024).toFixed(2);
-                errorDiv.textContent = `Archivo muy grande (${sizeMB} MB). Máximo: 10 MB`;
-                errorDiv.style.display = 'block';
-                this.value = '';
-                return;
-            }
-            
-            // Mostrar preview
-            filenameSpan.textContent = file.name;
-            filesizeSpan.textContent = `(${(file.size / 1024).toFixed(2)} KB)`;
-            preview.style.display = 'block';
-        });
+  const form = document.getElementById('formCargarDocs');
+  const fileInputs = document.querySelectorAll('.file-input-modern');
+  const btnEnviar = document.getElementById('btnEnviar');
+  const erroresGlobales = document.getElementById('erroresGlobales');
+  const mensajeExito = document.getElementById('mensajeExito');
+  const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+  
+  // Validación client-side de archivos
+  fileInputs.forEach(input => {
+    input.addEventListener('change', function() {
+      const tipo = this.dataset.tipo;
+      const preview = document.getElementById(`preview_${tipo}`);
+      const errorDiv = document.getElementById(`error_${tipo}`);
+      const filenameSpan = document.getElementById(`filename_${tipo}`);
+      const filesizeSpan = document.getElementById(`filesize_${tipo}`);
+      
+      // Reset
+      errorDiv.classList.remove('active');
+      preview.classList.remove('active');
+      
+      if (this.files.length === 0) return;
+      
+      const file = this.files[0];
+      const ext = file.name.split('.').pop().toLowerCase();
+      const validExtensions = ['pdf', 'jpg', 'jpeg', 'png'];
+      
+      // Validar extensión
+      if (!validExtensions.includes(ext)) {
+        errorDiv.textContent = `Formato no válido. Use: ${validExtensions.join(', ').toUpperCase()}`;
+        errorDiv.classList.add('active');
+        this.value = '';
+        return;
+      }
+      
+      // Validar tamaño
+      if (file.size > MAX_SIZE) {
+        const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+        errorDiv.textContent = `Archivo muy grande (${sizeMB} MB). Máximo: 10 MB`;
+        errorDiv.classList.add('active');
+        this.value = '';
+        return;
+      }
+      
+      // Mostrar preview
+      filenameSpan.textContent = file.name;
+      filesizeSpan.textContent = `(${(file.size / 1024).toFixed(2)} KB)`;
+      preview.classList.add('active');
     });
+  });
+  
+  // Submit con AJAX
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
     
-    // Submit con AJAX
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
+    erroresGlobales.classList.remove('active');
+    mensajeExito.classList.remove('active');
+    btnEnviar.disabled = true;
+    btnEnviar.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Enviando...';
+    
+    const formData = new FormData(form);
+    
+    fetch(form.action, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      btnEnviar.disabled = false;
+      btnEnviar.innerHTML = '<i class="bi bi-cloud-upload"></i> Enviar Documentos';
+      
+      if (data.success) {
+        mensajeExito.classList.add('active');
+        document.getElementById('textoExito').textContent = data.message;
         
-        erroresGlobales.style.display = 'none';
-        mensajeExito.style.display = 'none';
-        btnEnviar.disabled = true;
-        btnEnviar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Enviando...';
+        // Si está completo, redirigir después de 2 segundos
+        if (data.completo) {
+          setTimeout(() => {
+            window.location.href = "{{ url_for('incapacidades.mis_incapacidades') }}";
+          }, 2000);
+        } else {
+          // Recargar para mostrar documentos actualizados
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        }
+      } else {
+        // Mostrar errores
+        erroresGlobales.classList.add('active');
+        const listaErrores = document.getElementById('listaErrores');
+        listaErrores.innerHTML = '';
         
-        const formData = new FormData(form);
-        
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            btnEnviar.disabled = false;
-            btnEnviar.innerHTML = '<i class="bi bi-cloud-upload"></i> Enviar Documentos';
-            
-            if (data.success) {
-                mensajeExito.style.display = 'block';
-                document.getElementById('textoExito').textContent = data.message;
-                
-                // Si está completo, redirigir después de 2 segundos
-                if (data.completo) {
-                    setTimeout(() => {
-                        window.location.href = "{{ url_for('incapacidades.mis_incapacidades') }}";
-                    }, 2000);
-                } else {
-                    // Recargar para mostrar documentos actualizados
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
-                }
-            } else {
-                // Mostrar errores
-                erroresGlobales.style.display = 'block';
-                const listaErrores = document.getElementById('listaErrores');
-                listaErrores.innerHTML = '';
-                
-                data.errors.forEach(error => {
-                    const li = document.createElement('li');
-                    li.textContent = error;
-                    listaErrores.appendChild(li);
-                });
-                
-                window.scrollTo(0, 0);
-            }
-        })
-        .catch(error => {
-            btnEnviar.disabled = false;
-            btnEnviar.innerHTML = '<i class="bi bi-cloud-upload"></i> Enviar Documentos';
-            
-            erroresGlobales.style.display = 'block';
-            document.getElementById('listaErrores').innerHTML = 
-                `<li>Error de conexión: ${error.message}</li>`;
-            window.scrollTo(0, 0);
+        data.errors.forEach(error => {
+          const li = document.createElement('li');
+          li.textContent = error;
+          listaErrores.appendChild(li);
         });
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    })
+    .catch(error => {
+      btnEnviar.disabled = false;
+      btnEnviar.innerHTML = '<i class="bi bi-cloud-upload"></i> Enviar Documentos';
+      
+      erroresGlobales.classList.add('active');
+      document.getElementById('listaErrores').innerHTML = 
+        `<li>Error de conexión: ${error.message}</li>`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
+  });
 });
 </script>
 {% endblock %}
