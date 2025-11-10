@@ -45,6 +45,35 @@
     <!-- Lado derecho - Formulario de Login -->
     <div class="login-form-side">
       <div class="login-card">
+        <!-- Mensajes Flash para la página de login -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-messages-container">
+              {% for category, message in messages %}
+                <div class="alert-modern alert-{{ category }}">
+                  <div class="alert-icon">
+                    {% if category == 'success' %}
+                      <i class="bi bi-check-circle-fill"></i>
+                    {% elif category == 'danger' or category == 'error' %}
+                      <i class="bi bi-exclamation-circle-fill"></i>
+                    {% elif category == 'warning' %}
+                      <i class="bi bi-exclamation-triangle-fill"></i>
+                    {% else %}
+                      <i class="bi bi-info-circle-fill"></i>
+                    {% endif %}
+                  </div>
+                  <div class="alert-content">
+                    <span>{{ message }}</span>
+                  </div>
+                  <button type="button" class="alert-close" onclick="this.parentElement.remove()">
+                    <i class="bi bi-x"></i>
+                  </button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        
         <div class="login-header">
           <h2>Bienvenido</h2>
           <p>Ingresa tus credenciales para continuar</p>
@@ -280,6 +309,202 @@
 .login-card {
   width: 100%;
   max-width: 450px;
+  position: relative;
+}
+
+/* Mensajes Flash Modernos */
+.flash-messages-container {
+  margin-bottom: 1.5rem;
+  animation: slideDown 0.4s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alert-modern {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  animation: fadeInScale 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animación especial para alertas de error */
+.alert-danger {
+  animation: fadeInScale 0.3s ease, shake 0.5s ease 0.3s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.alert-modern::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+}
+
+.alert-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  animation: iconPop 0.4s ease 0.2s;
+}
+
+@keyframes iconPop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.alert-content {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.alert-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.alert-close:hover {
+  transform: scale(1.1);
+}
+
+/* Alerta de Error/Danger */
+.alert-danger {
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+  border: 1px solid #ffcdd2;
+  color: #c62828;
+}
+
+.alert-danger::before {
+  background: linear-gradient(180deg, #ef5350 0%, #c62828 100%);
+}
+
+.alert-danger .alert-icon {
+  color: #d32f2f;
+}
+
+.alert-danger .alert-close {
+  color: #c62828;
+}
+
+.alert-danger .alert-close:hover {
+  background: #ffcdd2;
+  color: #b71c1c;
+}
+
+/* Alerta de Éxito */
+.alert-success {
+  background: linear-gradient(135deg, #f1f8f4 0%, #e8f5e9 100%);
+  border: 1px solid #c8e6c9;
+  color: #2e7d32;
+}
+
+.alert-success::before {
+  background: linear-gradient(180deg, #66bb6a 0%, #43a047 100%);
+}
+
+.alert-success .alert-icon {
+  color: #388e3c;
+}
+
+.alert-success .alert-close {
+  color: #2e7d32;
+}
+
+.alert-success .alert-close:hover {
+  background: #c8e6c9;
+  color: #1b5e20;
+}
+
+/* Alerta de Advertencia */
+.alert-warning {
+  background: linear-gradient(135deg, #fffbf0 0%, #fff8e1 100%);
+  border: 1px solid #ffe082;
+  color: #f57c00;
+}
+
+.alert-warning::before {
+  background: linear-gradient(180deg, #ffa726 0%, #fb8c00 100%);
+}
+
+.alert-warning .alert-icon {
+  color: #f57c00;
+}
+
+.alert-warning .alert-close {
+  color: #f57c00;
+}
+
+.alert-warning .alert-close:hover {
+  background: #ffe082;
+  color: #e65100;
+}
+
+/* Alerta de Info */
+.alert-info {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e3f2fd 100%);
+  border: 1px solid #90caf9;
+  color: #1565c0;
+}
+
+.alert-info::before {
+  background: linear-gradient(180deg, #42a5f5 0%, #1e88e5 100%);
+}
+
+.alert-info .alert-icon {
+  color: #1976d2;
+}
+
+.alert-info .alert-close {
+  color: #1565c0;
+}
+
+.alert-info .alert-close:hover {
+  background: #90caf9;
+  color: #0d47a1;
 }
 
 .login-header {
@@ -476,6 +701,7 @@
   max-width: 400px;
   margin-bottom: 1rem;
   animation: slideUpDropdown 0.3s ease;
+  z-index: 1000;
 }
 
 .test-users-dropdown.show {
@@ -617,66 +843,98 @@
 </style>
 
 <script>
-// Toggle password visibility
-document.getElementById('togglePassword')?.addEventListener('click', function() {
-  const passwordInput = document.getElementById('password');
-  const icon = this.querySelector('i');
-  
-  if (passwordInput.type === 'password') {
-    passwordInput.type = 'text';
-    icon.classList.remove('bi-eye');
-    icon.classList.add('bi-eye-slash');
-  } else {
-    passwordInput.type = 'password';
-    icon.classList.remove('bi-eye-slash');
-    icon.classList.add('bi-eye');
+document.addEventListener('DOMContentLoaded', function() {
+  // Auto-cerrar mensajes flash después de 5 segundos
+  const alerts = document.querySelectorAll('.alert-modern');
+  alerts.forEach(alert => {
+    setTimeout(() => {
+      alert.style.animation = 'fadeOutScale 0.3s ease forwards';
+      setTimeout(() => {
+        alert.remove();
+      }, 300);
+    }, 5000);
+  });
+
+  // Agregar animaciones CSS
+  const styleAnimations = document.createElement('style');
+  styleAnimations.textContent = `
+    @keyframes fadeOutScale {
+      to {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+      }
+    }
+    @keyframes fillAnimation {
+      0% { background: transparent; }
+      50% { background: rgba(13, 110, 253, 0.1); }
+      100% { background: white; }
+    }
+  `;
+  document.head.appendChild(styleAnimations);
+
+  // Toggle password visibility
+  const togglePassword = document.getElementById('togglePassword');
+  if (togglePassword) {
+    togglePassword.addEventListener('click', function() {
+      const passwordInput = document.getElementById('password');
+      const icon = this.querySelector('i');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+      } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+      }
+    });
   }
-});
 
-// Toggle test users dropdown
-document.getElementById('toggleTestUsers')?.addEventListener('click', function() {
-  const dropdown = document.getElementById('testUsersDropdown');
-  dropdown.classList.toggle('show');
-});
-
-// Close dropdown when clicking outside
-document.addEventListener('click', function(event) {
-  const toggle = document.getElementById('toggleTestUsers');
-  const dropdown = document.getElementById('testUsersDropdown');
-  
-  if (toggle && dropdown && !toggle.contains(event.target) && !dropdown.contains(event.target)) {
-    dropdown.classList.remove('show');
+  // Toggle test users dropdown
+  const toggleTestUsers = document.getElementById('toggleTestUsers');
+  if (toggleTestUsers) {
+    toggleTestUsers.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const dropdown = document.getElementById('testUsersDropdown');
+      dropdown.classList.toggle('show');
+    });
   }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function(event) {
+    const toggle = document.getElementById('toggleTestUsers');
+    const dropdown = document.getElementById('testUsersDropdown');
+    
+    if (toggle && dropdown && !toggle.contains(event.target) && !dropdown.contains(event.target)) {
+      dropdown.classList.remove('show');
+    }
+  });
 });
 
-// Fill credentials function
+// Fill credentials function (debe estar fuera del DOMContentLoaded para ser llamada desde onclick)
 function fillCredentials(email, password) {
-  document.getElementById('email').value = email;
-  document.getElementById('password').value = password;
-  document.getElementById('testUsersDropdown').classList.remove('show');
-  
-  // Add animation to fields
   const emailInput = document.getElementById('email');
   const passwordInput = document.getElementById('password');
+  const dropdown = document.getElementById('testUsersDropdown');
   
-  emailInput.style.animation = 'none';
-  passwordInput.style.animation = 'none';
-  
-  setTimeout(() => {
-    emailInput.style.animation = 'fillAnimation 0.5s ease';
-    passwordInput.style.animation = 'fillAnimation 0.5s ease 0.1s';
-  }, 10);
-}
-
-// Add fill animation
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes fillAnimation {
-    0% { background: transparent; }
-    50% { background: rgba(13, 110, 253, 0.1); }
-    100% { background: white; }
+  if (emailInput && passwordInput) {
+    emailInput.value = email;
+    passwordInput.value = password;
+    
+    if (dropdown) {
+      dropdown.classList.remove('show');
+    }
+    
+    // Add animation to fields
+    emailInput.style.animation = 'none';
+    passwordInput.style.animation = 'none';
+    
+    setTimeout(() => {
+      emailInput.style.animation = 'fillAnimation 0.5s ease';
+      passwordInput.style.animation = 'fillAnimation 0.5s ease 0.1s';
+    }, 10);
   }
-`;
-document.head.appendChild(style);
+}
 </script>
 {% endblock %}

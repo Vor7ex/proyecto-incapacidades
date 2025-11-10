@@ -55,6 +55,7 @@ def login():
                 return redirect(url_for('auth.login'))
         else:
             flash('Email o contraseña incorrectos', 'danger')
+            return redirect(url_for('auth.login'))
 
     return render_template('login.html')
 

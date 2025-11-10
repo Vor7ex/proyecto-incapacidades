@@ -599,26 +599,45 @@ def notificar_validacion_completada(incapacidad):
         incapacidad: Instancia de Incapacidad
         
     Returns:
-        bool: True si la notificación se envió exitosamente
+        dict: {'email_ok': bool, 'notificacion_id': int}
     """
+    from app.models.enums import TipoNotificacionEnum
+    from app.models import db
+    
     logger.info(f"🔔 UC2: Notificando validación completada para #{incapacidad.id}")
     
     email_colaborador = get_email_notificaciones(incapacidad.usuario)
     
-    exito = send_email(
-        subject=f'✅ Incapacidad {incapacidad.codigo_radicacion} - Documentación validada',
-        recipients=[email_colaborador],
-        html_body=render_template(
-            'emails/validacion_completada.html',
-            incapacidad=incapacidad,
-            colaborador=incapacidad.usuario
-        )
+    # Preparar contenido de notificación interna
+    contenido_html = render_template(
+        'emails/validacion_completada.html',
+        incapacidad=incapacidad,
+        colaborador=incapacidad.usuario
     )
     
-    if exito:
-        logger.info(f"✅ UC2: Notificación de validación enviada para #{incapacidad.id}")
+    # Enviar email con notificación interna
+    resultado = send_email(
+        subject=f'✅ Incapacidad {incapacidad.codigo_radicacion} - Documentación validada',
+        recipients=[email_colaborador],
+        html_body=contenido_html,
+        crear_notificacion=True,
+        tipo_notificacion=TipoNotificacionEnum.DOCUMENTACION_COMPLETADA,
+        destinatario_id=incapacidad.usuario_id
+    )
     
-    return exito
+    if resultado['email_ok']:
+        logger.info(f"✅ UC2: Notificación de validación enviada para #{incapacidad.id}")
+        if resultado['notificacion_id']:
+            logger.info(f"📬 UC2: Notificación interna creada #{resultado['notificacion_id']}")
+    
+    # Commit de la notificación interna
+    try:
+        db.session.commit()
+    except Exception as e:
+        logger.error(f"❌ Error al commit de notificación interna: {str(e)}")
+        db.session.rollback()
+    
+    return resultado
 
 
 def notificar_documentos_faltantes(incapacidad, observaciones):
@@ -631,27 +650,46 @@ def notificar_documentos_faltantes(incapacidad, observaciones):
         observaciones: String con observaciones sobre documentos faltantes
         
     Returns:
-        bool: True si la notificación se envió exitosamente
+        dict: {'email_ok': bool, 'notificacion_id': int}
     """
+    from app.models.enums import TipoNotificacionEnum
+    from app.models import db
+    
     logger.info(f"🔔 UC2: Notificando documentos faltantes para #{incapacidad.id}")
     
     email_colaborador = get_email_notificaciones(incapacidad.usuario)
     
-    exito = send_email(
-        subject=f'📄 Incapacidad {incapacidad.codigo_radicacion} - Documentos faltantes',
-        recipients=[email_colaborador],
-        html_body=render_template(
-            'emails/documentos_faltantes.html',
-            incapacidad=incapacidad,
-            colaborador=incapacidad.usuario,
-            observaciones=observaciones
-        )
+    # Preparar contenido de notificación interna
+    contenido_html = render_template(
+        'emails/documentos_faltantes.html',
+        incapacidad=incapacidad,
+        colaborador=incapacidad.usuario,
+        observaciones=observaciones
     )
     
-    if exito:
-        logger.info(f"✅ UC2: Notificación de documentos faltantes enviada para #{incapacidad.id}")
+    # Enviar email con notificación interna
+    resultado = send_email(
+        subject=f'📄 Incapacidad {incapacidad.codigo_radicacion} - Documentos faltantes',
+        recipients=[email_colaborador],
+        html_body=contenido_html,
+        crear_notificacion=True,
+        tipo_notificacion=TipoNotificacionEnum.DOCUMENTOS_FALTANTES,
+        destinatario_id=incapacidad.usuario_id
+    )
     
-    return exito
+    if resultado['email_ok']:
+        logger.info(f"✅ UC2: Notificación de documentos faltantes enviada para #{incapacidad.id}")
+        if resultado['notificacion_id']:
+            logger.info(f"📬 UC2: Notificación interna creada #{resultado['notificacion_id']}")
+    
+    # Commit de la notificación interna
+    try:
+        db.session.commit()
+    except Exception as e:
+        logger.error(f"❌ Error al commit de notificación interna: {str(e)}")
+        db.session.rollback()
+    
+    return resultado
 
 
 def notificar_aprobacion(incapacidad):
@@ -663,26 +701,45 @@ def notificar_aprobacion(incapacidad):
         incapacidad: Instancia de Incapacidad
         
     Returns:
-        bool: True si la notificación se envió exitosamente
+        dict: {'email_ok': bool, 'notificacion_id': int}
     """
+    from app.models.enums import TipoNotificacionEnum
+    from app.models import db
+    
     logger.info(f"🔔 UC2: Notificando aprobación para #{incapacidad.id}")
     
     email_colaborador = get_email_notificaciones(incapacidad.usuario)
     
-    exito = send_email(
-        subject=f'✅ Incapacidad {incapacidad.codigo_radicacion} APROBADA',
-        recipients=[email_colaborador],
-        html_body=render_template(
-            'emails/incapacidad_aprobada.html',
-            incapacidad=incapacidad,
-            colaborador=incapacidad.usuario
-        )
+    # Preparar contenido de notificación interna
+    contenido_html = render_template(
+        'emails/incapacidad_aprobada.html',
+        incapacidad=incapacidad,
+        colaborador=incapacidad.usuario
     )
     
-    if exito:
-        logger.info(f"✅ UC2: Notificación de aprobación enviada para #{incapacidad.id}")
+    # Enviar email con notificación interna
+    resultado = send_email(
+        subject=f'✅ Incapacidad {incapacidad.codigo_radicacion} APROBADA',
+        recipients=[email_colaborador],
+        html_body=contenido_html,
+        crear_notificacion=True,
+        tipo_notificacion=TipoNotificacionEnum.APROBACION,
+        destinatario_id=incapacidad.usuario_id
+    )
     
-    return exito
+    if resultado['email_ok']:
+        logger.info(f"✅ UC2: Notificación de aprobación enviada para #{incapacidad.id}")
+        if resultado['notificacion_id']:
+            logger.info(f"📬 UC2: Notificación interna creada #{resultado['notificacion_id']}")
+    
+    # Commit de la notificación interna
+    try:
+        db.session.commit()
+    except Exception as e:
+        logger.error(f"❌ Error al commit de notificación interna: {str(e)}")
+        db.session.rollback()
+    
+    return resultado
 
 
 def notificar_rechazo(incapacidad):
@@ -694,26 +751,45 @@ def notificar_rechazo(incapacidad):
         incapacidad: Instancia de Incapacidad
         
     Returns:
-        bool: True si la notificación se envió exitosamente
+        dict: {'email_ok': bool, 'notificacion_id': int}
     """
+    from app.models.enums import TipoNotificacionEnum
+    from app.models import db
+    
     logger.info(f"🔔 UC2: Notificando rechazo para #{incapacidad.id}")
     
     email_colaborador = get_email_notificaciones(incapacidad.usuario)
     
-    exito = send_email(
-        subject=f'❌ Incapacidad {incapacidad.codigo_radicacion} RECHAZADA',
-        recipients=[email_colaborador],
-        html_body=render_template(
-            'emails/incapacidad_rechazada.html',
-            incapacidad=incapacidad,
-            colaborador=incapacidad.usuario
-        )
+    # Preparar contenido de notificación interna
+    contenido_html = render_template(
+        'emails/incapacidad_rechazada.html',
+        incapacidad=incapacidad,
+        colaborador=incapacidad.usuario
     )
     
-    if exito:
-        logger.info(f"✅ UC2: Notificación de rechazo enviada para #{incapacidad.id}")
+    # Enviar email con notificación interna
+    resultado = send_email(
+        subject=f'❌ Incapacidad {incapacidad.codigo_radicacion} RECHAZADA',
+        recipients=[email_colaborador],
+        html_body=contenido_html,
+        crear_notificacion=True,
+        tipo_notificacion=TipoNotificacionEnum.RECHAZO,
+        destinatario_id=incapacidad.usuario_id
+    )
     
-    return exito
+    if resultado['email_ok']:
+        logger.info(f"✅ UC2: Notificación de rechazo enviada para #{incapacidad.id}")
+        if resultado['notificacion_id']:
+            logger.info(f"📬 UC2: Notificación interna creada #{resultado['notificacion_id']}")
+    
+    # Commit de la notificación interna
+    try:
+        db.session.commit()
+    except Exception as e:
+        logger.error(f"❌ Error al commit de notificación interna: {str(e)}")
+        db.session.rollback()
+    
+    return resultado
 
 
 # ============================================================================
@@ -779,15 +855,18 @@ def notificar_solicitud_documentos(incapacidad, solicitudes, usuario_auxiliar):
             auxiliar_nombre=usuario_auxiliar.nombre if usuario_auxiliar else 'Gestión Humana'
         )
         
-        # Enviar email con reintentos
-        exito = send_email(
+        # Enviar email con notificación interna
+        resultado = send_email(
             subject=f'📄 Documentos faltantes - Incapacidad {incapacidad.codigo_radicacion}',
             recipients=[email_colaborador],
             html_body=html_body,
-            reintentos=3
+            reintentos=3,
+            crear_notificacion=True,
+            tipo_notificacion='DOCUMENTOS_FALTANTES',
+            destinatario_id=incapacidad.usuario_id
         )
         
-        if exito:
+        if resultado['email_ok']:
             # Actualizar ultima_notificacion en todas las solicitudes
             for sol in solicitudes:
                 sol.ultima_notificacion = datetime.utcnow()
@@ -796,8 +875,11 @@ def notificar_solicitud_documentos(incapacidad, solicitudes, usuario_auxiliar):
                 f"✅ UC6: Solicitud de documentos enviada a {incapacidad.usuario.email} "
                 f"({len(solicitudes)} documentos, vence en {dias_restantes} días hábiles)"
             )
+            
+            if resultado['notificacion_id']:
+                logger.info(f"📬 UC6: Notificación interna creada #{resultado['notificacion_id']}")
         
-        return exito
+        return resultado['email_ok']
         
     except Exception as e:
         logger.error(f"❌ UC6: Error al notificar solicitud de documentos para #{incapacidad.id}: {str(e)}")
@@ -870,15 +952,24 @@ def notificar_recordatorio_documentos(incapacidad, numero_recordatorio, solicitu
             numero_recordatorio=numero_recordatorio
         )
         
-        # Enviar con reintentos
-        exito = send_email(
+        # Determinar tipo de notificación según número de recordatorio
+        from app.models.enums import TipoNotificacionEnum
+        tipo_notif = (TipoNotificacionEnum.RECORDATORIO_DOCUMENTOS_DIA2 
+                     if numero_recordatorio == 1 
+                     else TipoNotificacionEnum.SEGUNDA_NOTIFICACION_DOCUMENTOS)
+        
+        # Enviar con reintentos y notificación interna
+        resultado = send_email(
             subject=asunto,
             recipients=[email_colaborador],
             html_body=html_body,
-            reintentos=3
+            reintentos=3,
+            crear_notificacion=True,
+            tipo_notificacion=tipo_notif,
+            destinatario_id=incapacidad.usuario_id
         )
         
-        if exito:
+        if resultado['email_ok']:
             # Actualizar ultima_notificacion
             for sol in solicitudes_pendientes:
                 sol.ultima_notificacion = datetime.utcnow()
@@ -887,8 +978,11 @@ def notificar_recordatorio_documentos(incapacidad, numero_recordatorio, solicitu
                 f"✅ UC6: Recordatorio #{numero_recordatorio} enviado a {incapacidad.usuario.email} "
                 f"({len(solicitudes_pendientes)} documentos pendientes)"
             )
+            
+            if resultado['notificacion_id']:
+                logger.info(f"📬 UC6: Notificación interna creada #{resultado['notificacion_id']}")
         
-        return exito
+        return resultado['email_ok']
         
     except Exception as e:
         logger.error(
@@ -929,6 +1023,19 @@ def notificar_documentacion_completada(incapacidad, email_auxiliar=None):
             logger.error(f"❌ UC6: No se puede notificar documentación completada: sin email de auxiliar")
             return False
         
+        # Buscar usuario auxiliar para crear notificación interna
+        from app.models.usuario import Usuario
+        destinatario_id = None
+        if email_auxiliar:
+            usuario_aux = Usuario.query.filter_by(email=email_auxiliar, rol='auxiliar').first()
+            if usuario_aux:
+                destinatario_id = usuario_aux.id
+        else:
+            # Si no hay email específico, buscar primer usuario auxiliar
+            usuario_aux = Usuario.query.filter_by(rol='auxiliar').first()
+            if usuario_aux:
+                destinatario_id = usuario_aux.id
+        
         # Renderizar template
         html_body = render_template(
             'emails/documentacion_completada.html',
@@ -936,20 +1043,25 @@ def notificar_documentacion_completada(incapacidad, email_auxiliar=None):
             colaborador=incapacidad.usuario
         )
         
-        # Enviar email
-        exito = send_email(
+        # Enviar email con notificación interna
+        resultado = send_email(
             subject=f'✅ Documentación completada - {incapacidad.codigo_radicacion}',
             recipients=[destinatario],
             html_body=html_body,
-            reintentos=3
+            reintentos=3,
+            crear_notificacion=True if destinatario_id else False,
+            tipo_notificacion='DOCUMENTACION_COMPLETADA',
+            destinatario_id=destinatario_id
         )
         
-        if exito:
+        if resultado['email_ok']:
             logger.info(
                 f"✅ UC6: Notificación de documentación completada enviada a {destinatario}"
             )
+            if resultado['notificacion_id']:
+                logger.info(f"📬 UC6: Notificación interna creada #{resultado['notificacion_id']}")
         
-        return exito
+        return resultado['email_ok']
         
     except Exception as e:
         logger.error(f"❌ UC6: Error al notificar documentación completada para #{incapacidad.id}: {str(e)}")
